@@ -20,3 +20,10 @@ export const CLOUD_STORAGE_EMULATOR_PORT = Number(
 export const FUNCTIONS_EMULATOR_PORT = Number(
   import.meta.env.VITE_APP_FUNCTIONS_EMULATOR_PORT
 );
+
+/*
+    Router routes
+*/
+
+export const HOME_ROUTE = "/";
+export const ABOUT_ROUTE = "/about";
