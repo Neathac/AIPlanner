@@ -3,11 +3,21 @@ import { createApp } from "vue";
 import { createPinia } from "pinia";
 import { getAnalytics } from "firebase/analytics";
 import { initEmulators } from "./helpers/emulatorHelper";
+// Vuetify
+import "vuetify/styles";
+import { createVuetify } from "vuetify";
+import * as components from "vuetify/components";
+import * as directives from "vuetify/directives";
 
 import App from "./App.vue";
 import router from "./router";
 
 import "./assets/main.css";
+
+const vuetify = createVuetify({
+  components,
+  directives,
+});
 
 const firebaseConfig = {
   apiKey: "AIzaSyAx1itd3sM290qg2ePjPOsWdpbS6X4-ApI",
@@ -24,4 +34,4 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 initEmulators();
 
-createApp(App).use(router).use(createPinia()).mount("#app");
+createApp(App).use(router).use(createPinia()).use(vuetify).mount("#app");
