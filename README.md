@@ -50,3 +50,9 @@ npm run test:unit
 ```sh
 npm run lint
 ```
+
+### Emulators how-to
+1. Make sure you ran ```npm ci``` in both root and functions directory (For FE and BE)
+2. **Only setup. Check firebase.json emulators section. If it is there, skip this step.** ```firebase init emulators``` and choose to use both an emulated database, and emulated auth, keep the defaults on everything else, unless you know your ports
+3. ```firebase emulators:start```
+4. If you haven't already, make sure to copy the ```.example.env``` and remove the *'.example'* prefix. In case you want to use emulators, set the **VUE_APP_DEV_ENVIRONMENT** variable to **true**

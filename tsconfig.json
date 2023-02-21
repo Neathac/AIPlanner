@@ -14,5 +14,11 @@
   "include": [
     "src",
     "functions"
-  ]
+  ],
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "node",
+    "types": ["vite/client"]
+  },
 }
