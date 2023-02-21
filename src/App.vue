@@ -12,6 +12,7 @@ import HelloWorld from "./components/HelloWorld.vue";
       width="125"
       height="125"
     />
+    <v-btn>Vuetify button</v-btn>
 
     <div class="wrapper">
       <HelloWorld msg="You did it!" />
