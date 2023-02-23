@@ -1,76 +1,49 @@
-<script setup lang="ts">
-import { RouterLink, RouterView } from "vue-router";
-import HelloWorld from "./components/HelloWorld.vue";
+<script lang="ts">
+import { defineComponent } from "vue";
+import { ABOUT_ROUTE, HOME_ROUTE, PDDL_ROUTE } from "./helpers/consts";
+
+export default defineComponent({
+  name: "App",
+  data() {
+    return {
+      menuVisible: true,
+      items: [
+        { text: "Domů", icon: "mdi-home", to: HOME_ROUTE },
+        { text: "Profil", icon: "mdi-account", to: PDDL_ROUTE },
+        { text: "About", icon: "mdi-cart-outline", to: ABOUT_ROUTE },
+      ],
+    };
+  },
+});
 </script>
 
 <template>
   <v-app>
-    <v-main>
-      <RouterView />
-    </v-main>
+    <v-navigation-drawer theme="dark" rail permanent>
+      <v-list-item
+        nav
+        prepend-avatar="https://randomuser.me/api/portraits/women/75.jpg"
+      ></v-list-item>
+
+      <v-divider></v-divider>
+
+      <v-list>
+        <v-list-item
+          v-for="(item, i) in items"
+          :key="i"
+          :value="item"
+          :to="item.to"
+          active-color="primary"
+        >
+          <template v-slot:prepend>
+            <v-icon :icon="item.icon"></v-icon>
+          </template>
+          <!-- eslint-disable vue/no-v-text-v-html-on-component -->
+          <v-list-item-title v-text="item.text"></v-list-item-title>
+        </v-list-item>
+      </v-list>
+    </v-navigation-drawer>
+    <v-main style="height: 100vh"></v-main>
+    <router-view />
   </v-app>
 </template>
-
-<style scoped>
-header {
-  line-height: 1.5;
-  max-height: 100vh;
-}
-
-.logo {
-  display: block;
-  margin: 0 auto 2rem;
-}
-
-nav {
-  width: 100%;
-  font-size: 12px;
-  text-align: center;
-  margin-top: 2rem;
-}
-
-nav a.router-link-exact-active {
-  color: var(--color-text);
-}
-
-nav a.router-link-exact-active:hover {
-  background-color: transparent;
-}
-
-nav a {
-  display: inline-block;
-  padding: 0 1rem;
-  border-left: 1px solid var(--color-border);
-}
-
-nav a:first-of-type {
-  border: 0;
-}
-
-@media (min-width: 1024px) {
-  header {
-    display: flex;
-    place-items: center;
-    padding-right: calc(var(--section-gap) / 2);
-  }
-
-  .logo {
-    margin: 0 2rem 0 0;
-  }
-
-  header .wrapper {
-    display: flex;
-    place-items: flex-start;
-    flex-wrap: wrap;
-  }
-
-  nav {
-    text-align: left;
-    margin-left: -1rem;
-    font-size: 1rem;
-
-    padding: 1rem 0;
-    margin-top: 1rem;
-  }
-}
-</style>
