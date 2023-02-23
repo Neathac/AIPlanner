@@ -16,4 +16,9 @@ module.exports = {
   parserOptions: {
     ecmaVersion: "latest",
   },
+  ignorePatterns: [
+    "/functions/*.ts",
+    "/lib/**/*", // Ignore built files.
+    "/*.js",
+  ],
 };

@@ -1,4 +1,4 @@
-import { ABOUT_ROUTE, HOME_ROUTE } from "@/helpers/consts";
+import { ABOUT_ROUTE, HOME_ROUTE, PDDL_ROUTE } from "../helpers/consts";
 import { getAuth } from "firebase/auth";
 import { createRouter, createWebHistory } from "vue-router";
 import HomeView from "../views/HomeView.vue";
@@ -10,16 +10,24 @@ const router = createRouter({
   routes: [
     {
       path: HOME_ROUTE,
-      name: "home",
+      name: "Home",
       component: HomeView,
     },
     {
       path: ABOUT_ROUTE,
-      name: "about",
+      name: "About",
       // route level code-splitting
       // this generates a separate chunk (About.[hash].js) for this route
       // which is lazy-loaded when the route is visited.
       component: () => import("../views/AboutView.vue"),
+    },
+    {
+      path: PDDL_ROUTE,
+      name: "PDDL",
+      // route level code-splitting
+      // this generates a separate chunk (About.[hash].js) for this route
+      // which is lazy-loaded when the route is visited.
+      component: () => import("../views/PddlView.vue"),
     },
   ],
 });

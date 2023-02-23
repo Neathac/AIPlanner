@@ -27,3 +27,4 @@ export const FUNCTIONS_EMULATOR_PORT = Number(
 
 export const HOME_ROUTE = "/";
 export const ABOUT_ROUTE = "/about";
+export const PDDL_ROUTE = "/pddl";
