@@ -1,7 +1,7 @@
-import { ABOUT_ROUTE, HOME_ROUTE, DCK_ROUTE } from "../helpers/consts";
+import { ABOUT_ROUTE, HOME_ROUTE, DCK_ROUTE } from "@src/helpers/consts";
 import { getAuth } from "firebase/auth";
 import { createRouter, createWebHistory } from "vue-router";
-import HomeView from "../views/HomeView.vue";
+import HomeView from "@src/views/HomeView.vue";
 
 const protectedRoutes: Array<String> = [];
 
@@ -19,7 +19,7 @@ const router = createRouter({
       // route level code-splitting
       // this generates a separate chunk (About.[hash].js) for this route
       // which is lazy-loaded when the route is visited.
-      component: () => import("../views/AboutView.vue"),
+      component: () => import("@src/views/AboutView.vue"),
     },
     {
       path: DCK_ROUTE,
@@ -27,7 +27,7 @@ const router = createRouter({
       // route level code-splitting
       // this generates a separate chunk (About.[hash].js) for this route
       // which is lazy-loaded when the route is visited.
-      component: () => import("../views/DckView.vue"),
+      component: () => import("@src/views/DckView.vue"),
     },
   ],
 });

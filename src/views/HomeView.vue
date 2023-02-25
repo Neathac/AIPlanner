@@ -1,6 +1,6 @@
 <script lang="ts">
 import { defineComponent } from "vue";
-import { ABOUT_ROUTE, HOME_ROUTE, DCK_ROUTE } from "../helpers/consts";
+import { ABOUT_ROUTE, HOME_ROUTE, DCK_ROUTE } from "@src/helpers/consts";
 
 export default defineComponent({
   name: "ProtectedView",
