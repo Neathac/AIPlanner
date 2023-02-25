@@ -61,6 +61,7 @@ export default defineComponent({
           position: fixed;
           left: 0px;
           top: 0px;
+          width: 100%;
         }
       "
       ><router-view
