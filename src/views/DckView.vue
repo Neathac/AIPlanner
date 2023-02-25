@@ -7,7 +7,7 @@
 
 <script lang="ts">
 import { defineComponent } from "vue";
-import DomainEditor from "@src/components/DomainEditor.vue";
+import DomainEditor from "../components/DomainEditor.vue";
 
 export default defineComponent({
   name: "DckView",
@@ -21,8 +21,3 @@ export default defineComponent({
   },
 });
 </script>
-
-<style>
-.dck {
-}
-</style>

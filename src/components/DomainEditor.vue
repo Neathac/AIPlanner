@@ -2,31 +2,33 @@
   <codemirror
     v-model="code"
     placeholder="Code goes here..."
-    style="
-       {
-        height: 100px;
-      }
-    "
     :autofocus="true"
     :indent-with-tab="true"
     :tab-size="2"
-    @ready="handleReady"
-    @change="log('change', $event)"
-    @focus="log('focus', $event)"
-    @blur="log('blur', $event)"
-  />
+    :extensions="extensions"
+  >
+  </codemirror>
 </template>
 
 <script lang="ts">
 import { defineComponent, ref, shallowRef } from "vue";
 import { Codemirror } from "vue-codemirror";
+import {
+  pddlLanguage,
+  getDocumentSyntaxTree,
+} from "../languageSupport/parser/language";
+import { loadDomain } from "../languageSupport/decomposer/domainLoader";
+import { SyntaxNodeRef } from "@lezer/common";
+import { useDomainStore } from "../stores/domainStore";
 
 export default defineComponent({
   components: {
     Codemirror,
   },
   setup() {
+    const domainStore = useDomainStore();
     const code = ref(`console.log('Hello, world!')`);
+    const extensions = [pddlLanguage()];
 
     // Codemirror EditorView instance ref
     const view = shallowRef();
@@ -51,6 +53,7 @@ export default defineComponent({
 
     return {
       code,
+      extensions,
       handleReady,
       log: console.log,
     };
