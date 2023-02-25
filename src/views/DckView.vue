@@ -1,16 +1,12 @@
 <template>
-  <div class="about">
+  <div class="dck">
     <v-app-bar></v-app-bar>
-    <FileStructure />
-    <v-main>
-      <DomainEditor />
-    </v-main>
+    <DomainEditor />
   </div>
 </template>
 
 <script lang="ts">
 import { defineComponent } from "vue";
-import FileStructure from "../components/FileStructure.vue";
 import DomainEditor from "../components/DomainEditor.vue";
 
 export default defineComponent({
@@ -21,8 +17,12 @@ export default defineComponent({
     };
   },
   components: {
-    FileStructure,
     DomainEditor,
   },
 });
 </script>
+
+<style>
+.dck {
+}
+</style>
