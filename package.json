@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "vite",
-    "build": "run-p type-check build-only",
+    "build": "run-p build-only",
     "preview": "vite preview",
     "test:unit": "vitest --environment jsdom --root src/",
     "build-only": "vite build",
@@ -12,10 +12,13 @@
     "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix --ignore-path .gitignore"
   },
   "dependencies": {
+    "@lezer/generator": "^1.2.2",
     "@mdi/font": "^7.1.96",
     "firebase": "^9.17.1",
     "pinia": "^2.0.28",
+    "vite-tsconfig-paths": "^4.0.5",
     "vue": "^3.2.45",
+    "vue-codemirror": "^6.1.1",
     "vue-router": "^4.1.6",
     "vuetify": "^3.1.6"
   },

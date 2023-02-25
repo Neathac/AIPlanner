@@ -1,24 +1,23 @@
 <template>
-  <div class="about">
+  <div class="dck">
     <v-app-bar></v-app-bar>
-    <FileStructure />
-    <h1>This is an about page</h1>
+    <DomainEditor />
   </div>
 </template>
 
 <script lang="ts">
 import { defineComponent } from "vue";
-import FileStructure from "../components/FileStructure.vue";
+import DomainEditor from "../components/DomainEditor.vue";
 
 export default defineComponent({
-  name: "ProtectedView",
+  name: "DckView",
   data() {
     return {
       menuVisible: true,
     };
   },
   components: {
-    FileStructure,
+    DomainEditor,
   },
 });
 </script>
