@@ -21,7 +21,7 @@
 
 <script lang="ts">
 import { defineComponent } from "vue";
-import { ABOUT_ROUTE, HOME_ROUTE, PDDL_ROUTE } from "../helpers/consts";
+import { ABOUT_ROUTE, HOME_ROUTE, DCK_ROUTE } from "../helpers/consts";
 
 export default defineComponent({
   name: "ProtectedView",
@@ -30,7 +30,7 @@ export default defineComponent({
       menuVisible: true,
       files: [
         { text: "File 1", icon: "mdi-home", to: HOME_ROUTE },
-        { text: "File 2", icon: "mdi-account", to: PDDL_ROUTE },
+        { text: "File 2", icon: "mdi-account", to: DCK_ROUTE },
         { text: "Folder 1", icon: "mdi-cart-outline", to: ABOUT_ROUTE },
       ],
     };

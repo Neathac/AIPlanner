@@ -1,6 +1,6 @@
 <script lang="ts">
 import { defineComponent } from "vue";
-import { ABOUT_ROUTE, HOME_ROUTE, PDDL_ROUTE } from "./helpers/consts";
+import { ABOUT_ROUTE, HOME_ROUTE, DCK_ROUTE } from "./helpers/consts";
 
 export default defineComponent({
   name: "App",
@@ -9,7 +9,7 @@ export default defineComponent({
       menuVisible: true,
       items: [
         { text: "Domů", icon: "mdi-home", to: HOME_ROUTE },
-        { text: "Profil", icon: "mdi-account", to: PDDL_ROUTE },
+        { text: "Profil", icon: "mdi-account", to: DCK_ROUTE },
         { text: "About", icon: "mdi-cart-outline", to: ABOUT_ROUTE },
       ],
     };
@@ -43,7 +43,6 @@ export default defineComponent({
         </v-list-item>
       </v-list>
     </v-navigation-drawer>
-    <v-main style="height: 100vh"></v-main>
     <router-view />
   </v-app>
 </template>
