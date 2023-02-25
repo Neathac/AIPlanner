@@ -3,9 +3,11 @@
     v-model="code"
     placeholder="Code goes here..."
     :autofocus="true"
+    :style="{ height: '90vh' }"
     :indent-with-tab="true"
     :tab-size="2"
     :extensions="extensions"
+    @change="onChanged"
   >
   </codemirror>
 </template>
@@ -20,6 +22,7 @@ import {
 import { loadDomain } from "../languageSupport/decomposer/domainLoader";
 import { SyntaxNodeRef } from "@lezer/common";
 import { useDomainStore } from "../stores/domainStore";
+import { store } from "../store";
 
 export default defineComponent({
   components: {
@@ -27,7 +30,8 @@ export default defineComponent({
   },
   setup() {
     const domainStore = useDomainStore();
-    const code = ref(`console.log('Hello, world!')`);
+    domainStore.loadRawDomain(store.activeDomain);
+    const code = ref(domainStore.rawDomain);
     const extensions = [pddlLanguage()];
 
     // Codemirror EditorView instance ref
@@ -58,5 +62,12 @@ export default defineComponent({
       log: console.log,
     };
   },
+  methods: {
+    onChanged() {
+      store.activeDomain = this.code;
+      const domainStore = useDomainStore();
+      domainStore.loadRawDomain(store.activeDomain);
+    }
+  }
 });
 </script>
