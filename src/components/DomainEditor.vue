@@ -67,7 +67,7 @@ export default defineComponent({
       store.activeDomain = this.code;
       const domainStore = useDomainStore();
       domainStore.loadRawDomain(store.activeDomain);
-    }
-  }
+    },
+  },
 });
 </script>

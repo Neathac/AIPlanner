@@ -3,6 +3,9 @@ import { createApp } from "vue";
 import { createPinia } from "pinia";
 import { getAnalytics } from "firebase/analytics";
 import { initEmulators } from "./helpers/emulatorHelper";
+// Baklava
+import { BaklavaVuePlugin as BkRenderer } from "@baklavajs/plugin-renderer-vue3";
+import "@baklavajs/plugin-renderer-vue3/dist/styles.css";
 // Vuetify
 import "vuetify/styles";
 import { createVuetify } from "vuetify";
@@ -35,4 +38,9 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 initEmulators();
 
-createApp(App).use(router).use(createPinia()).use(vuetify).mount("#app");
+createApp(App)
+  .use(router)
+  .use(createPinia())
+  .use(vuetify)
+  .use(BkRenderer)
+  .mount("#app");
