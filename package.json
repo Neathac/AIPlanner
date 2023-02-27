@@ -23,6 +23,7 @@
     "@mdi/font": "^7.1.96",
     "baklavajs": "^1.10.2",
     "firebase": "^9.17.1",
+    "lodash": "^4.17.21",
     "pinia": "^2.0.28",
     "vite-tsconfig-paths": "^4.0.5",
     "vue": "^3.2.45",

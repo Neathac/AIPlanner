@@ -8,22 +8,24 @@ import {
 
 export const useDomainStore = defineStore("domainStore", {
   state: () => ({
-    rawDomain: ``,
-    structuredDomain: emptyPddlDocument(),
+    rawActiveDomain: ``,
+    structuredActiveDomain: emptyPddlDocument(),
   }),
   getters: {
-    getStructure: (state) => state.structuredDomain,
-    getRawValue: (state) => state.rawDomain,
+    getStructure: (state) => state.structuredActiveDomain,
+    getRawValue: (state) => state.rawActiveDomain,
     getActions: (state) => {
       const actions: { [key: string]: Action } = {};
-      Object.entries(state.structuredDomain.actions).forEach(([, value]) => {
-        actions[value.name] = value;
-      });
+      Object.entries(state.structuredActiveDomain.actions).forEach(
+        ([, value]) => {
+          actions[value.name] = value;
+        }
+      );
       return actions;
     },
     getPredicates: (state) => {
       const predicates: Map<string, Predicate> = new Map<string, Predicate>();
-      Object.entries(state.structuredDomain.predicates).forEach(
+      Object.entries(state.structuredActiveDomain.predicates).forEach(
         ([, object]) => {
           if (object.rawPredicate) {
             predicates.set(object.rawPredicate, object);
@@ -34,7 +36,7 @@ export const useDomainStore = defineStore("domainStore", {
     },
     getGoalifiedPredicates: (state) => {
       const predicates: Map<string, Predicate> = new Map<string, Predicate>();
-      Object.entries(state.structuredDomain.predicates).forEach(
+      Object.entries(state.structuredActiveDomain.predicates).forEach(
         ([, object]) => {
           if (object.rawPredicate) {
             const newObject = Object.assign({}, object);
@@ -51,7 +53,7 @@ export const useDomainStore = defineStore("domainStore", {
     },
     getPredicatesByName: (state) => {
       const predicates: Map<string, Predicate> = new Map<string, Predicate>();
-      Object.entries(state.structuredDomain.predicates).forEach(
+      Object.entries(state.structuredActiveDomain.predicates).forEach(
         ([, object]) => {
           if (object.rawPredicate) {
             predicates.set(object.name, object);
@@ -62,12 +64,12 @@ export const useDomainStore = defineStore("domainStore", {
     },
   },
   actions: {
-    loadDomain(pddlDomain: PddlDocument, rawDomain: string) {
-      this.rawDomain = rawDomain;
-      this.structuredDomain = pddlDomain;
+    loadActiveDomain(pddlDomain: PddlDocument, rawActiveDomain: string) {
+      this.rawActiveDomain = rawActiveDomain;
+      this.structuredActiveDomain = pddlDomain;
     },
-    loadRawDomain(rawDomain: string) {
-      this.rawDomain = rawDomain;
+    loadRawActiveDomain(rawActiveDomain: string) {
+      this.rawActiveDomain = rawActiveDomain;
     },
   },
 });

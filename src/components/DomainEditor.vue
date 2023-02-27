@@ -19,10 +19,11 @@ import {
   pddlLanguage,
   getDocumentSyntaxTree,
 } from "../languageSupport/parser/language";
-import { loadDomain } from "../languageSupport/decomposer/domainLoader";
+import { loadActiveDomain } from "../languageSupport/decomposer/domainLoader";
 import { SyntaxNodeRef } from "@lezer/common";
 import { useDomainStore } from "../stores/domainStore";
 import { store } from "../store";
+import { codeFolding } from "@codemirror/language";
 
 export default defineComponent({
   components: {
@@ -30,8 +31,8 @@ export default defineComponent({
   },
   setup() {
     const domainStore = useDomainStore();
-    domainStore.loadRawDomain(store.activeDomain);
-    const code = ref(domainStore.rawDomain);
+    domainStore.loadRawActiveDomain(store.activeDomain);
+    const code = ref(domainStore.rawActiveDomain);
     const extensions = [pddlLanguage()];
 
     // Codemirror EditorView instance ref
@@ -66,7 +67,7 @@ export default defineComponent({
     onChanged() {
       store.activeDomain = this.code;
       const domainStore = useDomainStore();
-      domainStore.loadRawDomain(store.activeDomain);
+      domainStore.loadRawActiveDomain(store.activeDomain);
     },
   },
 });

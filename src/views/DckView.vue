@@ -3,19 +3,19 @@
     <v-app-bar>
       <template v-slot:prepend>
         <v-btn-toggle
-          v-model="editor"
+          v-model="editorType"
           rounded="0"
           color="deep-purple-accent-3"
           group
           mandatory
           variant="outlined"
-          ><v-btn value="Domain" variant="flat"> Domain Editor </v-btn>
-          <v-btn value="DCK" variant="flat"> DCK Encoder </v-btn>
+          ><v-btn value="Domain"> Domain Editor </v-btn>
+          <v-btn value="DCK"> DCK Encoder </v-btn>
         </v-btn-toggle>
       </template>
       <template v-slot:append>
         <div class="d-flex justify-center align-baseline" style="gap: 1rem">
-          <template v-if="editor == 'Domain'">
+          <template v-if="editorType == 'Domain'">
             <v-dialog v-model="dialogDomainSave" persistent width="auto">
               <template v-slot:activator="{ props }">
                 <v-btn
@@ -95,7 +95,7 @@
               color="blue-grey"
               variant="flat"
               prepend-icon="mdi-auto-fix"
-              @click="load(1)"
+              @click="encodeDCK"
             >
               Encode DCK to Domain
             </v-btn>
@@ -104,52 +104,125 @@
               :disabled="loading[2]"
               color="blue-grey"
               prepend-icon="mdi-cloud-upload"
-              variant="tonal"
-              @click="load(1)"
+              variant="flat"
+              @click="loadToDck"
             >
-              Upload File
+              Load to DCK Encoder
             </v-btn>
           </template>
-          <template v-if="editor == 'DCK'">
+          <template v-if="editorType == 'DCK'">
             <v-btn
               :loading="loading[2]"
               :disabled="loading[2]"
               color="blue-grey"
               prepend-icon="mdi-check-bold"
               variant="flat"
-              @click="load(1)"
+              @click="saveEncoderState"
             >
               Save ATB-DCK
+            </v-btn>
+            <v-btn
+              :loading="loading[2]"
+              :disabled="loading[2]"
+              color="blue-grey"
+              prepend-icon="mdi-check-bold"
+              variant="flat"
+              @click="loadEncoderState"
+            >
+              Load ATB-DCK
             </v-btn>
           </template>
         </div>
       </template>
     </v-app-bar>
-    <DomainEditor v-if="editor == 'Domain'" />
-    <NodeEditor v-if="editor == 'DCK'" />
+    <DomainEditor v-if="editorType == 'Domain'" ref="editor" />
+    <NodeEditor
+      v-if="editorType == 'DCK'"
+      ref="encoder"
+      @encoderChanged="saveEncoderState"
+      @askForState="loadEncoderState"
+    />
   </div>
 </template>
 
 <script lang="ts">
-import { defineComponent } from "vue";
+import {
+  loadActiveDomain,
+  encodeDCK,
+} from "../languageSupport/decomposer/domainLoader";
+import { defineComponent, h } from "vue";
 import DomainEditor from "../components/DomainEditor.vue";
 import NodeEditor from "../components/NodeEditor.vue";
+import { useDomainStore } from "../stores/domainStore";
+import { useNodeStore } from "../stores/nodeStore";
+import { OptionPlugin } from "@baklavajs/plugin-options-vue3";
+import { ViewPlugin } from "@baklavajs/plugin-renderer-vue3";
+import editorFactory from "../languageSupport/nodeFactory/nodeFactory";
+import ActionSidebarOption from "../components/Sidebars/ActionSidebarOption.vue";
+import GoalSidebarOption from "../components/Sidebars/GoalSidebarOption.vue";
+import StateConstraintSidebarOption from "../components/Sidebars/StateConstraintSidebarOption.vue";
+import { Engine } from "@baklavajs/plugin-engine";
 
 export default defineComponent({
   name: "DckView",
   data() {
+    /*
+      This whole stupid useless bit is so that the editor instance can remember its state upon changing the viewed editor. 
+      The save/load methods don't function properly with plugins it would seem.
+    */
+    const editor = editorFactory();
+    const viewPlugin = new ViewPlugin();
+    const engine = new Engine(true);
+    editor.use(viewPlugin);
+    editor.use(new OptionPlugin());
+    editor.use(engine);
+    // NEVER touch this ever. Oficially legacy code as of today
+    viewPlugin.registerOption("ActionSidebarOption", {
+      components: ActionSidebarOption,
+      render: () => h(ActionSidebarOption),
+    });
+    viewPlugin.registerOption("StateConstraintSidebarOption", {
+      components: StateConstraintSidebarOption,
+      render: () => h(StateConstraintSidebarOption),
+    });
+    viewPlugin.registerOption("GoalSidebarOption", {
+      components: GoalSidebarOption,
+      render: () => h(GoalSidebarOption),
+    });
     return {
       menuVisible: true,
-      editor: "Domain",
+      editorType: "Domain",
       loading: [],
       dialogDomainSave: false,
       dialogDomainRestore: false,
+      domainStore: useDomainStore(),
+      editorState: editor.save(),
     };
   },
+  mounted() {
+    this.loadToDck();
+  },
   methods: {
-    load(i) {
+    load(i: number) {
       this.loading[i] = true;
       setTimeout(() => (this.loading[i] = false), 3000);
+    },
+    loadToDck() {
+      this.domainStore.loadActiveDomain(
+        loadActiveDomain(this.$refs.editor.code),
+        this.$refs.editor.code
+      );
+    },
+    encodeDCK() {
+      encodeDCK();
+    },
+    saveEncoderState() {
+      this.editorState = this.$refs.encoder.editor.save();
+      useNodeStore().loadActiveEditorState(this.editorState);
+    },
+    loadEncoderState() {
+      console.log(this.$refs.encoder);
+      this.$refs.encoder.editor.load(this.editorState);
     },
   },
   components: {
