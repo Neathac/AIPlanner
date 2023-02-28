@@ -1,17 +1,15 @@
 import { defineStore } from "pinia";
-import { IState, INodeState } from "@baklavajs/core/dist/baklavajs-core/types";
-import { STATE_NODE_TYPE } from "../languageSupport/nodeFactory/StateNode";
 import editorFactory from "../languageSupport/nodeFactory/nodeFactory";
 
 export const useNodeStore = defineStore("nodeStore", {
   state: () => ({
-    editorState: editorFactory().save(),
+    //editorState: editorFactory().save(),
   }),
   getters: {
-    getActiveEditorState: (state) => {
+    /*getActiveEditorState: (state) => {
       return state.editorState;
     },
-    getActiveStateNodes: (state) => {
+    /* getActiveStateNodes: (state) => {
       const stateNodes: INodeState[] = [];
       Object.entries(state.editorState.nodes).forEach(([, object]) => {
         if (object.type === STATE_NODE_TYPE) {
@@ -19,11 +17,11 @@ export const useNodeStore = defineStore("nodeStore", {
         }
       });
       return stateNodes;
-    },
+    },*/
   },
   actions: {
-    loadActiveEditorState(state: IState) {
+    /*loadActiveEditorState(state: IState) {
       this.editorInstance = state;
-    },
+    },*/
   },
 });

@@ -1,4 +1,4 @@
-import { Node, NodeOption } from "@baklavajs/core";
+/*import { Node, NodeOption } from "@baklavajs/core";
 import { useDomainStore } from "../../stores/domainStore";
 
 export const ACTION_OPTION = "Actions";
@@ -53,3 +53,4 @@ export class ActionNode extends Node {
     );
   }
 }
+*/

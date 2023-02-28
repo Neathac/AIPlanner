@@ -95,7 +95,6 @@
               color="blue-grey"
               variant="flat"
               prepend-icon="mdi-auto-fix"
-              @click="encodeDCK"
             >
               Encode DCK to Domain
             </v-btn>
@@ -117,7 +116,6 @@
               color="blue-grey"
               prepend-icon="mdi-check-bold"
               variant="flat"
-              @click="saveEncoderState"
             >
               Save ATB-DCK
             </v-btn>
@@ -127,7 +125,6 @@
               color="blue-grey"
               prepend-icon="mdi-check-bold"
               variant="flat"
-              @click="loadEncoderState"
             >
               Load ATB-DCK
             </v-btn>
@@ -136,59 +133,20 @@
       </template>
     </v-app-bar>
     <DomainEditor v-if="editorType == 'Domain'" ref="editor" />
-    <NodeEditor
-      v-if="editorType == 'DCK'"
-      ref="encoder"
-      @encoderChanged="saveEncoderState"
-      @askForState="loadEncoderState"
-    />
+    <NodeEditor v-if="editorType == 'DCK'" ref="encoder" />
   </div>
 </template>
 
 <script lang="ts">
-import {
-  loadActiveDomain,
-  encodeDCK,
-} from "../languageSupport/decomposer/domainLoader";
+import { loadActiveDomain } from "../languageSupport/decomposer/domainLoader";
 import { defineComponent, h } from "vue";
 import DomainEditor from "../components/DomainEditor.vue";
 import NodeEditor from "../components/NodeEditor.vue";
 import { useDomainStore } from "../stores/domainStore";
-import { useNodeStore } from "../stores/nodeStore";
-import { OptionPlugin } from "@baklavajs/plugin-options-vue3";
-import { ViewPlugin } from "@baklavajs/plugin-renderer-vue3";
-import editorFactory from "../languageSupport/nodeFactory/nodeFactory";
-import ActionSidebarOption from "../components/Sidebars/ActionSidebarOption.vue";
-import GoalSidebarOption from "../components/Sidebars/GoalSidebarOption.vue";
-import StateConstraintSidebarOption from "../components/Sidebars/StateConstraintSidebarOption.vue";
-import { Engine } from "@baklavajs/plugin-engine";
 
 export default defineComponent({
   name: "DckView",
   data() {
-    /*
-      This whole stupid useless bit is so that the editor instance can remember its state upon changing the viewed editor. 
-      The save/load methods don't function properly with plugins it would seem.
-    */
-    const editor = editorFactory();
-    const viewPlugin = new ViewPlugin();
-    const engine = new Engine(true);
-    editor.use(viewPlugin);
-    editor.use(new OptionPlugin());
-    editor.use(engine);
-    // NEVER touch this ever. Oficially legacy code as of today
-    viewPlugin.registerOption("ActionSidebarOption", {
-      components: ActionSidebarOption,
-      render: () => h(ActionSidebarOption),
-    });
-    viewPlugin.registerOption("StateConstraintSidebarOption", {
-      components: StateConstraintSidebarOption,
-      render: () => h(StateConstraintSidebarOption),
-    });
-    viewPlugin.registerOption("GoalSidebarOption", {
-      components: GoalSidebarOption,
-      render: () => h(GoalSidebarOption),
-    });
     return {
       menuVisible: true,
       editorType: "Domain",
@@ -196,7 +154,6 @@ export default defineComponent({
       dialogDomainSave: false,
       dialogDomainRestore: false,
       domainStore: useDomainStore(),
-      editorState: editor.save(),
     };
   },
   mounted() {
@@ -213,7 +170,7 @@ export default defineComponent({
         this.$refs.editor.code
       );
     },
-    encodeDCK() {
+    /*encodeDCK() {
       encodeDCK();
     },
     saveEncoderState() {
@@ -222,7 +179,7 @@ export default defineComponent({
     },
     loadEncoderState() {
       this.$refs.encoder.editor.load(this.editorState);
-    },
+    },*/
   },
   components: {
     DomainEditor,

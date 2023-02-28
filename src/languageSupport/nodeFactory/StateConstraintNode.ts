@@ -1,4 +1,4 @@
-import { Node, NodeOption } from "@baklavajs/core";
+/*import { Node, NodeOption } from "@baklavajs/core";
 import { getNodeVariables, getOriginNode } from "../..//helpers/editorHelper";
 import {
   STATE_NAME,
@@ -83,3 +83,4 @@ export class StateConstraintNode extends Node {
     });
   }
 }
+*/

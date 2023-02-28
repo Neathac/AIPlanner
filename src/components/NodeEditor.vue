@@ -1,78 +1,38 @@
 <template>
-  <div style="height: 100vh; width: 100vw">
-    <baklava-editor :plugin="viewPlugin" />
+  <!--
+    By default, the editor completely fills its parent HTML element.
+    If you directly use the editor in the <body> element, make sure to use
+    a wrapper <div> with specified width and height properties:
+          -->
+  <div style="width: 100vw; height: 100vh">
+    <baklava-editor :view-model="baklava" />
   </div>
 </template>
 
 <script lang="ts">
-import { defineComponent, h } from "vue";
-import { OptionPlugin } from "@baklavajs/plugin-options-vue3";
-import { ViewPlugin } from "@baklavajs/plugin-renderer-vue3";
-import editorFactory from "../languageSupport/nodeFactory/nodeFactory";
-import ActionSidebarOption from "./Sidebars/ActionSidebarOption.vue";
-import GoalSidebarOption from "./Sidebars/GoalSidebarOption.vue";
-import StateConstraintSidebarOption from "./Sidebars/StateConstraintSidebarOption.vue";
-import { useNodeStore } from "../stores/nodeStore";
-import { Engine } from "@baklavajs/plugin-engine";
+import { defineComponent } from "vue";
+import { EditorComponent, DependencyEngine, applyResult } from "baklavajs";
+import "@baklavajs/themes/dist/syrup-dark.css";
+import nodeFactory from "../languageSupport/nodeFactory/nodeFactory";
+
 export default defineComponent({
-  data() {
-    const nodeStore = useNodeStore();
-    const editor = editorFactory();
-
-    return {
-      nodeStore,
-      editor,
-      viewPlugin: new ViewPlugin(),
-      engine: new Engine(true),
-    };
+  components: {
+    "baklava-editor": EditorComponent,
   },
-  created() {
-    this.editor.use(this.viewPlugin);
-    this.editor.use(new OptionPlugin());
-    this.editor.use(this.engine);
-    // NEVER touch this ever. Oficially legacy code as of today
-    this.viewPlugin.useStraightConnections = true;
-    this.viewPlugin.registerOption("ActionSidebarOption", {
-      components: ActionSidebarOption,
-      render: () => h(ActionSidebarOption),
-    });
-    this.viewPlugin.registerOption("StateConstraintSidebarOption", {
-      components: StateConstraintSidebarOption,
-      render: () => h(StateConstraintSidebarOption),
-    });
-    this.viewPlugin.registerOption("GoalSidebarOption", {
-      components: GoalSidebarOption,
-      render: () => h(GoalSidebarOption),
+  setup() {
+    const baklava = nodeFactory();
+    const engine = new DependencyEngine(baklava.editor);
+
+    const token = Symbol();
+    engine.events.afterRun.subscribe(token, (result) => {
+      engine.pause();
+      applyResult(result, baklava.editor);
+      engine.resume();
     });
 
-    this.engine.events.calculated.addListener(this, () => {
-      this.$emit("encoderChanged");
-    });
+    engine.start();
 
-    this.editor.events.addNode.addListener(this, () => {
-      this.$emit("encoderChanged");
-    });
-
-    this.editor.events.addConnection.addListener(this, () => {
-      this.$emit("encoderChanged");
-    });
-  },
-  mounted() {
-    this.$emit("askForState");
-  },
-  methods: {
-    load() {
-      this.nodeStore.loadActiveEditorState(this.editor.save());
-    },
+    return { baklava };
   },
 });
 </script>
-
-<style scoped>
-.saveButton {
-  z-index: 1000;
-  position: fixed;
-  left: 20px;
-  top: 10%;
-}
-</style>

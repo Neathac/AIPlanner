@@ -1,4 +1,4 @@
-import { Node } from "@baklavajs/core";
+/*import { Node } from "@baklavajs/core";
 export const STATE_NODE_TYPE = "StateNode";
 export const VARIABLES_OPTION = "Variables";
 export const STATE_OUTPUT_TRANSITION = "Transition to";
@@ -19,3 +19,4 @@ export class StateNode extends Node {
     this.addOption(VARIABLES_OPTION, "InputOption", "?s ?more");
   }
 }
+*/

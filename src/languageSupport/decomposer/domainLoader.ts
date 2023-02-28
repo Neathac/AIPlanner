@@ -9,7 +9,7 @@ import {
   Predicate,
 } from "@functions/parserTypes";
 import { useDomainStore } from "../../stores/domainStore";
-import { gatherActionModifications, gatherPredicateModifications } from "./nodeLoader";
+//import { gatherActionModifications, gatherPredicateModifications } from "./nodeLoader";
 
 const NAME = "NAME";
 const PARAMETERS = "Parameters";
@@ -163,12 +163,12 @@ export const loadActiveDomain = (domainCode: string): PddlDocument => {
 const getNodeValue = (code: string, node: SyntaxNodeRef): string => {
   return code.substring(node.from, node.to);
 };
-
+/*
 export const encodeDCK = (): void => {
   encodePredicates(gatherPredicateModifications());
   encodeActionModifications(gatherActionModifications());
 };
-
+*/
 export const encodePredicates = (predicates: Map<string, Predicate>): void => {
   const domainStore = useDomainStore();
   const tree = getDocumentSyntaxTree(domainStore.rawActiveDomain);
@@ -236,7 +236,8 @@ export const encodeActionModifications = (
         foundActionGroup = false;
         foundAction = actions.find((action) => {
           return (
-            action.actionName === getNodeValue(domainStore.rawActiveDomain, node)
+            action.actionName ===
+            getNodeValue(domainStore.rawActiveDomain, node)
           );
         });
       } else if (

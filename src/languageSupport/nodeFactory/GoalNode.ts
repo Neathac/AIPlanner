@@ -1,4 +1,4 @@
-import { Node, NodeOption } from "@baklavajs/core";
+/*import { Node, NodeOption } from "baklavajs";
 import { useDomainStore } from "../../stores/domainStore";
 
 export const GOAL_NODE_TYPE = "GoalNode";
@@ -48,3 +48,4 @@ export class GoalNode extends Node {
     );
   }
 }
+*/

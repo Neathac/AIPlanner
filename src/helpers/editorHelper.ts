@@ -1,4 +1,4 @@
-import { emptyPredicate, Predicate } from "@functions/parserTypes";
+/*import { emptyPredicate, Predicate } from "@functions/parserTypes";
 import {
   STATE_NAME,
   VARIABLES_OPTION,
@@ -196,3 +196,4 @@ export function exploreOutputDirection(
   } while (frontierNodes.length > 0);
   return result;
 }
+*/
