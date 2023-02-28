@@ -58,7 +58,6 @@ export default defineComponent({
     });
   },
   mounted() {
-    console.log(this.editor);
     this.$emit("askForState");
   },
   methods: {

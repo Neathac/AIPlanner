@@ -221,7 +221,6 @@ export default defineComponent({
       useNodeStore().loadActiveEditorState(this.editorState);
     },
     loadEncoderState() {
-      console.log(this.$refs.encoder);
       this.$refs.encoder.editor.load(this.editorState);
     },
   },
