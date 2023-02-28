@@ -19,6 +19,7 @@ import {
   pddlLanguage,
   getDocumentSyntaxTree,
 } from "../languageSupport/parser/language";
+import { oneDark } from "@codemirror/theme-one-dark";
 import { loadActiveDomain } from "../languageSupport/decomposer/domainLoader";
 import { SyntaxNodeRef } from "@lezer/common";
 import { useDomainStore } from "../stores/domainStore";
@@ -33,7 +34,7 @@ export default defineComponent({
     const domainStore = useDomainStore();
     domainStore.loadRawActiveDomain(store.activeDomain);
     const code = ref(domainStore.rawActiveDomain);
-    const extensions = [pddlLanguage()];
+    const extensions = [pddlLanguage(), oneDark];
 
     // Codemirror EditorView instance ref
     const view = shallowRef();
@@ -72,3 +73,17 @@ export default defineComponent({
   },
 });
 </script>
+
+<style>
+#contents pre {
+  background: transparent;
+}
+
+cm-line::before,
+cm-line::after {
+  box-sizing: border-box;
+  margin: 0;
+  position: absolute;
+  font-weight: normal;
+}
+</style>

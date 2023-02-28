@@ -9,7 +9,10 @@ import {
   Predicate,
 } from "@functions/parserTypes";
 import { useDomainStore } from "../../stores/domainStore";
-import { gatherActionModifications, gatherPredicateModifications } from "./nodeLoader";
+import {
+  gatherActionModifications,
+  gatherPredicateModifications,
+} from "./nodeLoader";
 
 const NAME = "NAME";
 const PARAMETERS = "Parameters";
@@ -236,7 +239,8 @@ export const encodeActionModifications = (
         foundActionGroup = false;
         foundAction = actions.find((action) => {
           return (
-            action.actionName === getNodeValue(domainStore.rawActiveDomain, node)
+            action.actionName ===
+            getNodeValue(domainStore.rawActiveDomain, node)
           );
         });
       } else if (
