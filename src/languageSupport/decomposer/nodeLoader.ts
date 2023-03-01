@@ -116,13 +116,14 @@ export const gatherActionModifications = (): ActionModifications[] => {
   transitionGroups.forEach((valueStates, keyAction) => {
     modifications.push(populateActionModification(keyAction, valueStates));
   });
+
   return modifications;
 };
 
 export const gatherPredicateModifications = (): Map<string, Predicate> => {
   const nodeStore = useNodeStore();
   const domainStore = useDomainStore();
-  const editorState = nodeStore.getEditorState;
+  const editorState = nodeStore.getActiveEditorState;
   const states = getNodeTypes(editorState.nodes, STATE_NODE_TYPE);
   const goals = getNodeTypes(editorState.nodes, GOAL_NODE_TYPE);
   const result = new Map<string, Predicate>();
@@ -156,7 +157,7 @@ export const gatherPredicateModifications = (): Map<string, Predicate> => {
 
 export const gatherTransitionGroups = (): Map<INodeState, INodeState[]> => {
   const nodeStore = useNodeStore();
-  const editorState = nodeStore.getEditorState;
+  const editorState = nodeStore.getActiveEditorState;
   const actions = getNodeTypes(editorState.nodes, ACTION_NODE_TYPE);
   const nodeGroups = new Map<INodeState, INodeState[]>();
   // Map Action nodes to all associated nodes
@@ -175,7 +176,7 @@ export const getEmptyStateTransition = (node: INodeState): INodeState[] => {
   const nodeStore = useNodeStore();
   const inputDirection: INodeState[] = [];
   let inputStates = getNodeTypes(
-    getNodeInputs(node, nodeStore.getEditorState),
+    getNodeInputs(node, nodeStore.getActiveEditorState),
     STATE_NODE_TYPE
   );
   do {
@@ -183,7 +184,7 @@ export const getEmptyStateTransition = (node: INodeState): INodeState[] => {
     inputStates.forEach((inputNode) =>
       tempStates.concat(
         getNodeTypes(
-          getNodeInputs(inputNode, nodeStore.getEditorState),
+          getNodeInputs(inputNode, nodeStore.getActiveEditorState),
           STATE_NODE_TYPE
         )
       )
@@ -193,7 +194,7 @@ export const getEmptyStateTransition = (node: INodeState): INodeState[] => {
   } while (inputStates.length > 0);
   const outputDirection: INodeState[] = [];
   let outputStates = getNodeTypes(
-    getNodeOutputs(node, nodeStore.getEditorState),
+    getNodeOutputs(node, nodeStore.getActiveEditorState),
     STATE_NODE_TYPE
   );
   do {
@@ -201,7 +202,7 @@ export const getEmptyStateTransition = (node: INodeState): INodeState[] => {
     outputStates.forEach((outputNode) =>
       tempStates.concat(
         getNodeTypes(
-          getNodeInputs(outputNode, nodeStore.getEditorState),
+          getNodeInputs(outputNode, nodeStore.getActiveEditorState),
           STATE_NODE_TYPE
         )
       )

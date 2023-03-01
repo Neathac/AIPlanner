@@ -1,18 +1,22 @@
 <template>
-  <div>
-    <h3>Predicates</h3>
+  <v-container style="height: 80vh; overflow: auto">
+    <h2>Predicates</h2>
     <goal-interface
       v-for="option in predicateOptions"
       :key="option[0]"
       :node="option[1]"
       class="mt-3"
       @remove="removePredicateOption(option[0])"
-      @change="changeOption(option[0], $event)"
+      @changeValue="changeOption(option[0], $event)"
     />
-    <button @click="addPredicateOption()" class="dark-button mt-3 w-100">
+    <v-btn
+      @click="addPredicateOption()"
+      class="dark-button mt-3 w-100"
+      variant="tonal"
+    >
       Add Predicate
-    </button>
-  </div>
+    </v-btn>
+  </v-container>
 </template>
 
 <script lang="ts">

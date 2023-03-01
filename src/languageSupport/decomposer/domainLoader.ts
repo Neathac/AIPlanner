@@ -9,6 +9,10 @@ import {
   Predicate,
 } from "@functions/parserTypes";
 import { useDomainStore } from "../../stores/domainStore";
+import {
+  gatherActionModifications,
+  gatherPredicateModifications,
+} from "./nodeLoader";
 
 const NAME = "NAME";
 const PARAMETERS = "Parameters";
@@ -26,7 +30,7 @@ const ACTION_PARAMETERS_SUBGROUP = "ActionParametersSubgroup";
 const ACTION_PRECONDITION_SUBGROUP = "ActionPreconditionSubgroup";
 const ACTION_EFFECT_SUBGROUP = "ActionEffectSubgroup";
 
-export const loadDomain = (domainCode: string): PddlDocument => {
+export const loadActiveDomain = (domainCode: string): PddlDocument => {
   const tree = getDocumentSyntaxTree(domainCode);
   const domain: PddlDocument = emptyPddlDocument();
   let currentGroup: string;
@@ -163,10 +167,15 @@ const getNodeValue = (code: string, node: SyntaxNodeRef): string => {
   return code.substring(node.from, node.to);
 };
 
+export const encodeDCK = (): void => {
+  encodePredicates(gatherPredicateModifications());
+  encodeActionModifications(gatherActionModifications());
+};
+
 export const encodePredicates = (predicates: Map<string, Predicate>): void => {
   const domainStore = useDomainStore();
-  const tree = getDocumentSyntaxTree(domainStore.rawDomain);
-  let domainText = domainStore.rawDomain;
+  const tree = getDocumentSyntaxTree(domainStore.rawActiveDomain);
+  let domainText = domainStore.rawActiveDomain;
   let addedPredicates = "";
   predicates.forEach((predicate) => {
     addedPredicates = addedPredicates + predicate.rawPredicate + "\n";
@@ -182,7 +191,7 @@ export const encodePredicates = (predicates: Map<string, Predicate>): void => {
           domainText.slice(0, node.from) +
           addedPredicates +
           domainText.slice(node.from, domainText.length);
-        domainStore.loadDomain(loadDomain(domainText), domainText);
+        domainStore.loadActiveDomain(loadActiveDomain(domainText), domainText);
         return;
       }
     },
@@ -213,7 +222,7 @@ export const encodeActionModifications = (
   actions: ActionModifications[]
 ): void => {
   const domainStore = useDomainStore();
-  const tree = getDocumentSyntaxTree(domainStore.rawDomain);
+  const tree = getDocumentSyntaxTree(domainStore.rawActiveDomain);
   let foundActionGroup = false;
   let foundAction: undefined | ActionModifications = undefined;
   const actionRedefinitions: Array<{
@@ -230,14 +239,15 @@ export const encodeActionModifications = (
         foundActionGroup = false;
         foundAction = actions.find((action) => {
           return (
-            action.actionName === getNodeValue(domainStore.rawDomain, node)
+            action.actionName ===
+            getNodeValue(domainStore.rawActiveDomain, node)
           );
         });
       } else if (
         node.type.name === ACTION_PRECONDITION_SUBGROUP &&
         foundAction
       ) {
-        const preconditions = getNodeValue(domainStore.rawDomain, node);
+        const preconditions = getNodeValue(domainStore.rawActiveDomain, node);
 
         actionRedefinitions.push({
           original: preconditions,
@@ -250,7 +260,7 @@ export const encodeActionModifications = (
           foundAction = undefined;
         }
       } else if (node.type.name === ACTION_EFFECT_SUBGROUP && foundAction) {
-        const effects = getNodeValue(domainStore.rawDomain, node);
+        const effects = getNodeValue(domainStore.rawActiveDomain, node);
 
         actionRedefinitions.push({
           original: effects,
@@ -267,9 +277,9 @@ export const redefineActions = (
   redefinitions: Array<{ original: string; redefinition: string }>
 ): void => {
   const domainStore = useDomainStore();
-  let domain = domainStore.rawDomain;
+  let domain = domainStore.rawActiveDomain;
   redefinitions.forEach((redefinition) => {
     domain = domain.replace(redefinition.original, redefinition.redefinition);
   });
-  domainStore.loadDomain(loadDomain(domain), domain);
+  domainStore.loadActiveDomain(loadActiveDomain(domain), domain);
 };

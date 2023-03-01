@@ -1,24 +1,52 @@
 <template>
-  <div v-if="!editMode" class="flex-grow-1">{{ nodeOption }}</div>
-  <v-text-field
-    v-else
-    class="p-inputtext-sm"
-    v-model="tempConstraint"
-  ></v-text-field>
-  <div class="d-flex align-items-center">
-    <button class="dark-button ml-2 pl-2 pr-2" @click="toggle">
-      {{ editMode ? "Save" : "Edit" }}
-    </button>
+  <v-container
+    style="padding: 0; padding-top: 0px; margin-top: 0; margin-bottom: 8px"
+    class="mt-0"
+  >
+    <v-row no-gutters>
+      <v-label v-if="!editMode" class="flex-grow-1">{{ nodeOption }}</v-label>
+      <v-text-field
+        v-else
+        class="p-inputtext-sm"
+        v-model="tempConstraint"
+      ></v-text-field>
+    </v-row>
+    <v-row no-gutters>
+      <v-btn
+        class="dark-button ml-2 pl-2 pr-2"
+        @click="toggle"
+        variant="tonal"
+        size="small"
+      >
+        {{ editMode ? "Save" : "Edit" }}
+      </v-btn>
 
-    <button class="dark-button ml-2 pl-2 pr-2" @click="$emit('remove')">
-      Remove
-    </button>
-    <br />
-    <v-checkbox name="negation" value="Negate" v-model="negate" />
-    <label for="negate">Negate</label>
-    <v-checkbox name="effect" value="Effect" v-model="effect" />
-    <label for="effect">Negate in effect</label>
-  </div>
+      <v-btn
+        variant="tonal"
+        size="small"
+        class="dark-button ml-2 pl-2 pr-2"
+        @click="$emit('remove')"
+      >
+        Remove
+      </v-btn>
+    </v-row>
+    <v-row no-gutters>
+      <v-checkbox
+        name="negation"
+        value="Negate"
+        v-model="negate"
+        label="Negate"
+        v-if="editMode"
+      />
+      <v-checkbox
+        name="effect"
+        value="Effect"
+        v-model="effect"
+        label="Negate in effect"
+        v-if="editMode"
+      />
+    </v-row>
+  </v-container>
 </template>
 
 <script lang="ts">

@@ -34,7 +34,7 @@ export class StateConstraintNode extends Node {
     const origin = getOriginNode(
       this.getInterface(INPUT_STATE),
       STATE_OUTPUT_TRANSITION,
-      useNodeStore().getEditorState
+      useNodeStore().getActiveEditorState
     );
     const result = emptyStateVals();
     if (origin && origin.type === STATE_NODE_TYPE) {
