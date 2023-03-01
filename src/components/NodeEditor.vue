@@ -68,9 +68,14 @@ export default defineComponent({
 });
 </script>
 
-<style scoped>
-.node-editor:nth-child(1) {
-  position: absolute !important;
-  background-color: chartreuse;
+<style>
+.__content {
+  position: static !important;
+}
+.__outputs {
+  position: static !important;
+}
+.__inputs {
+  position: static !important;
 }
 </style>
