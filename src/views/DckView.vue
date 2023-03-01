@@ -1,5 +1,5 @@
 <template>
-  <div class="dck">
+  <div class="dck" style="position: relative">
     <v-app-bar>
       <template v-slot:prepend>
         <v-btn-toggle

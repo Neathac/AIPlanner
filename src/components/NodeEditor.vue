@@ -69,10 +69,8 @@ export default defineComponent({
 </script>
 
 <style scoped>
-.saveButton {
-  z-index: 1000;
-  position: fixed;
-  left: 20px;
-  top: 10%;
+.node-editor:nth-child(1) {
+  position: absolute !important;
+  background-color: chartreuse;
 }
 </style>

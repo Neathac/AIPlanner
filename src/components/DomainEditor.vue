@@ -19,7 +19,7 @@ import {
   pddlLanguage,
   getDocumentSyntaxTree,
 } from "../languageSupport/parser/language";
-import { oneDark } from "@codemirror/theme-one-dark";
+import { oneDark } from "../languageSupport/parser/theme";
 import { loadActiveDomain } from "../languageSupport/decomposer/domainLoader";
 import { SyntaxNodeRef } from "@lezer/common";
 import { useDomainStore } from "../stores/domainStore";
@@ -73,17 +73,3 @@ export default defineComponent({
   },
 });
 </script>
-
-<style>
-#contents pre {
-  background: transparent;
-}
-
-cm-line::before,
-cm-line::after {
-  box-sizing: border-box;
-  margin: 0;
-  position: absolute;
-  font-weight: normal;
-}
-</style>
