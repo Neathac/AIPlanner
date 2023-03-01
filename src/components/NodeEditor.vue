@@ -1,6 +1,6 @@
 <template>
   <div style="height: 100vh">
-    <baklava-editor :plugin="viewPlugin" />
+    <baklava-editor :plugin="viewPlugin" @click="changed" />
   </div>
 </template>
 
@@ -64,6 +64,9 @@ export default defineComponent({
     load() {
       this.nodeStore.loadActiveEditorState(this.editor.save());
     },
+    changed() {
+      this.$emit("encoderChanged");
+    }
   },
 });
 </script>

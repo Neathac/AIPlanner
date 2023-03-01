@@ -23,7 +23,7 @@ export const useNodeStore = defineStore("nodeStore", {
   },
   actions: {
     loadActiveEditorState(state: IState) {
-      this.editorInstance = state;
+      this.editorState = state;
     },
   },
 });

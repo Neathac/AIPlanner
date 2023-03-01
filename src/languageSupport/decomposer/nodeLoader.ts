@@ -116,6 +116,7 @@ export const gatherActionModifications = (): ActionModifications[] => {
   transitionGroups.forEach((valueStates, keyAction) => {
     modifications.push(populateActionModification(keyAction, valueStates));
   });
+
   return modifications;
 };
 

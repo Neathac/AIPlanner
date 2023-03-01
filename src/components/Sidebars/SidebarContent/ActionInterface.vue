@@ -1,14 +1,17 @@
 <template>
-  <v-container>
+  <v-container
+    style="padding: 0; padding-top: 0px; margin-top: 0; margin-bottom: 8px"
+    class="mt-0"
+  >
     <v-row no-gutters>
       <v-label v-if="!editMode" class="flex-grow-1">{{ node.value }}</v-label>
-      <v-select
+      <v-autocomplete
         v-else
         class="p-inputtext-sm"
         size="small"
         v-model="tempPredicate"
         :items="predicateValues"
-      ></v-select>
+      ></v-autocomplete>
     </v-row>
     <v-row no-gutters>
       <v-btn
@@ -78,10 +81,17 @@ export default defineComponent({
         this.editMode = false;
         if (this.$data.negate) {
           this.$data.tempPredicate = negatePredicate(this.$data.tempPredicate);
+          this.$data.negate = false;
         }
-        this.$emit("change", this.tempPredicate);
+        this.$emit("changeValue", this.tempPredicate);
       }
     },
   },
 });
 </script>
+
+<style scoped>
+.mt-0.mt-3 {
+  margin-top: 0 !important;
+}
+</style>

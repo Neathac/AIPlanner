@@ -162,6 +162,10 @@ import ActionSidebarOption from "../components/Sidebars/ActionSidebarOption.vue"
 import GoalSidebarOption from "../components/Sidebars/GoalSidebarOption.vue";
 import StateConstraintSidebarOption from "../components/Sidebars/StateConstraintSidebarOption.vue";
 import { Engine } from "@baklavajs/plugin-engine";
+import { deepCopy } from "@firebase/util";
+import { ACTION_NODE_TYPE } from "../languageSupport/nodeFactory/ActionNode";
+import { STATE_CONSTRAINT_NODE_TYPE } from "../languageSupport/nodeFactory/StateConstraintNode";
+import { GOAL_NODE_TYPE } from "../languageSupport/nodeFactory/GoalNode";
 
 export default defineComponent({
   name: "DckView",
@@ -214,14 +218,40 @@ export default defineComponent({
       );
     },
     encodeDCK() {
+      // TODO: Transitioning to a state via an effect doesn't work
       encodeDCK();
+      this.$refs.editor.code = this.domainStore.rawActiveDomain;
     },
     saveEncoderState() {
       this.editorState = this.$refs.encoder.editor.save();
       useNodeStore().loadActiveEditorState(this.editorState);
     },
     loadEncoderState() {
+      // We need to manually fill in the options, as load doesn't consider them
+      const stateCopy = deepCopy(this.editorState);
       this.$refs.encoder.editor.load(this.editorState);
+      for (const node of stateCopy.nodes) {
+        const nodeRef = this.$refs.encoder.editor.nodes.find((val) => {
+          return val.id === node.id;
+        });
+        if (nodeRef) {
+          node.options.forEach((option) => {
+            console.log(option);
+            if (!nodeRef.options.has(option[0])) {
+              if (node.type === ACTION_NODE_TYPE) {
+                nodeRef.addNewPredicate();
+                nodeRef.setOptionValue(option[0], option[1]);
+              } else if (node.type === STATE_CONSTRAINT_NODE_TYPE) {
+                nodeRef.addConstraintOption();
+                nodeRef.setOptionValue(option[0], option[1]);
+              } else if (node.type === GOAL_NODE_TYPE) {
+                nodeRef.addNewPredicate();
+                nodeRef.setOptionValue(option[0], option[1]);
+              }
+            }
+          });
+        }
+      }
     },
   },
   components: {

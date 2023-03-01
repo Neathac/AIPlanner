@@ -1,21 +1,25 @@
 <template>
   <v-container style="height: 80vh; overflow: auto">
-    <h3>Parameters of node</h3>
-    <v-label>{{ currentParameters }}</v-label>
-    <h3>Predicates</h3>
+    <h2>Parameters of node</h2>
+    <v-label style="margin-bottom: 10px;">{{ currentParameters }}</v-label>
+    <h2>Predicates</h2>
     <action-interface
       v-for="option in predicateOptions"
       :key="option[0]"
       :node="option[1]"
       class="mt-3"
       @remove="removePredicateOption(option[0])"
-      @change="changeOption(option[0], $event)"
+      @changeValue="changeOption(option[0], $event)"
+      @change="emitChange"
     />
-    <v-btn @click="addPredicateOption()" class="dark-button ml-2 w-100">
+    <v-btn
+      @click="addPredicateOption()"
+      class="dark-button ml-2 w-100"
+      variant="tonal"
+    >
       Add Predicate
     </v-btn></v-container
   >
-  <v-spacer></v-spacer>
 </template>
 
 <script lang="ts">
@@ -80,6 +84,9 @@ export default defineComponent({
     changeOption(optionName: string, newValue: string) {
       this.$props.node.setOptionValue(optionName, newValue);
     },
+    emitChange() {
+      this.$emit("change");
+    }
   },
 });
 </script>
