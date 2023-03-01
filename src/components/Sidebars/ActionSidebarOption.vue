@@ -1,7 +1,7 @@
 <template>
-  <div>
+  <v-container style="height: 80vh; overflow: auto">
     <h3>Parameters of node</h3>
-    <label>{{ currentParameters }}</label>
+    <v-label>{{ currentParameters }}</v-label>
     <h3>Predicates</h3>
     <action-interface
       v-for="option in predicateOptions"
@@ -11,10 +11,11 @@
       @remove="removePredicateOption(option[0])"
       @change="changeOption(option[0], $event)"
     />
-    <button @click="addPredicateOption()" class="dark-button mt-3 w-100">
+    <v-btn @click="addPredicateOption()" class="dark-button ml-2 w-100">
       Add Predicate
-    </button>
-  </div>
+    </v-btn></v-container
+  >
+  <v-spacer></v-spacer>
 </template>
 
 <script lang="ts">

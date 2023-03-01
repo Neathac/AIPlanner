@@ -1,23 +1,43 @@
 <template>
-  <div v-if="!editMode" class="flex-grow-1">{{ node.value }}</div>
-  <v-select
-    v-else
-    class="p-inputtext-sm"
-    v-model="tempPredicate"
-    :items="predicateValues"
-  ></v-select>
-  <div class="d-flex align-items-center">
-    <button class="dark-button ml-2 pl-2 pr-2" @click="toggle">
-      {{ editMode ? "Save" : "Edit" }}
-    </button>
+  <v-container>
+    <v-row no-gutters>
+      <v-label v-if="!editMode" class="flex-grow-1">{{ node.value }}</v-label>
+      <v-select
+        v-else
+        class="p-inputtext-sm"
+        size="small"
+        v-model="tempPredicate"
+        :items="predicateValues"
+      ></v-select>
+    </v-row>
+    <v-row no-gutters>
+      <v-btn
+        class="dark-button ml-2 pl-2 pr-2"
+        @click="toggle"
+        variant="tonal"
+        size="small"
+      >
+        {{ editMode ? "Save" : "Edit" }}
+      </v-btn>
 
-    <button class="dark-button ml-2 pl-2 pr-2" @click="$emit('remove')">
-      Remove
-    </button>
-    <br />
-    <PrimeCheckbox name="negation" value="Negate" v-model="negate" />
-    <label for="negate">Negate</label>
-  </div>
+      <v-btn
+        variant="tonal"
+        size="small"
+        class="dark-button ml-2 pl-2 pr-2"
+        @click="$emit('remove')"
+      >
+        Remove
+      </v-btn>
+      <v-checkbox
+        name="negation"
+        value="Negate"
+        v-model="negate"
+        label="Negate"
+        density="compact"
+        v-if="editMode"
+      />
+    </v-row>
+  </v-container>
 </template>
 
 <script lang="ts">
