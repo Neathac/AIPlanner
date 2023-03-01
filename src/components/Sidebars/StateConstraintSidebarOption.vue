@@ -1,9 +1,11 @@
 <template>
-  <div>
+  <v-container style="height: 80vh; overflow: auto">
     <h3>State constraints</h3>
-    <label>Please connect node to a State node before adding constraints</label>
+    <v-label
+      >Please connect node to a State node before adding constraints</v-label
+    >
     <br />
-    <label>Replace variable names with variables of connected action</label>
+    <v-label>Replace variable names with variables of connected action</v-label>
     <br />
     <state-constraint-interface
       v-for="option in stateOptions"
@@ -13,10 +15,14 @@
       @remove="removeStateOption(option[0])"
       @change="changeOption(option[0], $event)"
     />
-    <button @click="addConstraintOption()" class="dark-button mt-3 w-100">
+    <v-btn
+      @click="addConstraintOption()"
+      class="dark-button mt-3 w-100"
+      variant="tonal"
+    >
       Add State constraint
-    </button>
-  </div>
+    </v-btn>
+  </v-container>
 </template>
 
 <script lang="ts">
