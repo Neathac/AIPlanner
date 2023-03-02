@@ -1,13 +1,10 @@
 import * as functions from "firebase-functions";
-import * as cors from "cors";
 import {toUser} from "./Entities";
 import * as Dao from "./Dao";
 import {UserRecord} from "firebase-admin/lib/auth/user-record";
 
 // // Start writing Firebase Functions
 // // https://firebase.google.com/docs/functions/typescript
-
-const corsHandler = cors({origin: true, preflightContinue: false});
 
 const theFunctions = ()=>{
   if (process.env.FUNCTIONS_EMULATOR) return functions;
