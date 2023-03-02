@@ -21,4 +21,7 @@ module.exports = {
     "/lib/**/*", // Ignore built files.
     "/*.js",
   ],
+  rules: {
+    "max-len": 0,
+  },
 };

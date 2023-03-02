@@ -1,7 +1,7 @@
 <template>
   <v-container style="height: 80vh; overflow: auto">
     <h2>Parameters of node</h2>
-    <v-label style="margin-bottom: 10px;">{{ currentParameters }}</v-label>
+    <v-label style="margin-bottom: 10px">{{ currentParameters }}</v-label>
     <h2>Predicates</h2>
     <action-interface
       v-for="option in predicateOptions"
@@ -86,7 +86,7 @@ export default defineComponent({
     },
     emitChange() {
       this.$emit("change");
-    }
+    },
   },
 });
 </script>
