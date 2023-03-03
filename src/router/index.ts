@@ -34,7 +34,6 @@ const router = createRouter({
 
 // Guard certain routes
 router.beforeEach(async (to, from, next) => {
-  console.log("BEFORE EACH");
   const auth = getAuth();
   if (protectedRoutes.includes(to.path)) {
     if (!auth.currentUser) {
