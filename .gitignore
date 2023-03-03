@@ -127,3 +127,6 @@ dist
 
 # Dev environment 
 .vscode
+
+# Build files
+*.js
