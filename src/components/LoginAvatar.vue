@@ -29,10 +29,9 @@ export default defineComponent({
     };
   },
   methods: {
-    signin() {
-      signin().then(() => {
-        this.avatar = store.me.pic ?? this.avatar;
-      });
+    async signin() {
+      await signin();
+      this.avatar = store.me.pic ?? this.avatar;
     },
   },
 });
