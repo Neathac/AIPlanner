@@ -66,7 +66,7 @@ export default defineComponent({
     },
     changed() {
       this.$emit("encoderChanged");
-    }
+    },
   },
 });
 </script>

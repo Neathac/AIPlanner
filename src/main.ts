@@ -17,6 +17,7 @@ import App from "./App.vue";
 import router from "./router";
 
 import "./assets/main.css";
+import { initClient } from "./client";
 
 const vuetify = createVuetify({
   components,
@@ -37,6 +38,7 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 initEmulators();
+initClient(app);
 
 createApp(App)
   .use(router)

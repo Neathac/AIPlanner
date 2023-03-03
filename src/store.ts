@@ -1,7 +1,8 @@
+import { NOBODY } from "@functions/systemTypes";
 import { reactive } from "vue";
 
 export const store = reactive({
-  me: { name: "test" },
+  me: NOBODY,
   activeDomain: `(define
     (domain construction)
     (:extends building)

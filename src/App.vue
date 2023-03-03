@@ -1,12 +1,14 @@
 <script lang="ts">
 import { defineComponent } from "vue";
 import FileStructure from "./components/FileStructure.vue";
+import LoginAvatar from "./components/LoginAvatar.vue";
 import { ABOUT_ROUTE, HOME_ROUTE, DCK_ROUTE } from "./helpers/consts";
 
 export default defineComponent({
   name: "App",
   components: {
     FileStructure,
+    LoginAvatar,
   },
   data() {
     return {
@@ -22,18 +24,9 @@ export default defineComponent({
 </script>
 
 <template>
-  <v-app
-    style="
-       {
-        margin: none;
-      }
-    "
-  >
+  <v-app>
     <v-navigation-drawer theme="dark" rail permanent style="width: 60px">
-      <v-list-item
-        nav
-        prepend-avatar="https://randomuser.me/api/portraits/women/75.jpg"
-      ></v-list-item>
+      <LoginAvatar />
 
       <v-divider></v-divider>
 
