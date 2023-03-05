@@ -51,15 +51,15 @@ export function toUserEntityPatch(
  * @return {UserEntity} - Database entity corresponding to User
  */
 export function toUserEntity(
-  user: User): UserEntity {
-return {
-  id: user.id,
-  email: user.email,
-  name: user.name,
-  pic: user.pic,
-  docNum: user.docNum,
-  domainIds: user.domainIds,
-};
+    user: User): UserEntity {
+  return {
+    id: user.id,
+    email: user.email,
+    name: user.name,
+    pic: user.pic,
+    docNum: user.docNum,
+    domainIds: user.domainIds,
+  };
 }
 
 /**
@@ -110,14 +110,14 @@ export function toDomainEntityPatch(
  * @return {DomainEntity} - Database entity corresponding to Domain
  */
 export function toDomainEntity(
-  domain: Domain): DomainEntity {
-return {
-  id: domain.id,
-  name: domain.name,
-  rawDomain: domain.rawDomain,
-  dckState: domain.dckState,
-  associatedProblems: domain.associatedProblems,
-};
+    domain: Domain): DomainEntity {
+  return {
+    id: domain.id,
+    name: domain.name,
+    rawDomain: domain.rawDomain,
+    dckState: domain.dckState,
+    associatedProblems: domain.associatedProblems,
+  };
 }
 
 /**
@@ -165,11 +165,11 @@ export function toProblemEntityPatch(
  * @return {ProblemEntity} - Database entity corresponding to Problem
  */
 export function toProblemEntity(
-  problem: Problem): ProblemEntity {
-return {
-  id: problem.id,
-  name: problem.name,
-  parentDomain: problem.parentDomain,
-  rawProblem: problem.rawProblem,
-};
+    problem: Problem): ProblemEntity {
+  return {
+    id: problem.id,
+    name: problem.name,
+    parentDomain: problem.parentDomain,
+    rawProblem: problem.rawProblem,
+  };
 }

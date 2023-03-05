@@ -104,6 +104,7 @@ export async function storeDomain(u: DomainEntity): Promise<void> {
 
 /**
  * Fetches all domain entries in the database from domains collection
+ * @param {string} userId - Id of user with domains
  * @param {number} limit - Limit of entries to fetch
  * @return {Promise<DomainEntity[]>} - Found entries
  */
@@ -164,6 +165,7 @@ export async function storeProblem(u: ProblemEntity): Promise<void> {
 
 /**
  * Fetches all Problem entries in the database from problems collection
+ * @param {string} problemId - Id of domain of the problems
  * @param {number} limit - Limit of entries to fetch
  * @return {Promise<ProblemEntity[]>} - Found entries
  */
