@@ -165,13 +165,13 @@ export async function storeProblem(u: ProblemEntity): Promise<void> {
 
 /**
  * Fetches all Problem entries in the database from problems collection
- * @param {string} problemId - Id of domain of the problems
+ * @param {string} domainId - Id of domain of the problems
  * @param {number} limit - Limit of entries to fetch
  * @return {Promise<ProblemEntity[]>} - Found entries
  */
-export async function getAllProblemsForDomain(problemId: string, limit?:number): Promise<ProblemEntity[]> {
+export async function getAllProblemsForDomain(domainId: string, limit?:number): Promise<ProblemEntity[]> {
   let query:CollectionReference<ProblemEntity>|Query<ProblemEntity> =
-     firestore.collection(DOMAINS_COLLECTION).where("parentDomain", "==", problemId)
+     firestore.collection(DOMAINS_COLLECTION).where("parentDomain", "==", domainId)
          .withConverter(problemEntityConverter);
 
   if (limit!=undefined) {
