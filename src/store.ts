@@ -1,4 +1,4 @@
-import { NOBODY } from "@functions/systemTypes";
+import { Domain, NOBODY, Problem } from "@functions/systemTypes";
 import { reactive } from "vue";
 
 export const store = reactive({

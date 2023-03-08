@@ -32,7 +32,6 @@ export const onUserCreation = theFunctions()
 export const getSelf = theFunctions()
     .https.onCall(async (_data:void, context: functions.https.CallableContext) => {
       if (!context.auth) {
-        // eslint-disable-next-line max-len
         throw new functions.https.HttpsError("unauthenticated", "you need to authenticate");
       }
       const auth = context.auth;
@@ -60,7 +59,6 @@ export const updateUser = theFunctions()
 
 export const createDomain = theFunctions().https.onCall(async (data:Domain, context: functions.https.CallableContext) => {
   if (!context.auth) {
-    // eslint-disable-next-line max-len
     throw new functions.https.HttpsError("unauthenticated", "you need to authenticate");
   }
 
@@ -81,7 +79,6 @@ export const createDomain = theFunctions().https.onCall(async (data:Domain, cont
 export const getDomain = theFunctions()
     .https.onCall(async (data:string, context: functions.https.CallableContext) => {
       if (!context.auth) {
-        // eslint-disable-next-line max-len
         throw new functions.https.HttpsError("unauthenticated", "you need to authenticate");
       }
       return Dao.getUser(context.auth.uid).then((user) => {
@@ -93,7 +90,6 @@ export const getDomain = theFunctions()
 export const getDomainProblems = theFunctions()
     .https.onCall(async (data: string, context: functions.https.CallableContext) => {
       if (!context.auth) {
-        // eslint-disable-next-line max-len
         throw new functions.https.HttpsError("unauthenticated", "you need to authenticate");
       }
       return Dao.getUser(context.auth.uid).then((user) => {
@@ -106,7 +102,6 @@ export const getDomainProblems = theFunctions()
 export const getMyDomains = theFunctions()
     .https.onCall(async (_data: void, context: functions.https.CallableContext) => {
       if (!context.auth) {
-        // eslint-disable-next-line max-len
         throw new functions.https.HttpsError("unauthenticated", "you need to authenticate");
       }
       return Dao.getAllDomainsForUser(context.auth.uid).then(domainEntities => domainEntities.map(entity => toDomain(entity)));
@@ -115,7 +110,6 @@ export const getMyDomains = theFunctions()
 export const updateDomain = theFunctions()
     .https.onCall(async (data: Partial<Domain>, context: functions.https.CallableContext) => {
       if (!context.auth) {
-        // eslint-disable-next-line max-len
         throw new functions.https.HttpsError("unauthenticated", "you need to authenticate");
       }
       return Dao.getUser(context.auth.uid).then((user) => {
@@ -127,12 +121,10 @@ export const updateDomain = theFunctions()
 
 export const createProblem = theFunctions().https.onCall(async (_data:Problem, context: functions.https.CallableContext) => {
   if (!context.auth) {
-    // eslint-disable-next-line max-len
     throw new functions.https.HttpsError("unauthenticated", "you need to authenticate");
   }
 
   if (!_data.parentDomain) {
-    // eslint-disable-next-line max-len
     throw new functions.https.HttpsError("invalid-argument", "Problem needs to be associated with a domain");
   }
 
@@ -146,10 +138,12 @@ export const createProblem = theFunctions().https.onCall(async (_data:Problem, c
       _data.id = uuid;
       domain.associatedProblems.push(uuid);
       user.docNum += 1;
-      Dao.updateDomain(domain.id, domain);
-      Dao.updateUser(user.id, user);
-      return Dao.storeProblem(toProblemEntity(_data)).then(() => {
-        return Dao.getProblem(uuid).then(toProblem);
+      return Dao.updateDomain(domain.id, domain).then(() => {
+        return Dao.updateUser(user.id, user).then(() => {
+          return Dao.storeProblem(toProblemEntity(_data)).then(() => {
+            return Dao.getProblem(uuid).then(toProblem);
+          });
+        });
       });
     });
   });
@@ -158,7 +152,6 @@ export const createProblem = theFunctions().https.onCall(async (_data:Problem, c
 export const getProblem = theFunctions()
     .https.onCall(async (data:string, context: functions.https.CallableContext) => {
       if (!context.auth) {
-        // eslint-disable-next-line max-len
         throw new functions.https.HttpsError("unauthenticated", "you need to authenticate");
       }
       return Dao.getUser(context.auth.uid).then((user) => {
@@ -172,7 +165,6 @@ export const getProblem = theFunctions()
 export const updateProblem = theFunctions()
     .https.onCall(async (data: Partial<Problem>, context: functions.https.CallableContext) => {
       if (!context.auth) {
-        // eslint-disable-next-line max-len
         throw new functions.https.HttpsError("unauthenticated", "you need to authenticate");
       }
       return Dao.getUser(context.auth.uid).then((user) => {
