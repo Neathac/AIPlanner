@@ -119,6 +119,27 @@ export const updateDomain = theFunctions()
       });
     });
 
+export const deleteDomain = theFunctions()
+    .https.onCall(async (domainId: string, context: functions.https.CallableContext) => {
+      if (!context.auth) {
+        throw new functions.https.HttpsError("unauthenticated", "you need to authenticate");
+      }
+      return Dao.getUser(context.auth.uid).then(async (user) => {
+        return Dao.getDomain(domainId).then(async (domain) => {
+          if (!domain || !user) throw new functions.https.HttpsError("not-found", "Could not find user or domain entity");
+          if (!user.domainIds.includes(domain.id)) throw new functions.https.HttpsError("invalid-argument", "Domain not owned by the user");
+          domain.associatedProblems.forEach((problemId) => {
+            Dao.deleteProblem(problemId);
+          });
+          user.domainIds.splice(user.domainIds.indexOf(domainId));
+          return Dao.updateUser(user.id, user).then((_res) => {
+            return Dao.deleteDomain(domainId);
+          });
+        });
+      });
+    });
+
+
 export const createProblem = theFunctions().https.onCall(async (_data:Problem, context: functions.https.CallableContext) => {
   if (!context.auth) {
     throw new functions.https.HttpsError("unauthenticated", "you need to authenticate");
@@ -174,5 +195,23 @@ export const updateProblem = theFunctions()
         });
 
         return Dao.updateProblem(data.id, data).then((toProblem));
+      });
+    });
+
+export const deleteProblem = theFunctions()
+    .https.onCall(async (data: Problem, context: functions.https.CallableContext) => {
+      if (!context.auth) {
+        throw new functions.https.HttpsError("unauthenticated", "you need to authenticate");
+      }
+      return Dao.getUser(context.auth.uid).then(async (user) => {
+        return Dao.getDomain(data.parentDomain).then(async (domain) => {
+          if (!domain || !user) throw new functions.https.HttpsError("not-found", "Could not find user or domain entity the problem belongs to");
+          if (!user.domainIds.includes(domain.id) || !domain.associatedProblems.includes(data.id))
+            throw new functions.https.HttpsError("invalid-argument", "Domain or problem are not associated");
+          domain.associatedProblems.splice(domain.associatedProblems.indexOf(data.id));
+          return Dao.updateDomain(domain.id, domain).then((_dom) => {
+            return Dao.deleteProblem(data.id);
+          })
+        });
       });
     });

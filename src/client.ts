@@ -16,9 +16,11 @@ let _getDomain: HttpsCallable<unknown, unknown>;
 let _getMyDomains: HttpsCallable<unknown, unknown>;
 let _getDomainProblems: HttpsCallable<unknown, unknown>;
 let _updateDomain: HttpsCallable<unknown, unknown>;
+let _deleteDomain: HttpsCallable<unknown, unknown>;
 let _createProblem: HttpsCallable<unknown, unknown>;
 let _getProblem: HttpsCallable<unknown, unknown>;
 let _updateProblem: HttpsCallable<unknown, unknown>;
+let _deleteProblem: HttpsCallable<unknown, unknown>;
 
 export function initClient(app: FirebaseApp) {
   functions = DEV_ENVIRONMENT
@@ -31,9 +33,11 @@ export function initClient(app: FirebaseApp) {
   _getMyDomains = httpsCallable(functions, "getMyDomains");
   _getDomainProblems = httpsCallable(functions, "getDomainProblems");
   _updateDomain = httpsCallable(functions, "updateDomain");
+  _deleteDomain = httpsCallable(functions, "deleteDomain");
   _createProblem = httpsCallable(functions, "createProblem");
   _getProblem = httpsCallable(functions, "getProblem");
   _updateProblem = httpsCallable(functions, "updateProblem");
+  _deleteProblem = httpsCallable(functions, "deleteProblem");
 }
 
 export function getSelf(): Promise<User> {
@@ -62,6 +66,10 @@ export function getDomainProblems(domainId: string): Promise<Array<Problem>> {
   );
 }
 
+export function deleteDomain(domainId: string): Promise<void> {
+  return _deleteDomain(domainId).then();
+}
+
 export function updateDomain(domain: Partial<Domain>): Promise<Domain> {
   return _updateDomain(domain).then((result) => result.data as Domain);
 }
@@ -76,4 +84,8 @@ export function getProblem(problemId: string): Promise<Problem> {
 
 export function updateProblem(problem: Partial<Problem>): Promise<Problem> {
   return _updateProblem(problem).then((result) => result.data as Problem);
+}
+
+export function deleteProblem(problem: Problem): Promise<void> {
+  return _deleteProblem(problem).then();
 }

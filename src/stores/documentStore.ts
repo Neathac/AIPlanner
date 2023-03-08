@@ -77,5 +77,23 @@ export const useDocumentStore = defineStore("documentStore", {
           ].push(problem);
       }
     },
+
+    removeProblem(problem: Problem) {
+      const index = (this.problems as Map<string, Array<Problem>>)[
+        problem.parentDomain
+      ].findIndex((val: Problem) => problem.id == val.id);
+      if (index > -1)
+        (this.problems as Map<string, Array<Problem>>)[
+          problem.parentDomain
+        ].splice(index, 1);
+    },
+
+    removeDomain(domainId: string) {
+      (this.problems as Map<string, Array<Problem>>).delete(domainId);
+      const index = (this.domains as Array<Domain>).findIndex(
+        (dom) => dom.id == domainId
+      );
+      if (index > -1) (this.domains as Array<Domain>).splice(index, 1);
+    },
   },
 });
