@@ -28,3 +28,4 @@ export const FUNCTIONS_EMULATOR_PORT = Number(
 export const HOME_ROUTE = "/";
 export const ABOUT_ROUTE = "/about";
 export const DCK_ROUTE = "/dck";
+export const PROBLEM_ROUTE = "/problem";

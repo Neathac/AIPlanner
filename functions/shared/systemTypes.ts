@@ -27,6 +27,7 @@ export const EMPTY_DOMAIN: Domain = {
   id: "",
   name: "",
   rawDomain: "",
+  dckState: "",
   associatedProblems: [],
 };
 

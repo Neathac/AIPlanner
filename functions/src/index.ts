@@ -4,7 +4,6 @@ import {toDomain, toDomainEntity, toProblem, toProblemEntity, toUser} from "./En
 import * as Dao from "./Dao";
 import {UserRecord} from "firebase-admin/lib/auth/user-record";
 import {User, Domain, Problem} from "../shared/systemTypes";
-import {uniqueId} from "lodash";
 
 // // Start writing Firebase Functions
 // // https://firebase.google.com/docs/functions/typescript
@@ -65,7 +64,7 @@ export const createDomain = theFunctions().https.onCall(async (data:Domain, cont
   return Dao.getUser(context.auth.uid).then((user) => {
     if (!user) throw new functions.https.HttpsError("not-found", "User not found in the database");
 
-    const uuid = uniqueId();
+    const uuid = uid();
     user.docNum += 1;
     user.domainIds.push(uuid);
     Dao.updateUser(user.id, user);
@@ -155,7 +154,7 @@ export const createProblem = theFunctions().https.onCall(async (_data:Problem, c
 
     return Dao.getDomain(_data.parentDomain).then((domain) => {
       if (!domain) throw new functions.https.HttpsError("not-found", "Domain not found in the database");
-      const uuid = uniqueId();
+      const uuid = uid();
       _data.id = uuid;
       domain.associatedProblems.push(uuid);
       user.docNum += 1;
@@ -215,3 +214,10 @@ export const deleteProblem = theFunctions()
         });
       });
     });
+
+
+
+const uid = function(){
+    return Date.now().toString(36) + Math.random().toString(36).substr(2);
+  }
+  

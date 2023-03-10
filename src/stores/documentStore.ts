@@ -4,7 +4,7 @@ import { defineStore } from "pinia";
 export const useDocumentStore = defineStore("documentStore", {
   state: () => ({
     domains: [] as Array<Domain>,
-    problems: {} as Map<string, Array<Problem>>,
+    problems: new Map<string, Array<Problem>>(),
     activeDomain: "",
   }),
   getters: {
@@ -32,8 +32,8 @@ export const useDocumentStore = defineStore("documentStore", {
         (val) => val.id == domain.id
       );
       if (foundDomain == -1) (this.domains as Array<Domain>).push(domain);
-      else (this.domains as Array<Domain>)[foundDomain] = domain;
-      (this.problems as Map<string, Array<Problem>>).set(domain.id, problems);
+      else this.domains[foundDomain] = domain;
+      this.problems.set(domain.id, problems);
       if (this.activeDomain == "") this.activeDomain = domain.id;
     },
     setActiveDomain(domainId: string) {

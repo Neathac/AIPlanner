@@ -2,7 +2,6 @@ import { defineStore } from "pinia";
 import {
   emptyPddlDocument,
   PddlDocument,
-  Action,
   Predicate,
 } from "@functions/parserTypes";
 
@@ -56,11 +55,11 @@ export const useProblemStore = defineStore("problemStore", {
   },
   actions: {
     loadActiveProblem(pddlProblem: PddlDocument, rawActiveProblem: string) {
-      this.rawActiveDomain = rawActiveProblem;
-      this.structuredActiveDomain = pddlProblem;
+      this.rawActiveProblem = rawActiveProblem;
+      this.structuredActiveProblem = pddlProblem;
     },
     loadRawActiveProblem(rawActiveProblem: string) {
-      this.rawActiveDomain = rawActiveProblem;
+      this.rawActiveProblem = rawActiveProblem;
     },
   },
 });

@@ -1,3 +1,4 @@
+import { Manager } from "@src/stores/resourceManager";
 import { getAuth, signInWithPopup, GoogleAuthProvider } from "firebase/auth";
 import { getSelf } from "../client";
 import { store } from "../store";
@@ -10,6 +11,8 @@ export async function signin(): Promise<void> {
     getSelf().then((u) => {
       if (u) {
         store.me = u;
+        store.avatar = u.pic ?? store.avatar;
+        Manager.initiateUser();
       }
     });
   });
