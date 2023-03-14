@@ -12,6 +12,7 @@ import {
   updateProblem,
 } from "@src/client";
 import { loadActiveDomain } from "@src/languageSupport/decomposer/domainLoader";
+import editorFactory from "@src/languageSupport/nodeFactory/nodeFactory";
 import nodeFactory from "@src/languageSupport/nodeFactory/nodeFactory";
 import { store } from "@src/store";
 import { useDocumentStore } from "./documentStore";
@@ -60,6 +61,12 @@ export interface resourceManager {
    * @return {Promise<Domain>} - Updated domain
    */
   updateDomain(domain: Partial<Domain>): Promise<Domain>;
+
+  /**
+   * Selects a domain
+   * @param {Domain} domain - The Domain to select
+   */
+  selectDomain(domain: Domain): void;
 
   /**
    * Creates a new problem in a given domain
@@ -239,6 +246,17 @@ export class resourceManagerClass implements resourceManager {
 
   async deleteProblem(problemid: string): Promise<void> {
     throw new Error("Method not implemented.");
+  }
+
+  selectDomain(domain: Domain): void {
+    useDocumentStore().setActiveDomain(domain.id);
+    useDomainStore().loadActiveDomain(
+      loadActiveDomain(domain.rawDomain),
+      domain.rawDomain
+    );
+    useNodeStore().loadActiveEditorState(
+      JSON.parse(domain.dckState) ?? editorFactory()
+    );
   }
 }
 

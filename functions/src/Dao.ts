@@ -30,7 +30,9 @@ export async function getUser(uid: string): Promise<UserEntity | undefined> {
       .collection(USERS_COLLECTION)
       .doc(uid)
       .withConverter(userEntityConverter)
-      .get().then((ds)=>ds.data());
+      .get().then((ds)=> {
+        return ds.data();
+      });
 }
 
 /**
@@ -104,19 +106,20 @@ export async function storeDomain(u: DomainEntity): Promise<void> {
 
 /**
  * Fetches all domain entries in the database from domains collection
- * @param {string} userId - Id of user with domains
+ * @param {string} domainIds - Ids of domains
  * @param {number} limit - Limit of entries to fetch
  * @return {Promise<DomainEntity[]>} - Found entries
  */
-export async function getAllDomainsForUser(userId: string, limit?:number): Promise<DomainEntity[]> {
+export async function getAllDomainsForUser(domainIds: string[], limit?:number): Promise<DomainEntity[]> {
   let query:CollectionReference<DomainEntity>|Query<DomainEntity> =
-     firestore.collection(DOMAINS_COLLECTION).where("id", "==", userId)
+     firestore.collection(DOMAINS_COLLECTION).where("id", "in", domainIds)
          .withConverter(domainEntityConverter);
-
   if (limit!=undefined) {
     query = query.limit(limit);
   }
-  return query.get().then((a)=>a.docs.map((a)=>a.data()));
+  return query.get().then((a)=>a.docs.map((a)=> {
+    return a.data();
+  }));
 }
 
 /**

@@ -11,6 +11,7 @@ import { defineComponent, ref } from "vue";
 import { signin } from "../helpers/authHelper";
 import { store } from "../store";
 import { HOME_ROUTE } from "../helpers/consts";
+import { Manager } from "../stores/resourceManager";
 
 export default defineComponent({
   name: "LoginAvatar",
@@ -22,6 +23,7 @@ export default defineComponent({
   methods: {
     async signin() {
       await signin();
+      await Manager.getMyDomains();
       this.$router.push(HOME_ROUTE);
     },
   },

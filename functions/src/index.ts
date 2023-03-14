@@ -4,6 +4,7 @@ import {toDomain, toDomainEntity, toProblem, toProblemEntity, toUser} from "./En
 import * as Dao from "./Dao";
 import {UserRecord} from "firebase-admin/lib/auth/user-record";
 import {User, Domain, Problem} from "../shared/systemTypes";
+import {warn} from "firebase-functions/logger";
 
 // // Start writing Firebase Functions
 // // https://firebase.google.com/docs/functions/typescript
@@ -34,7 +35,8 @@ export const getSelf = theFunctions()
         throw new functions.https.HttpsError("unauthenticated", "you need to authenticate");
       }
       const auth = context.auth;
-      return Dao.getUser(auth.uid).then(toUser);
+      const us = Dao.getUser(auth.uid).then(toUser);
+      return us;
     });
 
 export const helloWorld = theFunctions()
@@ -103,7 +105,10 @@ export const getMyDomains = theFunctions()
       if (!context.auth) {
         throw new functions.https.HttpsError("unauthenticated", "you need to authenticate");
       }
-      return Dao.getAllDomainsForUser(context.auth.uid).then(domainEntities => domainEntities.map(entity => toDomain(entity)));
+      return Dao.getUser(context.auth.uid).then((u) => {
+        if (u) return Dao.getAllDomainsForUser(u.domainIds).then(domainEntities => domainEntities.map(entity => toDomain(entity)));
+        else return [];
+      });
     });
 
 export const updateDomain = theFunctions()
