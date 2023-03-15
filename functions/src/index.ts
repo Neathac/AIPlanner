@@ -4,7 +4,6 @@ import {toDomain, toDomainEntity, toProblem, toProblemEntity, toUser} from "./En
 import * as Dao from "./Dao";
 import {UserRecord} from "firebase-admin/lib/auth/user-record";
 import {User, Domain, Problem} from "../shared/systemTypes";
-import {warn} from "firebase-functions/logger";
 
 // // Start writing Firebase Functions
 // // https://firebase.google.com/docs/functions/typescript

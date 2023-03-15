@@ -13,7 +13,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, shallowRef } from "vue";
+import { defineComponent, shallowRef, ref } from "vue";
 import { Codemirror } from "vue-codemirror";
 import { pddlLanguage } from "../languageSupport/parser/language";
 import { oneDark } from "../languageSupport/parser/theme";

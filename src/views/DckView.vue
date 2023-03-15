@@ -19,6 +19,8 @@
             <v-dialog v-model="dialogDomainSave" persistent width="auto">
               <template v-slot:activator="{ props }">
                 <v-btn
+                  :loading="loading"
+                  :disabled="loading"
                   color="blue-grey"
                   v-bind="props"
                   variant="flat"
@@ -39,7 +41,7 @@
                   <v-btn
                     color="green-darken-1"
                     variant="text"
-                    @click="dialogDomainSave = false"
+                    @click="updateDomainState()"
                   >
                     Save
                   </v-btn>
@@ -90,8 +92,8 @@
               </v-card>
             </v-dialog>
             <v-btn
-              :loading="loading[2]"
-              :disabled="loading[2]"
+              :loading="loading"
+              :disabled="loading"
               color="blue-grey"
               variant="flat"
               prepend-icon="mdi-auto-fix"
@@ -100,8 +102,8 @@
               Encode DCK to Domain
             </v-btn>
             <v-btn
-              :loading="loading[2]"
-              :disabled="loading[2]"
+              :loading="loading"
+              :disabled="loading"
               color="blue-grey"
               prepend-icon="mdi-cloud-upload"
               variant="flat"
@@ -112,8 +114,8 @@
           </template>
           <template v-if="editorType == 'DCK'">
             <v-btn
-              :loading="loading[2]"
-              :disabled="loading[2]"
+              :loading="loading"
+              :disabled="loading"
               color="blue-grey"
               prepend-icon="mdi-check-bold"
               variant="flat"
@@ -122,8 +124,8 @@
               Save ATB-DCK
             </v-btn>
             <v-btn
-              :loading="loading[2]"
-              :disabled="loading[2]"
+              :loading="loading"
+              :disabled="loading"
               color="blue-grey"
               prepend-icon="mdi-check-bold"
               variant="flat"
@@ -150,7 +152,7 @@ import {
   loadActiveDomain,
   encodeDCK,
 } from "../languageSupport/decomposer/domainLoader";
-import { defineComponent, h } from "vue";
+import { defineComponent, nextTick, h } from "vue";
 import DomainEditor from "../components/DomainEditor.vue";
 import NodeEditor from "../components/NodeEditor.vue";
 import { useDomainStore } from "../stores/domainStore";
@@ -166,6 +168,10 @@ import { deepCopy } from "@firebase/util";
 import { ACTION_NODE_TYPE } from "../languageSupport/nodeFactory/ActionNode";
 import { STATE_CONSTRAINT_NODE_TYPE } from "../languageSupport/nodeFactory/StateConstraintNode";
 import { GOAL_NODE_TYPE } from "../languageSupport/nodeFactory/GoalNode";
+import EventBus from "../lib/EventBus";
+import { NEW_DOMAIN } from "../helpers/consts";
+import { Manager } from "../stores/resourceManager";
+import { useDocumentStore } from "../stores/documentStore";
 
 export default defineComponent({
   name: "DckView",
@@ -193,10 +199,11 @@ export default defineComponent({
       components: GoalSidebarOption,
       render: () => h(GoalSidebarOption),
     });
+
     return {
       menuVisible: true,
       editorType: "Domain",
-      loading: [],
+      loading: false,
       dialogDomainSave: false,
       dialogDomainRestore: false,
       domainStore: useDomainStore(),
@@ -204,12 +211,17 @@ export default defineComponent({
     };
   },
   mounted() {
-    this.loadToDck();
+    // this.loadToDck();
+    EventBus.on(NEW_DOMAIN, async (_e) => {
+      this.editorType = "a";
+      await nextTick();
+      this.editorType = "Domain";
+    });
   },
   methods: {
-    load(i: number) {
-      this.loading[i] = true;
-      setTimeout(() => (this.loading[i] = false), 3000);
+    load() {
+      this.loading = true;
+      setTimeout(() => (this.loading = false), 3000);
     },
     loadToDck() {
       this.domainStore.loadActiveDomain(
@@ -226,6 +238,26 @@ export default defineComponent({
       this.editorState = this.$refs.encoder.editor.save();
       useNodeStore().loadActiveEditorState(this.editorState);
     },
+    updateDomainState() {
+      this.dialogDomainSave = false;
+      this.loading = true;
+      Manager.updateDomain({
+        id: useDocumentStore().getActiveDomain.id,
+        rawDomain: this.$refs.editor.code,
+      }).then(() => {
+        this.loading = false;
+      });
+    },
+    updateEncoderState() {
+      this.dialogDomainSave = false;
+      this.loading = true;
+      Manager.updateDomain({
+        id: useDocumentStore().getActiveDomain.id,
+        dckState: JSON.stringify(this.$refs.encoder.editor.save()),
+      }).then(() => {
+        this.loading = false;
+      });
+    },
     loadEncoderState() {
       // We need to manually fill in the options, as load doesn't consider them
       const stateCopy = deepCopy(this.editorState);
@@ -236,7 +268,6 @@ export default defineComponent({
         });
         if (nodeRef) {
           node.options.forEach((option) => {
-            console.log(option);
             if (!nodeRef.options.has(option[0])) {
               if (node.type === ACTION_NODE_TYPE) {
                 nodeRef.addNewPredicate();

@@ -11,9 +11,11 @@ import {
   updateDomain,
   updateProblem,
 } from "@src/client";
+import { NEW_DOMAIN } from "@src/helpers/consts";
 import { loadActiveDomain } from "@src/languageSupport/decomposer/domainLoader";
 import editorFactory from "@src/languageSupport/nodeFactory/nodeFactory";
 import nodeFactory from "@src/languageSupport/nodeFactory/nodeFactory";
+import EventBus from "@src/lib/EventBus";
 import { store } from "@src/store";
 import { useDocumentStore } from "./documentStore";
 import { useDomainStore } from "./domainStore";
@@ -46,6 +48,14 @@ export interface resourceManager {
    * @return {Promise<Domain>} - A domain object from the DB
    */
   getDomain(domainId: string): Promise<Domain>;
+
+  /**
+   * Getter of all problems of specifc domain
+   * @async
+   * @param {string} domainId - Id of problem parent domain
+   * @return {Promise<Array<Problem>>} - An array of found problems
+   */
+  getDomainProblems(domainId: string): Promise<Array<Problem>>;
 
   /**
    * Getter of all domains available to the user
@@ -240,6 +250,18 @@ export class resourceManagerClass implements resourceManager {
     return;
   }
 
+  async getDomainProblems(domainId: string): Promise<Array<Problem>> {
+    if (
+      useDocumentStore().getProblemsByDomainId(domainId).length !==
+      useDocumentStore().getDomainById(domainId).associatedProblems.length
+    )
+      getDomainProblems(domainId).then((res) => {
+        useDocumentStore().setDomainProblems(domainId, res);
+        return res;
+      });
+    else return useDocumentStore().getProblemsByDomainId(domainId);
+  }
+
   async deleteDomain(domainId: string): Promise<void> {
     throw new Error("Method not implemented.");
   }
@@ -257,6 +279,8 @@ export class resourceManagerClass implements resourceManager {
     useNodeStore().loadActiveEditorState(
       JSON.parse(domain.dckState) ?? editorFactory()
     );
+    store.activeDomain = domain.rawDomain;
+    EventBus.emit(NEW_DOMAIN);
   }
 }
 
