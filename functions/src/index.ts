@@ -4,7 +4,6 @@ import {toDomain, toDomainEntity, toProblem, toProblemEntity, toUser} from "./En
 import * as Dao from "./Dao";
 import {UserRecord} from "firebase-admin/lib/auth/user-record";
 import {User, Domain, Problem} from "../shared/systemTypes";
-import {uniqueId} from "lodash";
 
 // // Start writing Firebase Functions
 // // https://firebase.google.com/docs/functions/typescript
@@ -32,11 +31,11 @@ export const onUserCreation = theFunctions()
 export const getSelf = theFunctions()
     .https.onCall(async (_data:void, context: functions.https.CallableContext) => {
       if (!context.auth) {
-        // eslint-disable-next-line max-len
         throw new functions.https.HttpsError("unauthenticated", "you need to authenticate");
       }
       const auth = context.auth;
-      return Dao.getUser(auth.uid).then(toUser);
+      const us = Dao.getUser(auth.uid).then(toUser);
+      return us;
     });
 
 export const helloWorld = theFunctions()
@@ -48,69 +47,108 @@ export const helloWorld = theFunctions()
     });
 
 export const updateUser = theFunctions()
-    .https.onCall(async (_data: Partial<User>, context) => {
-      if (_data.id) {
-        return Dao.updateUser(_data.id, _data).then((toUser));
+    .https.onCall(async (data: Partial<User>, context) => {
+      if (data.id) {
+        return Dao.updateUser(data.id, data).then((toUser));
       } else if (context.auth) {
-        return Dao.updateUser(context.auth?.uid, _data).then(toUser);
+        return Dao.updateUser(context.auth?.uid, data).then(toUser);
       } else {
         throw new functions.https.HttpsError("unauthenticated", "you need to authenticate");
       }
     });
 
-export const createDomain = theFunctions().https.onCall(async (_data:Domain, context: functions.https.CallableContext) => {
+export const createDomain = theFunctions().https.onCall(async (data:Domain, context: functions.https.CallableContext) => {
   if (!context.auth) {
-    // eslint-disable-next-line max-len
     throw new functions.https.HttpsError("unauthenticated", "you need to authenticate");
   }
 
   return Dao.getUser(context.auth.uid).then((user) => {
     if (!user) throw new functions.https.HttpsError("not-found", "User not found in the database");
 
-    const uuid = uniqueId();
+    const uuid = uid();
     user.docNum += 1;
     user.domainIds.push(uuid);
     Dao.updateUser(user.id, user);
-    _data.id = uuid;
-    return Dao.storeDomain(toDomainEntity(_data)).then(() => {
+    data.id = uuid;
+    return Dao.storeDomain(toDomainEntity(data)).then(() => {
       return Dao.getDomain(uuid).then(toDomain);
     });
   });
 });
 
 export const getDomain = theFunctions()
-    .https.onCall(async (_data:string, context: functions.https.CallableContext) => {
+    .https.onCall(async (data:string, context: functions.https.CallableContext) => {
       if (!context.auth) {
-        // eslint-disable-next-line max-len
         throw new functions.https.HttpsError("unauthenticated", "you need to authenticate");
       }
       return Dao.getUser(context.auth.uid).then((user) => {
-        if (user && user.domainIds.includes(_data)) return Dao.getDomain(_data).then(toDomain);
+        if (user && user.domainIds.includes(data)) return Dao.getDomain(data).then(toDomain);
         else throw new functions.https.HttpsError("not-found", "User does not have access to domain");
       });
     });
 
-export const updateDomain = theFunctions()
-    .https.onCall(async (_data: Partial<Domain>, context) => {
+export const getDomainProblems = theFunctions()
+    .https.onCall(async (data: string, context: functions.https.CallableContext) => {
       if (!context.auth) {
-        // eslint-disable-next-line max-len
         throw new functions.https.HttpsError("unauthenticated", "you need to authenticate");
       }
       return Dao.getUser(context.auth.uid).then((user) => {
-        if (!_data.id) throw new functions.https.HttpsError("invalid-argument", "Domain id not provided");
-        if (!user?.domainIds.includes(_data.id)) throw new functions.https.HttpsError("not-found", "User does not have access to domain");
-        return Dao.updateDomain(_data.id, _data).then((toDomain));
+        if (!user) throw new functions.https.HttpsError("internal", "Authenticated user does not correspond to a database entry");
+        if (!user.domainIds.includes(data)) throw new functions.https.HttpsError("permission-denied", "User does not have access to the specified domain");
+        return Dao.getAllProblemsForDomain(data).then(problemEntities => problemEntities.map(entity => toProblem(entity)));
       });
     });
 
+export const getMyDomains = theFunctions()
+    .https.onCall(async (_data: void, context: functions.https.CallableContext) => {
+      if (!context.auth) {
+        throw new functions.https.HttpsError("unauthenticated", "you need to authenticate");
+      }
+      return Dao.getUser(context.auth.uid).then((u) => {
+        if (u) return Dao.getAllDomainsForUser(u.domainIds).then(domainEntities => domainEntities.map(entity => toDomain(entity)));
+        else return [];
+      });
+    });
+
+export const updateDomain = theFunctions()
+    .https.onCall(async (data: Partial<Domain>, context: functions.https.CallableContext) => {
+      if (!context.auth) {
+        throw new functions.https.HttpsError("unauthenticated", "you need to authenticate");
+      }
+      return Dao.getUser(context.auth.uid).then((user) => {
+        if (!data.id) throw new functions.https.HttpsError("invalid-argument", "Domain id not provided");
+        if (!user?.domainIds.includes(data.id)) throw new functions.https.HttpsError("not-found", "User does not have access to domain");
+        return Dao.updateDomain(data.id, data).then((toDomain));
+      });
+    });
+
+export const deleteDomain = theFunctions()
+    .https.onCall(async (domainId: string, context: functions.https.CallableContext) => {
+      if (!context.auth) {
+        throw new functions.https.HttpsError("unauthenticated", "you need to authenticate");
+      }
+      return Dao.getUser(context.auth.uid).then(async (user) => {
+        return Dao.getDomain(domainId).then(async (domain) => {
+          if (!domain || !user) throw new functions.https.HttpsError("not-found", "Could not find user or domain entity");
+          if (!user.domainIds.includes(domain.id)) throw new functions.https.HttpsError("invalid-argument", "Domain not owned by the user");
+          domain.associatedProblems.forEach((problemId) => {
+            Dao.deleteProblem(problemId);
+          });
+          user.domainIds.splice(user.domainIds.indexOf(domainId));
+          return Dao.updateUser(user.id, user).then((_res) => {
+            return Dao.deleteDomain(domainId);
+          });
+        });
+      });
+    });
+
+
 export const createProblem = theFunctions().https.onCall(async (_data:Problem, context: functions.https.CallableContext) => {
   if (!context.auth) {
-    // eslint-disable-next-line max-len
     throw new functions.https.HttpsError("unauthenticated", "you need to authenticate");
   }
 
   if (!_data.parentDomain) {
-    // eslint-disable-next-line max-len
     throw new functions.https.HttpsError("invalid-argument", "Problem needs to be associated with a domain");
   }
 
@@ -120,27 +158,28 @@ export const createProblem = theFunctions().https.onCall(async (_data:Problem, c
 
     return Dao.getDomain(_data.parentDomain).then((domain) => {
       if (!domain) throw new functions.https.HttpsError("not-found", "Domain not found in the database");
-      const uuid = uniqueId();
+      const uuid = uid();
       _data.id = uuid;
       domain.associatedProblems.push(uuid);
       user.docNum += 1;
-      Dao.updateDomain(domain.id, domain);
-      Dao.updateUser(user.id, user);
-      return Dao.storeProblem(toProblemEntity(_data)).then(() => {
-        return Dao.getProblem(uuid).then(toProblem);
+      return Dao.updateDomain(domain.id, domain).then(() => {
+        return Dao.updateUser(user.id, user).then(() => {
+          return Dao.storeProblem(toProblemEntity(_data)).then(() => {
+            return Dao.getProblem(uuid).then(toProblem);
+          });
+        });
       });
     });
   });
 });
 
 export const getProblem = theFunctions()
-    .https.onCall(async (_data:string, context: functions.https.CallableContext) => {
+    .https.onCall(async (data:string, context: functions.https.CallableContext) => {
       if (!context.auth) {
-        // eslint-disable-next-line max-len
         throw new functions.https.HttpsError("unauthenticated", "you need to authenticate");
       }
       return Dao.getUser(context.auth.uid).then((user) => {
-        return Dao.getProblem(_data).then((problem) => {
+        return Dao.getProblem(data).then((problem) => {
           if (user && problem && user.domainIds.includes(problem.parentDomain)) return toProblem(problem);
           else throw new functions.https.HttpsError("not-found", "User does not have access to problem");
         });
@@ -148,17 +187,41 @@ export const getProblem = theFunctions()
     });
 
 export const updateProblem = theFunctions()
-    .https.onCall(async (_data: Partial<Problem>, context) => {
+    .https.onCall(async (data: Partial<Problem>, context: functions.https.CallableContext) => {
       if (!context.auth) {
-        // eslint-disable-next-line max-len
         throw new functions.https.HttpsError("unauthenticated", "you need to authenticate");
       }
       return Dao.getUser(context.auth.uid).then((user) => {
-        if (!_data.id) throw new functions.https.HttpsError("invalid-argument", "Problem id not provided");
-        Dao.getProblem(_data.id).then((problem) => {
+        if (!data.id) throw new functions.https.HttpsError("invalid-argument", "Problem id not provided");
+        Dao.getProblem(data.id).then((problem) => {
           if (problem && !user?.domainIds.includes(problem.parentDomain)) throw new functions.https.HttpsError("not-found", "User does not have access to problem");
         });
 
-        return Dao.updateProblem(_data.id, _data).then((toProblem));
+        return Dao.updateProblem(data.id, data).then((toProblem));
       });
     });
+
+export const deleteProblem = theFunctions()
+    .https.onCall(async (data: Problem, context: functions.https.CallableContext) => {
+      if (!context.auth) {
+        throw new functions.https.HttpsError("unauthenticated", "you need to authenticate");
+      }
+      return Dao.getUser(context.auth.uid).then(async (user) => {
+        return Dao.getDomain(data.parentDomain).then(async (domain) => {
+          if (!domain || !user) throw new functions.https.HttpsError("not-found", "Could not find user or domain entity the problem belongs to");
+          if (!user.domainIds.includes(domain.id) || !domain.associatedProblems.includes(data.id))
+            throw new functions.https.HttpsError("invalid-argument", "Domain or problem are not associated");
+          domain.associatedProblems.splice(domain.associatedProblems.indexOf(data.id));
+          return Dao.updateDomain(domain.id, domain).then((_dom) => {
+            return Dao.deleteProblem(data.id);
+          })
+        });
+      });
+    });
+
+
+
+const uid = function(){
+    return Date.now().toString(36) + Math.random().toString(36).substr(2);
+  }
+  

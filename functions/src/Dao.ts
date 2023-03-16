@@ -30,7 +30,9 @@ export async function getUser(uid: string): Promise<UserEntity | undefined> {
       .collection(USERS_COLLECTION)
       .doc(uid)
       .withConverter(userEntityConverter)
-      .get().then((ds)=>ds.data());
+      .get().then((ds)=> {
+        return ds.data();
+      });
 }
 
 /**
@@ -104,19 +106,20 @@ export async function storeDomain(u: DomainEntity): Promise<void> {
 
 /**
  * Fetches all domain entries in the database from domains collection
- * @param {string} userId - Id of user with domains
+ * @param {string} domainIds - Ids of domains
  * @param {number} limit - Limit of entries to fetch
  * @return {Promise<DomainEntity[]>} - Found entries
  */
-export async function getAllDomainsForUser(userId: string, limit?:number): Promise<DomainEntity[]> {
+export async function getAllDomainsForUser(domainIds: string[], limit?:number): Promise<DomainEntity[]> {
   let query:CollectionReference<DomainEntity>|Query<DomainEntity> =
-     firestore.collection(DOMAINS_COLLECTION).where("id", "==", userId)
+     firestore.collection(DOMAINS_COLLECTION).where("id", "in", domainIds)
          .withConverter(domainEntityConverter);
-
   if (limit!=undefined) {
     query = query.limit(limit);
   }
-  return query.get().then((a)=>a.docs.map((a)=>a.data()));
+  return query.get().then((a)=>a.docs.map((a)=> {
+    return a.data();
+  }));
 }
 
 /**
@@ -131,6 +134,18 @@ export async function updateDomain(id: string, domain: Partial<DomainEntity>): P
   const newDomain: DomainEntity | undefined = await getDomain(id);
   return newDomain;
 }
+
+/**
+ * Delete a Domain database entry
+ * @param {string} id  - An identifier of which Domain to delete
+ * @return {Promise<void>}
+ */
+export async function deleteDomain(id: string): Promise<void> {
+  // Delete the domain
+  await firestore.collection(DOMAINS_COLLECTION).withConverter(domainEntityConverter).doc(id).delete();
+  return;
+}
+
 
 /**
  * Transforms incoming and outgoing database data
@@ -165,13 +180,13 @@ export async function storeProblem(u: ProblemEntity): Promise<void> {
 
 /**
  * Fetches all Problem entries in the database from problems collection
- * @param {string} problemId - Id of domain of the problems
+ * @param {string} domainId - Id of domain of the problems
  * @param {number} limit - Limit of entries to fetch
  * @return {Promise<ProblemEntity[]>} - Found entries
  */
-export async function getAllProblemsForDomain(problemId: string, limit?:number): Promise<ProblemEntity[]> {
+export async function getAllProblemsForDomain(domainId: string, limit?:number): Promise<ProblemEntity[]> {
   let query:CollectionReference<ProblemEntity>|Query<ProblemEntity> =
-     firestore.collection(DOMAINS_COLLECTION).where("parentDomain", "==", problemId)
+     firestore.collection(PROBLEMS_COLLECTION).where("parentDomain", "==", domainId)
          .withConverter(problemEntityConverter);
 
   if (limit!=undefined) {
@@ -188,7 +203,18 @@ export async function getAllProblemsForDomain(problemId: string, limit?:number):
  */
 export async function updateProblem(id: string, problem: Partial<ProblemEntity>): Promise<ProblemEntity | undefined> {
   // Update the domain
-  await firestore.collection(DOMAINS_COLLECTION).withConverter(domainEntityConverter).doc(id).update(problem);
+  await firestore.collection(PROBLEMS_COLLECTION).withConverter(problemEntityConverter).doc(id).update(problem);
   const newProblem: ProblemEntity | undefined = await getProblem(id);
   return newProblem;
+}
+
+/**
+ * Delete a Problem database entry
+ * @param {string} id  - An identifier of which Problem to delete
+ * @return {Promise<void>}
+ */
+export async function deleteProblem(id: string): Promise<void> {
+  // Delete the problem
+  await firestore.collection(PROBLEMS_COLLECTION).withConverter(problemEntityConverter).doc(id).delete();
+  return;
 }

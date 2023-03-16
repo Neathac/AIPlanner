@@ -13,11 +13,11 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, shallowRef, ref } from "vue";
+import { defineComponent, ref, shallowRef } from "vue";
 import { Codemirror } from "vue-codemirror";
 import { pddlLanguage } from "../languageSupport/parser/language";
 import { oneDark } from "../languageSupport/parser/theme";
-import { useDomainStore } from "../stores/domainStore";
+import { useProblemStore } from "../stores/problemStore";
 import { store } from "../store";
 
 export default defineComponent({
@@ -25,9 +25,9 @@ export default defineComponent({
     Codemirror,
   },
   setup() {
-    const domainStore = useDomainStore();
-    domainStore.loadRawActiveDomain(store.activeDomain);
-    const code = ref(domainStore.rawActiveDomain);
+    const problemStore = useProblemStore();
+    problemStore.loadRawActiveProblem(store.activeProblem);
+    const code = ref(problemStore.rawActiveProblem);
     const extensions = [pddlLanguage(), oneDark];
 
     // Codemirror EditorView instance ref
@@ -45,9 +45,9 @@ export default defineComponent({
   },
   methods: {
     onChanged() {
-      store.activeDomain = this.code;
-      const domainStore = useDomainStore();
-      domainStore.loadRawActiveDomain(store.activeDomain);
+      store.activeProblem = this.code;
+      const problemStore = useProblemStore();
+      problemStore.loadRawActiveProblem(store.activeDomain);
     },
   },
 });
