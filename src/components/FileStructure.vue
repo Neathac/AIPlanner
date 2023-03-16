@@ -112,7 +112,7 @@ import {
   Problem,
 } from "@functions/systemTypes";
 import editorFactory from "../languageSupport/nodeFactory/nodeFactory";
-import { useDocumentStore } from "@src/stores/documentStore";
+import { useDocumentStore } from "../stores/documentStore";
 
 export default defineComponent({
   name: "ProtectedView",
