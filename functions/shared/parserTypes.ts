@@ -1,9 +1,30 @@
+export interface PddlProblemDocument {
+  name: string;
+  parentDomain: string;
+  objects: ProblemObject[];
+  init: Predicate[];
+  goal: LogicalExpression | Predicate | string;
+}
+
+export const emptyPddlProblemDocument = (): PddlProblemDocument => ({
+  name: "",
+  parentDomain: "",
+  objects: new Array<ProblemObject>(),
+  init: new Array<Predicate>(),
+  goal: "",
+});
+
 export interface PddlDocument {
     name: string;
     types?: PddlType[];
     predicates: Predicate[];
     actions: Action[];
   }
+
+export interface ProblemObject {
+  variables: string[];
+  types?: PddlType[];
+}
 
 export interface Predicate {
     name: string;
@@ -77,6 +98,11 @@ export const emptyPredicate = (): Predicate => ({
 export const emptyStateVals = (): StateNodeValues => ({
   name: "",
   variables: [],
+});
+
+export const emptyProblemObject = (): ProblemObject => ({
+  variables: [],
+  types: [],
 });
 
 export const negatePredicate = (predicate: string): string => {

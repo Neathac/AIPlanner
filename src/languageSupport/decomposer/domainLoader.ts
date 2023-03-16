@@ -4,8 +4,11 @@ import {
   ActionModifications,
   emptyAction,
   emptyPddlDocument,
+  emptyPddlProblemDocument,
   emptyPredicate,
+  emptyProblemObject,
   PddlDocument,
+  PddlProblemDocument,
   Predicate,
 } from "@functions/parserTypes";
 import { useDomainStore } from "../../stores/domainStore";
@@ -13,6 +16,7 @@ import {
   gatherActionModifications,
   gatherPredicateModifications,
 } from "./nodeLoader";
+import { getProblemDocumentSyntaxTree } from "../problemParser/language";
 
 const NAME = "NAME";
 const PARAMETERS = "Parameters";
@@ -29,6 +33,128 @@ const ACTION_SECTION = "ACTION_SECTION";
 const ACTION_PARAMETERS_SUBGROUP = "ActionParametersSubgroup";
 const ACTION_PRECONDITION_SUBGROUP = "ActionPreconditionSubgroup";
 const ACTION_EFFECT_SUBGROUP = "ActionEffectSubgroup";
+const PROBLEM_GROUP = "ProblemGroup";
+const PROBLEM_NAME_GROUP = "ProblemNameGroup";
+const PROBLEM_OBJECTS_GROUP = "ProblemObjectsGroup";
+const PROBLEM_INIT_GROUP = "ProblemInitGroup";
+const PROBLEM_DOMAIN_GROUP = "ProblemDomainGroup";
+const PROBLEM_GOAL_GROUP = "ProblemGoalGroup";
+const INIT_PREDICATE = "InitPredicate";
+const INIT_VARIABLES = "InitVariables";
+const LOGICAL_EXPRESSION = "LogicalExpression";
+
+export const loadActiveProblem = (problemCode: string): PddlProblemDocument => {
+  const tree = getProblemDocumentSyntaxTree(problemCode);
+  const problem: PddlProblemDocument = emptyPddlProblemDocument();
+  let currentGroup: string;
+  let isInGroup = false;
+  let initAmount: number;
+  let objectAmount: number;
+  let sameTypeVars = 0;
+  let foundRootGoal = 0;
+
+  tree.iterate({
+    enter: (node: SyntaxNodeRef) => {
+      const foundName = node.type.name;
+      if (foundRootGoal === 1) {
+        if (foundName === LOGICAL_EXPRESSION) {
+          // This is kinda hacky Possible bug source
+          // Does not cause inconsistencies in Group presence however
+          problem.goal = getNodeValue(problemCode, node);
+          foundRootGoal = 2;
+        }
+      } else if (isInGroup) {
+        if (foundName === PROBLEM_GROUP) {
+          isInGroup = false;
+        } else {
+          switch (currentGroup) {
+            case PROBLEM_NAME_GROUP:
+              switch (foundName) {
+                case NAME:
+                  problem.name = getNodeValue(problemCode, node);
+                  break;
+                default:
+                  break;
+              }
+              break;
+            case PROBLEM_DOMAIN_GROUP:
+              switch (foundName) {
+                case NAME:
+                  problem.parentDomain = getNodeValue(problemCode, node);
+                  break;
+                default:
+                  break;
+              }
+              break;
+            case PROBLEM_OBJECTS_GROUP:
+              switch (foundName) {
+                case NAME:
+                  problem.objects[objectAmount].variables.push(
+                    "?" + getNodeValue(problemCode, node)
+                  );
+                  break;
+                case TYPE:
+                  problem.objects[objectAmount].types.push({
+                    name: getNodeValue(problemCode, node),
+                  });
+                  objectAmount = problem.objects.push(emptyProblemObject()) - 1;
+                  break;
+                default:
+                  break;
+              }
+              break;
+            case PROBLEM_INIT_GROUP:
+              switch (foundName) {
+                case INIT_PREDICATE:
+                  initAmount = problem.init.push(emptyPredicate()) - 1;
+                  problem.init[initAmount].rawPredicate = getNodeValue(
+                    problemCode,
+                    node
+                  );
+                  sameTypeVars = 0;
+                  break;
+                case PREDICATE_NAME:
+                  problem.init[initAmount].name = getNodeValue(
+                    problemCode,
+                    node
+                  );
+                  break;
+                case INIT_VARIABLES:
+                  getNodeValue(problemCode, node)
+                    .split(" ")
+                    .forEach((val) => {
+                      problem.init[initAmount].varNames.push(val);
+                      sameTypeVars += 1;
+                    });
+
+                  break;
+                case TYPE:
+                  while (sameTypeVars > 0) {
+                    problem.init[initAmount].types?.push({
+                      name: getNodeValue(problemCode, node),
+                    });
+                    sameTypeVars -= 1;
+                  }
+                  break;
+              }
+              break;
+            case PROBLEM_GOAL_GROUP:
+              foundRootGoal += 1;
+              break;
+            default:
+              break;
+          }
+        }
+      } else {
+        isInGroup = true;
+        currentGroup = foundName;
+        if (foundName === PROBLEM_OBJECTS_GROUP)
+          objectAmount = problem.objects.push(emptyProblemObject()) - 1;
+      }
+    },
+  });
+  return problem;
+};
 
 export const loadActiveDomain = (domainCode: string): PddlDocument => {
   const tree = getDocumentSyntaxTree(domainCode);

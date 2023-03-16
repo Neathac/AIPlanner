@@ -99,6 +99,7 @@
 import {
   loadActiveDomain,
   encodeDCK,
+loadActiveProblem,
 } from "../languageSupport/decomposer/domainLoader";
 import { defineComponent } from "vue";
 import ProblemEditor from "../components/ProblemEditor.vue";
@@ -128,7 +129,7 @@ export default defineComponent({
     },
     loadToDck() {
       this.problemStore.loadActiveProblem(
-        loadActiveDomain(this.$refs.editor.code),
+        loadActiveProblem(this.$refs.editor.code),
         this.$refs.editor.code
       );
     },
