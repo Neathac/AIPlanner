@@ -15,8 +15,8 @@
 <script lang="ts">
 import { defineComponent, ref, shallowRef } from "vue";
 import { Codemirror } from "vue-codemirror";
-import { pddlLanguage } from "../languageSupport/parser/language";
-import { oneDark } from "../languageSupport/parser/theme";
+import { pddlProblemLanguage } from "../languageSupport/problemParser/language";
+import { oneDark } from "../languageSupport/problemParser/theme";
 import { useProblemStore } from "../stores/problemStore";
 import { store } from "../store";
 
@@ -28,7 +28,7 @@ export default defineComponent({
     const problemStore = useProblemStore();
     problemStore.loadRawActiveProblem(store.activeProblem);
     const code = ref(problemStore.rawActiveProblem);
-    const extensions = [pddlLanguage(), oneDark];
+    const extensions = [pddlProblemLanguage(), oneDark];
 
     // Codemirror EditorView instance ref
     const view = shallowRef();
