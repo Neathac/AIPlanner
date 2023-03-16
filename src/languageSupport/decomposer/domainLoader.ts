@@ -153,7 +153,6 @@ export const loadActiveProblem = (problemCode: string): PddlProblemDocument => {
       }
     },
   });
-  console.log(problem);
   return problem;
 };
 
