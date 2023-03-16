@@ -99,7 +99,7 @@
 import {
   loadActiveDomain,
   encodeDCK,
-} from "../languageSupport/decomposer/DomainLoader";
+} from "../languageSupport/decomposer/domainLoader";
 import { defineComponent } from "vue";
 import ProblemEditor from "../components/ProblemEditor.vue";
 import { useProblemStore } from "../stores/problemStore";
