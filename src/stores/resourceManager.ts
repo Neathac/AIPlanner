@@ -255,7 +255,7 @@ export class resourceManagerClass implements resourceManager {
       useDocumentStore().getProblemsByDomainId(domainId).length !==
       useDocumentStore().getDomainById(domainId).associatedProblems.length
     )
-      getDomainProblems(domainId).then((res) => {
+      return getDomainProblems(domainId).then((res) => {
         useDocumentStore().setDomainProblems(domainId, res);
         return res;
       });

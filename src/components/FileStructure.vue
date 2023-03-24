@@ -56,37 +56,40 @@
             </v-card>
           </v-dialog>
         </v-card-title>
-
-        <v-dialog v-model="dialogProblemCreate" persistent width="auto">
-          <template v-slot:activator="{ props }">
-            <v-btn v-bind="props"> Create new Problem </v-btn>
-          </template>
-          <v-card>
-            <v-card-title class="text-h5"> Create problem </v-card-title>
-            <v-card-item>
-              <v-text-field
-                v-model="newProblemName"
-                label="Problem name"
-              ></v-text-field>
-            </v-card-item>
-            <v-card-actions>
-              <v-spacer></v-spacer>
-              <v-btn
-                color="green-darken-1"
-                variant="text"
-                @click="createProblem"
-              >
-                Save
+        <v-card-subtitle>
+          <v-dialog v-model="dialogProblemCreate" persistent width="auto">
+            <template v-slot:activator="{ props }">
+              <v-btn v-bind="props" :disabled="!selectedDomain">
+                Create new Problem
               </v-btn>
-              <v-btn
-                color="error"
-                variant="text"
-                @click="dialogProblemCreate = false"
-              >
-                Cancel
-              </v-btn>
-            </v-card-actions>
-          </v-card> </v-dialog
+            </template>
+            <v-card>
+              <v-card-title class="text-h5"> Create problem </v-card-title>
+              <v-card-item>
+                <v-text-field
+                  v-model="newProblemName"
+                  label="Problem name"
+                ></v-text-field>
+              </v-card-item>
+              <v-card-actions>
+                <v-spacer></v-spacer>
+                <v-btn
+                  color="green-darken-1"
+                  variant="text"
+                  @click="createProblem"
+                >
+                  Save
+                </v-btn>
+                <v-btn
+                  color="error"
+                  variant="text"
+                  @click="dialogProblemCreate = false"
+                >
+                  Cancel
+                </v-btn>
+              </v-card-actions>
+            </v-card>
+          </v-dialog></v-card-subtitle
         ><v-expansion-panels variant="accordion">
           <v-expansion-panel
             v-for="i in problems"
@@ -152,13 +155,24 @@ export default defineComponent({
   },
   mounted() {
     watch(store, (newStore) => {
-      if (newStore.me.id) this.loggedIn = true;
-      Manager.getMyDomains().then((res) => {
-        this.domains = res;
-        this.domainNames = res.map((dom, index) => {
-          return dom.name + " " + ++index;
+      if (newStore.me.id) {
+        this.loggedIn = true;
+        Manager.getMyDomains().then((res) => {
+          this.domains = res;
+          this.domainNames = res.map((dom, index) => {
+            return dom.name + " " + ++index;
+          });
+          if (!this.selectedDomain) {
+            Manager.selectDomain(this.domains[0]);
+            this.selectedDomain = this.domainNames[0];
+            Manager.getDomainProblems(this.domains[0].id).then((probRes) => {
+              this.problems = probRes;
+            });
+            useDocumentStore().setActiveDomain(this.domains[0].id);
+            this.$router.push(DCK_ROUTE);
+          }
         });
-      });
+      }
     });
   },
   methods: {
@@ -185,7 +199,7 @@ export default defineComponent({
       prob.name = this.newProblemName;
       prob.parentDomain = useDocumentStore().getActiveDomain.id;
       Manager.createProblem(prob).then((_res) => {
-        Manager.getMyDomains().then((res) => {
+        Manager.getDomainProblems(prob.parentDomain).then((res) => {
           this.problems = res;
         });
       });

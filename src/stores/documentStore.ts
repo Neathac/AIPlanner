@@ -93,13 +93,14 @@ export const useDocumentStore = defineStore("documentStore", {
       const stateProblems: Map<string, Array<Problem>> = new Map(
         JSON.parse(this.problems)
       );
+      console.log(stateProblems);
       if (stateProblems.has(problem.parentDomain)) {
-        const foundProblem = stateProblems[problem.parentDomain].findIndex(
-          (val: Problem) => val.id == problem.id
-        );
+        const foundProblem = stateProblems
+          .get(problem.parentDomain)
+          .findIndex((val: Problem) => val.id == problem.id);
         if (foundProblem > -1)
-          stateProblems[problem.parentDomain][foundProblem] = problem;
-        else stateProblems[problem.parentDomain].push(problem);
+          stateProblems.get(problem.parentDomain)[foundProblem] = problem;
+        else stateProblems.get(problem.parentDomain).push(problem);
       }
       this.problems = JSON.stringify(Array.from(stateProblems));
     },
