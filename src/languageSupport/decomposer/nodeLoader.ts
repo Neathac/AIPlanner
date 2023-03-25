@@ -16,6 +16,7 @@ import {
   getNodeOutputs,
   getNodeTypes,
   getPredicateFromState,
+  isStateInitial,
 } from "../../helpers/editorHelper";
 import { STATE_NODE_TYPE } from "../nodeFactory/StateNode";
 import {
@@ -150,6 +151,54 @@ export const gatherPredicateModifications = (): Map<string, Predicate> => {
         result.set(goalPredicate.name, goalPredicate);
       }
     });
+  });
+
+  return result;
+};
+
+export const gatherGoalModifications = (): Map<string, Predicate> => {
+  const nodeStore = useNodeStore();
+  const domainStore = useDomainStore();
+  const editorState = nodeStore.getActiveEditorState;
+  const goals = getNodeTypes(editorState.nodes, GOAL_NODE_TYPE);
+  const result = new Map<string, Predicate>();
+  const existingPredicates = domainStore.getPredicatesByName;
+
+  goals.forEach((goal) => {
+    getNodeOptionsValues(GOAL_OPTION_NAME_START, goal).forEach((value) => {
+      const goalPredicate = getPredicateFromString(value);
+      if (goalPredicate && !existingPredicates.has(goalPredicate.name)) {
+        result.set(goalPredicate.name, goalPredicate);
+      }
+    });
+  });
+
+  return result;
+};
+
+export const gatherInitStateModifications = (): Map<string, Predicate> => {
+  const nodeStore = useNodeStore();
+  const domainStore = useDomainStore();
+  const editorState = nodeStore.getActiveEditorState;
+  const states = getNodeTypes(editorState.nodes, STATE_NODE_TYPE);
+  const result = new Map<string, Predicate>();
+  const existingPredicates = domainStore.getPredicatesByName;
+
+  states.forEach((state) => {
+    if (isStateInitial(state)) {
+      const statePredicate = getPredicateFromState(state);
+      if (
+        statePredicate &&
+        statePredicate.rawPredicate &&
+        !existingPredicates.has(statePredicate.name)
+      ) {
+        // TODO: Replace in the future. Extracting Predicate from string supports type parsing
+        const statePredicateWithTypes = getPredicateFromString(
+          statePredicate.rawPredicate
+        );
+        result.set(statePredicateWithTypes.name, statePredicateWithTypes);
+      }
+    }
   });
 
   return result;

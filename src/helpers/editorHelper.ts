@@ -1,5 +1,6 @@
 import { emptyPredicate, Predicate } from "@functions/parserTypes";
 import {
+  INITIAL_STATE_OPTION,
   STATE_NAME,
   VARIABLES_OPTION,
 } from "../languageSupport/nodeFactory/StateNode";
@@ -87,6 +88,13 @@ export function getNodeVariables(node: INodeState): string[] | void {
     return (varOption[1] as string).split(" ");
   }
   return;
+}
+
+export function isStateInitial(node: INodeState): boolean {
+  // TODO: Debug
+  return node.options.find(([optName]) => {
+    return optName === INITIAL_STATE_OPTION;
+  })[1];
 }
 
 export function getPredicateFromState(node: INodeState): Predicate | void {

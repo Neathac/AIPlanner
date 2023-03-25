@@ -14,9 +14,12 @@ import {
 import { useDomainStore } from "../../stores/domainStore";
 import {
   gatherActionModifications,
+  gatherGoalModifications,
+  gatherInitStateModifications,
   gatherPredicateModifications,
 } from "./nodeLoader";
 import { getProblemDocumentSyntaxTree } from "../problemParser/language";
+import { useProblemStore } from "@src/stores/problemStore";
 
 const NAME = "NAME";
 const PARAMETERS = "Parameters";
@@ -298,6 +301,12 @@ export const encodeDCK = (): void => {
   encodeActionModifications(gatherActionModifications());
 };
 
+export const encodeProblemDCK = (): void => {
+  encodePredicatesToProblem(gatherPredicateModifications());
+  encodeInitialStatesToProblem(gatherInitStateModifications());
+  encodeGoalModifications(gatherGoalModifications());
+};
+
 export const encodePredicatesToDomain = (
   predicates: Map<string, Predicate>
 ): void => {
@@ -320,6 +329,80 @@ export const encodePredicatesToDomain = (
           addedPredicates +
           domainText.slice(node.from, domainText.length);
         domainStore.loadActiveDomain(loadActiveDomain(domainText), domainText);
+        return;
+      }
+    },
+  });
+  return;
+};
+
+export const encodePredicatesToProblem = (
+  predicates: Map<string, Predicate>
+): void => {
+  const domainStore = useDomainStore();
+  const problemStore = useProblemStore();
+  const tree = getDocumentSyntaxTree(domainStore.rawActiveDomain);
+  let problemText = problemStore.rawActiveProblem;
+  let addedPredicates = "";
+  predicates.forEach((predicate) => {
+    addedPredicates =
+      addedPredicates + predicate.varNames.join(" ").replaceAll("?", "");
+    if (predicate.types)
+      addedPredicates = addedPredicates + " - " + predicate.types.join(" ");
+    addedPredicates = addedPredicates + "\n";
+  });
+  let foundPredicates = false;
+  tree.iterate({
+    enter: (node: SyntaxNodeRef) => {
+      if (node.type.name === PROBLEM_OBJECTS_GROUP) {
+        foundPredicates = true;
+      } else if (foundPredicates && node.type.name === NAME) {
+        foundPredicates = false;
+        problemText =
+          problemText.slice(0, node.from) +
+          addedPredicates +
+          problemText.slice(node.from, problemText.length);
+        problemStore.loadActiveProblem(
+          loadActiveProblem(problemText),
+          problemText
+        );
+        return;
+      }
+    },
+  });
+  return;
+};
+
+export const encodeInitialStatesToProblem = (
+  predicates: Map<string, Predicate>
+): void => {
+  const domainStore = useDomainStore();
+  const problemStore = useProblemStore();
+  const tree = getDocumentSyntaxTree(domainStore.rawActiveDomain);
+  let problemText = problemStore.rawActiveProblem;
+  let addedPredicates = "";
+  predicates.forEach((predicate) => {
+    addedPredicates =
+      addedPredicates + predicate.varNames.join(" ").replaceAll("?", "");
+    if (predicate.types)
+      addedPredicates = addedPredicates + " - " + predicate.types.join(" ");
+    addedPredicates = addedPredicates + "\n";
+  });
+  let foundPredicates = false;
+  tree.iterate({
+    enter: (node: SyntaxNodeRef) => {
+      if (node.type.name === PROBLEM_OBJECTS_GROUP) {
+        foundPredicates = true;
+      } else if (foundPredicates && node.type.name === NAME) {
+        foundPredicates = false;
+        problemText =
+          problemText.slice(0, node.from) +
+          addedPredicates +
+          problemText.slice(node.from, problemText.length);
+        problemStore.loadActiveProblem(
+          loadActiveProblem(problemText),
+          problemText
+        );
         return;
       }
     },
@@ -410,4 +493,41 @@ export const redefineActions = (
     domain = domain.replace(redefinition.original, redefinition.redefinition);
   });
   domainStore.loadActiveDomain(loadActiveDomain(domain), domain);
+};
+
+export const encodeGoalModifications = (
+  predicates: Map<string, Predicate>
+): void => {
+  const domainStore = useDomainStore();
+  const problemStore = useProblemStore();
+  const tree = getDocumentSyntaxTree(domainStore.rawActiveDomain);
+  let problemText = problemStore.rawActiveProblem;
+  let addedPredicates = "";
+  predicates.forEach((predicate) => {
+    addedPredicates =
+      addedPredicates + predicate.varNames.join(" ").replaceAll("?", "");
+    if (predicate.types)
+      addedPredicates = addedPredicates + " - " + predicate.types.join(" ");
+    addedPredicates = addedPredicates + "\n";
+  });
+  let foundPredicates = false;
+  tree.iterate({
+    enter: (node: SyntaxNodeRef) => {
+      if (node.type.name === PROBLEM_OBJECTS_GROUP) {
+        foundPredicates = true;
+      } else if (foundPredicates && node.type.name === NAME) {
+        foundPredicates = false;
+        problemText =
+          problemText.slice(0, node.from) +
+          addedPredicates +
+          problemText.slice(node.from, problemText.length);
+        problemStore.loadActiveProblem(
+          loadActiveProblem(problemText),
+          problemText
+        );
+        return;
+      }
+    },
+  });
+  return;
 };

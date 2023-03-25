@@ -1,4 +1,7 @@
-import { emptyPddlDocument, emptyPddlProblemDocument } from "@functions/parserTypes";
+import {
+  emptyPddlDocument,
+  emptyPddlProblemDocument,
+} from "@functions/parserTypes";
 import { Domain, Problem, User } from "@functions/systemTypes";
 import {
   createDomain,
@@ -12,7 +15,10 @@ import {
   updateProblem,
 } from "@src/client";
 import { NEW_DOMAIN, NEW_PROBLEM } from "@src/helpers/consts";
-import { loadActiveDomain, loadActiveProblem } from "@src/languageSupport/decomposer/domainLoader";
+import {
+  loadActiveDomain,
+  loadActiveProblem,
+} from "@src/languageSupport/decomposer/domainLoader";
 import editorFactory from "@src/languageSupport/nodeFactory/nodeFactory";
 import nodeFactory from "@src/languageSupport/nodeFactory/nodeFactory";
 import EventBus from "@src/lib/EventBus";
