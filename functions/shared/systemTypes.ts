@@ -97,5 +97,26 @@ export const EMPTY_PROBLEM: Problem = {
   id: "",
   name: "",
   parentDomain: "",
-  rawProblem: "",
+  rawProblem: `(define
+    (problem buildingahouse)
+    (:domain construction)
+    ;(:situation <situation_name>) ;deprecated
+    (:objects 
+        s1 - site 
+        b - bricks 
+        w - windows 
+        c - cables
+    )
+    (:goal (and
+            (walls-built ?s1)
+            (cables-installed ?s1)
+            (windows-fitted ?s1)
+        )
+    )
+    (:init
+        (on-site b s1)
+        (on-site c s1)
+        (on-site w s1)
+    )
+)`,
 };

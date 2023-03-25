@@ -97,15 +97,16 @@
 
 <script lang="ts">
 import {
-  loadActiveDomain,
   encodeDCK,
-loadActiveProblem,
+  loadActiveProblem,
 } from "../languageSupport/decomposer/domainLoader";
-import { defineComponent } from "vue";
+import { defineComponent, nextTick } from "vue";
 import ProblemEditor from "../components/ProblemEditor.vue";
 import { useProblemStore } from "../stores/problemStore";
 import { useNodeStore } from "../stores/nodeStore";
 import { getAuth } from "firebase/auth";
+import { NEW_PROBLEM } from "../helpers/consts";
+import EventBus from "../lib/EventBus";
 
 export default defineComponent({
   name: "ProblemView",
@@ -121,6 +122,11 @@ export default defineComponent({
   },
   mounted() {
     this.loadToDck();
+    EventBus.on(NEW_PROBLEM, async (_e) => {
+      this.menuVisible = false;
+      await nextTick();
+      this.menuVisible = true;
+    });
   },
   methods: {
     load(i: number) {
