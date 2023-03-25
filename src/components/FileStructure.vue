@@ -91,11 +91,17 @@
             </v-card>
           </v-dialog></v-card-subtitle
         ><v-expansion-panels variant="accordion">
-          <v-expansion-panel
-            v-for="i in problems"
-            :key="i.id"
-            :title="i.name"
-          ></v-expansion-panel>
+          <v-expansion-panel v-for="i in problems" :key="i.id" :title="i.name">
+            <v-expansion-panel-text>
+              <v-btn
+                color="green-darken-1"
+                variant="text"
+                @click="editProblem(i)"
+              >
+                Edit problem
+              </v-btn>
+            </v-expansion-panel-text>
+          </v-expansion-panel>
         </v-expansion-panels>
       </v-card>
     </v-navigation-drawer>
@@ -176,6 +182,10 @@ export default defineComponent({
     });
   },
   methods: {
+    editProblem(problem: Problem) {
+      Manager.selectProblem(problem);
+      this.$router.push(PROBLEM_ROUTE);
+    },
     createDomain() {
       this.dialogDomainCreate = false;
       const dom = EMPTY_DOMAIN;

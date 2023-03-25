@@ -33,3 +33,4 @@ export const PROBLEM_ROUTE = "/problem";
     Global events
 */
 export const NEW_DOMAIN = "new_domain";
+export const NEW_PROBLEM = "new_problem";

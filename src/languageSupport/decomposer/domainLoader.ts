@@ -294,11 +294,13 @@ const getNodeValue = (code: string, node: SyntaxNodeRef): string => {
 };
 
 export const encodeDCK = (): void => {
-  encodePredicates(gatherPredicateModifications());
+  encodePredicatesToDomain(gatherPredicateModifications());
   encodeActionModifications(gatherActionModifications());
 };
 
-export const encodePredicates = (predicates: Map<string, Predicate>): void => {
+export const encodePredicatesToDomain = (
+  predicates: Map<string, Predicate>
+): void => {
   const domainStore = useDomainStore();
   const tree = getDocumentSyntaxTree(domainStore.rawActiveDomain);
   let domainText = domainStore.rawActiveDomain;

@@ -1,4 +1,4 @@
-import { emptyPddlDocument } from "@functions/parserTypes";
+import { emptyPddlDocument, emptyPddlProblemDocument } from "@functions/parserTypes";
 import { Domain, Problem, User } from "@functions/systemTypes";
 import {
   createDomain,
@@ -11,8 +11,8 @@ import {
   updateDomain,
   updateProblem,
 } from "@src/client";
-import { NEW_DOMAIN } from "@src/helpers/consts";
-import { loadActiveDomain } from "@src/languageSupport/decomposer/domainLoader";
+import { NEW_DOMAIN, NEW_PROBLEM } from "@src/helpers/consts";
+import { loadActiveDomain, loadActiveProblem } from "@src/languageSupport/decomposer/domainLoader";
 import editorFactory from "@src/languageSupport/nodeFactory/nodeFactory";
 import nodeFactory from "@src/languageSupport/nodeFactory/nodeFactory";
 import EventBus from "@src/lib/EventBus";
@@ -199,7 +199,7 @@ export class resourceManagerClass implements resourceManager {
       return getDomain(problem.parentDomain).then((domain) => {
         useDocumentStore().modifyDomain(domain);
         useDocumentStore().appendDomainProblems(problem);
-        useProblemStore().loadActiveProblem(emptyPddlDocument(), "");
+        useProblemStore().loadActiveProblem(emptyPddlProblemDocument(), "");
         return problem;
       });
     });
@@ -209,7 +209,7 @@ export class resourceManagerClass implements resourceManager {
     const problem = useDocumentStore().getActiveProblemById(problemId);
     if (problem) {
       useProblemStore().loadActiveProblem(
-        loadActiveDomain(problem.rawProblem),
+        loadActiveProblem(problem.rawProblem),
         problem.rawProblem
       );
       return problem;
@@ -224,7 +224,7 @@ export class resourceManagerClass implements resourceManager {
       return getProblem(problemId).then((problem) => {
         useDocumentStore().appendDomainProblems(problem);
         useProblemStore().loadActiveProblem(
-          loadActiveDomain(problem.rawProblem),
+          loadActiveProblem(problem.rawProblem),
           problem.rawProblem
         );
         return problem;
@@ -236,7 +236,7 @@ export class resourceManagerClass implements resourceManager {
     return updateProblem(problem).then((newProblem) => {
       useDocumentStore().appendDomainProblems(newProblem);
       useProblemStore().loadActiveProblem(
-        loadActiveDomain(problem.rawProblem),
+        loadActiveProblem(problem.rawProblem),
         problem.rawProblem
       );
       return newProblem;
@@ -281,6 +281,15 @@ export class resourceManagerClass implements resourceManager {
     );
     store.activeDomain = domain.rawDomain;
     EventBus.emit(NEW_DOMAIN);
+  }
+
+  selectProblem(problem: Problem): void {
+    useProblemStore().loadActiveProblem(
+      loadActiveProblem(problem.rawProblem),
+      problem.rawProblem
+    );
+    store.activeProblem = problem.rawProblem;
+    EventBus.emit(NEW_PROBLEM);
   }
 }
 
