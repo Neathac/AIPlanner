@@ -200,6 +200,9 @@ export default defineComponent({
       render: () => h(GoalSidebarOption),
     });
 
+    if (useNodeStore().getActiveStateNodes.length > 0)
+      editor.load(useNodeStore().getActiveEditorState);
+
     return {
       menuVisible: true,
       editorType: "Domain",

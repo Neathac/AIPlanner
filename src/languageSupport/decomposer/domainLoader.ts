@@ -59,6 +59,8 @@ export const loadActiveProblem = (problemCode: string): PddlProblemDocument => {
   tree.iterate({
     enter: (node: SyntaxNodeRef) => {
       const foundName = node.type.name;
+      console.log(foundName);
+      console.log(getNodeValue(problemCode, node));
       if (foundRootGoal === 1) {
         if (foundName === LOGICAL_EXPRESSION) {
           // This is kinda hacky Possible bug source
@@ -172,6 +174,8 @@ export const loadActiveDomain = (domainCode: string): PddlDocument => {
   tree.iterate({
     enter: (node: SyntaxNodeRef) => {
       const foundName = node.type.name;
+      console.log(foundName);
+      console.log(getNodeValue(domainCode, node));
       if (isInGroup) {
         if (foundName === DOMAIN_GROUP) {
           isInGroup = false;
@@ -339,15 +343,15 @@ export const encodePredicatesToDomain = (
 export const encodePredicatesToProblem = (
   predicates: Map<string, Predicate>
 ): void => {
-  const domainStore = useDomainStore();
   const problemStore = useProblemStore();
-  const tree = getDocumentSyntaxTree(domainStore.rawActiveDomain);
+  console.log(predicates);
+  const tree = getProblemDocumentSyntaxTree(problemStore.rawActiveProblem);
   let problemText = problemStore.rawActiveProblem;
   let addedPredicates = "";
   predicates.forEach((predicate) => {
     addedPredicates =
       addedPredicates + predicate.varNames.join(" ").replaceAll("?", "");
-    if (predicate.types)
+    if (predicate.types && predicate.types.length > 0)
       addedPredicates = addedPredicates + " - " + predicate.types.join(" ");
     addedPredicates = addedPredicates + "\n";
   });
@@ -376,24 +380,26 @@ export const encodePredicatesToProblem = (
 export const encodeInitialStatesToProblem = (
   predicates: Map<string, Predicate>
 ): void => {
-  const domainStore = useDomainStore();
   const problemStore = useProblemStore();
-  const tree = getDocumentSyntaxTree(domainStore.rawActiveDomain);
+  const tree = getProblemDocumentSyntaxTree(problemStore.rawActiveProblem);
   let problemText = problemStore.rawActiveProblem;
   let addedPredicates = "";
   predicates.forEach((predicate) => {
     addedPredicates =
-      addedPredicates + predicate.varNames.join(" ").replaceAll("?", "");
-    if (predicate.types)
-      addedPredicates = addedPredicates + " - " + predicate.types.join(" ");
+      addedPredicates +
+      "(" +
+      predicate.name +
+      " " +
+      predicate.varNames.join(" ").replaceAll("?", "") +
+      ")";
     addedPredicates = addedPredicates + "\n";
   });
   let foundPredicates = false;
   tree.iterate({
     enter: (node: SyntaxNodeRef) => {
-      if (node.type.name === PROBLEM_OBJECTS_GROUP) {
+      if (node.type.name === PROBLEM_INIT_GROUP) {
         foundPredicates = true;
-      } else if (foundPredicates && node.type.name === NAME) {
+      } else if (foundPredicates && node.type.name === INIT_PREDICATE) {
         foundPredicates = false;
         problemText =
           problemText.slice(0, node.from) +
@@ -498,29 +504,32 @@ export const redefineActions = (
 export const encodeGoalModifications = (
   predicates: Map<string, Predicate>
 ): void => {
-  const domainStore = useDomainStore();
   const problemStore = useProblemStore();
-  const tree = getDocumentSyntaxTree(domainStore.rawActiveDomain);
+  const tree = getProblemDocumentSyntaxTree(problemStore.rawActiveProblem);
   let problemText = problemStore.rawActiveProblem;
-  let addedPredicates = "";
+  let addedPredicates = "\n(and\n";
   predicates.forEach((predicate) => {
     addedPredicates =
-      addedPredicates + predicate.varNames.join(" ").replaceAll("?", "");
-    if (predicate.types)
-      addedPredicates = addedPredicates + " - " + predicate.types.join(" ");
+      addedPredicates +
+      "(" +
+      predicate.name +
+      " " +
+      predicate.varNames.join(" ") +
+      ")";
     addedPredicates = addedPredicates + "\n";
   });
   let foundPredicates = false;
   tree.iterate({
     enter: (node: SyntaxNodeRef) => {
-      if (node.type.name === PROBLEM_OBJECTS_GROUP) {
+      if (node.type.name === PROBLEM_GOAL_GROUP) {
         foundPredicates = true;
-      } else if (foundPredicates && node.type.name === NAME) {
+      } else if (foundPredicates && node.type.name === LOGICAL_EXPRESSION) {
         foundPredicates = false;
         problemText =
           problemText.slice(0, node.from) +
           addedPredicates +
-          problemText.slice(node.from, problemText.length);
+          problemText.slice(node.from, problemText.length) +
+          ")";
         problemStore.loadActiveProblem(
           loadActiveProblem(problemText),
           problemText

@@ -28,10 +28,10 @@ DomainPredicatesGroup {
     "(" PREDICATES_SECTION (Predicate)+ ")"
 }
 Predicate {
-    "(" PredicateName (VARIABLE (TYPE)?)+ ")"
+    "(" PredicateName (VARIABLE (TYPE)?)* ")"
 }
 PredicateName {
-    NAME ("-" NAME)?
+    NAME ("-" NAME)*
 }
 DomainTimelessGroup {
     "(" TIMELESS_SECTION (Timeless)+ ")"

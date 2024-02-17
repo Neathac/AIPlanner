@@ -42,7 +42,7 @@
         name="effect"
         value="Effect"
         v-model="effect"
-        label="Negate in effect"
+        label="Is action effect"
         v-if="editMode"
       />
     </v-row>

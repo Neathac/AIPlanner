@@ -97,7 +97,7 @@
 
 <script lang="ts">
 import {
-  encodeDCK,
+  encodeProblemDCK,
   loadActiveProblem,
 } from "../languageSupport/decomposer/domainLoader";
 import { defineComponent, nextTick } from "vue";
@@ -141,7 +141,7 @@ export default defineComponent({
     },
     encodeDCK() {
       // TODO: Transitioning to a state via an effect doesn't work
-      encodeDCK();
+      encodeProblemDCK();
       this.$refs.editor.code = this.problemStore.rawActiveProblem;
     },
     saveEncoderState() {
