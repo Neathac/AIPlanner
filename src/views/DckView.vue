@@ -10,7 +10,8 @@
           mandatory
           variant="outlined"
           ><v-btn value="Domain"> Domain Editor </v-btn>
-          <v-btn value="DCK"> DCK Encoder </v-btn>
+          <!--<v-btn value="DCK"> DCK Encoder </v-btn>-->
+          <v-btn value="ATB"> ATB </v-btn>
         </v-btn-toggle>
       </template>
       <template v-slot:append>
@@ -112,7 +113,7 @@
               Load to DCK Encoder
             </v-btn>
           </template>
-          <template v-if="editorType == 'DCK'">
+          <!--<template v-if="editorType == 'DCK'">
             <v-btn
               :loading="loading"
               :disabled="loading"
@@ -133,16 +134,21 @@
             >
               Load ATB-DCK
             </v-btn>
-          </template>
+          </template>-->
         </div>
       </template>
     </v-app-bar>
     <DomainEditor v-if="editorType == 'Domain'" ref="editor" />
-    <NodeEditor
+    <!--<NodeEditor
       v-if="editorType == 'DCK'"
       ref="encoder"
       @encoderChanged="saveEncoderState"
       @askForState="loadEncoderState"
+    />-->
+    <AtbEditor
+      v-if="editorType == 'ATB'"
+      ref="encoder"
+      @encoderChanged="saveEncoderState"
     />
   </div>
 </template>
@@ -154,7 +160,8 @@ import {
 } from "../languageSupport/decomposer/domainLoader";
 import { defineComponent, nextTick, h } from "vue";
 import DomainEditor from "../components/DomainEditor.vue";
-import NodeEditor from "../components/NodeEditor.vue";
+//import NodeEditor from "../components/NodeEditor.vue";
+import AtbEditor from "../components/AtbEditor.vue";
 import { useDomainStore } from "../stores/domainStore";
 import { useNodeStore } from "../stores/nodeStore";
 import { OptionPlugin } from "@baklavajs/plugin-options-vue3";
@@ -164,10 +171,10 @@ import ActionSidebarOption from "../components/Sidebars/ActionSidebarOption.vue"
 import GoalSidebarOption from "../components/Sidebars/GoalSidebarOption.vue";
 import StateConstraintSidebarOption from "../components/Sidebars/StateConstraintSidebarOption.vue";
 import { Engine } from "@baklavajs/plugin-engine";
-import { deepCopy } from "@firebase/util";
-import { ACTION_NODE_TYPE } from "../languageSupport/nodeFactory/ActionNode";
-import { STATE_CONSTRAINT_NODE_TYPE } from "../languageSupport/nodeFactory/StateConstraintNode";
-import { GOAL_NODE_TYPE } from "../languageSupport/nodeFactory/GoalNode";
+//import { deepCopy } from "@firebase/util";
+//import { ACTION_NODE_TYPE } from "../languageSupport/nodeFactory/ActionNode";
+//import { STATE_CONSTRAINT_NODE_TYPE } from "../languageSupport/nodeFactory/StateConstraintNode";
+//import { GOAL_NODE_TYPE } from "../languageSupport/nodeFactory/GoalNode";
 import EventBus from "../lib/EventBus";
 import { NEW_DOMAIN } from "../helpers/consts";
 import { Manager } from "../stores/resourceManager";
@@ -180,6 +187,7 @@ export default defineComponent({
       This whole stupid useless bit is so that the editor instance can remember its state upon changing the viewed editor. 
       The save/load methods don't function properly with plugins it would seem.
     */
+   /*
     const editor = editorFactory();
     const viewPlugin = new ViewPlugin();
     const engine = new Engine(true);
@@ -202,7 +210,7 @@ export default defineComponent({
 
     if (useNodeStore().getActiveStateNodes.length > 0)
       editor.load(useNodeStore().getActiveEditorState);
-
+    */
     return {
       menuVisible: true,
       editorType: "Domain",
@@ -210,7 +218,7 @@ export default defineComponent({
       dialogDomainSave: false,
       dialogDomainRestore: false,
       domainStore: useDomainStore(),
-      editorState: editor.save(),
+      //editorState: editor.save(),
     };
   },
   mounted() {
@@ -261,7 +269,7 @@ export default defineComponent({
         this.loading = false;
       });
     },
-    loadEncoderState() {
+    /*loadEncoderState() {
       // We need to manually fill in the options, as load doesn't consider them
       const stateCopy = deepCopy(this.editorState);
       this.$refs.encoder.editor.load(this.editorState);
@@ -286,11 +294,12 @@ export default defineComponent({
           });
         }
       }
-    },
+    },*/
   },
   components: {
     DomainEditor,
-    NodeEditor,
+    //NodeEditor,
+    AtbEditor,
   },
 });
 </script>

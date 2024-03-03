@@ -35,7 +35,9 @@ const PREDICATE_NAME = "PredicateName";
 const ACTION_SECTION = "ACTION_SECTION";
 const ACTION_PARAMETERS_SUBGROUP = "ActionParametersSubgroup";
 const ACTION_PRECONDITION_SUBGROUP = "ActionPreconditionSubgroup";
+const PRECONDITION_CONTENT = "PreconditionContent";
 const ACTION_EFFECT_SUBGROUP = "ActionEffectSubgroup";
+const EFFECT_CONTENT = "EffectContent";
 const PROBLEM_GROUP = "ProblemGroup";
 const PROBLEM_NAME_GROUP = "ProblemNameGroup";
 const PROBLEM_OBJECTS_GROUP = "ProblemObjectsGroup";
@@ -59,8 +61,6 @@ export const loadActiveProblem = (problemCode: string): PddlProblemDocument => {
   tree.iterate({
     enter: (node: SyntaxNodeRef) => {
       const foundName = node.type.name;
-      console.log(foundName);
-      console.log(getNodeValue(problemCode, node));
       if (foundRootGoal === 1) {
         if (foundName === LOGICAL_EXPRESSION) {
           // This is kinda hacky Possible bug source
@@ -158,6 +158,7 @@ export const loadActiveProblem = (problemCode: string): PddlProblemDocument => {
       }
     },
   });
+  console.log(problem);
   return problem;
 };
 
@@ -174,8 +175,6 @@ export const loadActiveDomain = (domainCode: string): PddlDocument => {
   tree.iterate({
     enter: (node: SyntaxNodeRef) => {
       const foundName = node.type.name;
-      console.log(foundName);
-      console.log(getNodeValue(domainCode, node));
       if (isInGroup) {
         if (foundName === DOMAIN_GROUP) {
           isInGroup = false;
@@ -256,16 +255,18 @@ export const loadActiveDomain = (domainCode: string): PddlDocument => {
                     }
                     break;
                   case ACTION_PRECONDITION_SUBGROUP:
-                    domain.actions[actionsAmount].preconditions = getNodeValue(
-                      domainCode,
-                      node
-                    );
+                    if (foundName === PRECONDITION_CONTENT) {
+                      domain.actions[actionsAmount].preconditions =
+                        getNodeValue(domainCode, node);
+                    }
                     break;
                   case ACTION_EFFECT_SUBGROUP:
-                    domain.actions[actionsAmount].effect = getNodeValue(
-                      domainCode,
-                      node
-                    );
+                    if (foundName === EFFECT_CONTENT) {
+                      domain.actions[actionsAmount].effect = getNodeValue(
+                        domainCode,
+                        node
+                      );
+                    }
                     break;
                   default:
                     break;
@@ -293,6 +294,7 @@ export const loadActiveDomain = (domainCode: string): PddlDocument => {
       }
     },
   });
+  console.log(domain);
   return domain;
 };
 

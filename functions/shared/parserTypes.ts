@@ -26,6 +26,18 @@ export interface ProblemObject {
   types?: PddlType[];
 }
 
+export interface Domain {
+  name: "",
+  predicates: Predicate[],
+  operators: Action[],
+}
+
+export const emptyDomain = (): Domain => ({
+  name: "",
+  predicates: new Array<Predicate>(),
+  operators: new Array<Action>(),
+});
+
 export interface Predicate {
     name: string;
     varNames: string[];
@@ -159,3 +171,63 @@ export const getPredicateFromString = (predicate: string): Predicate => {
   }
   return newPredicate;
 };
+
+export interface AttributedDCK {
+  domain: Domain,
+  states: AttributedState[],
+  memory: AttributedMemory[],
+  transitions: AttributedTransition[],
+}
+
+export const emptyAttributedDCK = (): AttributedDCK => ({
+  domain: emptyDomain(),
+  states: new Array<AttributedState>(),
+  memory: new Array<AttributedMemory>(),
+  transitions: new Array<AttributedTransition>(),
+});
+
+export interface AttributedState {
+  name: string,
+  numOfVars: number,
+  specificVars?: string[],
+}
+
+export const emptyAttributedState = (): AttributedState => ({
+  name: "",
+  numOfVars: 0,
+});
+
+export interface AttributedMemory {
+  name: string,
+  numOfVars: number,
+  specificVars?: string[],
+}
+
+export const emptyAttributedMemory = (): AttributedMemory => ({
+  name: "",
+  numOfVars: 0,
+});
+
+export interface AttributedTransition {
+  originState: AttributedState,
+  targetState: AttributedState,
+  operator: Action,
+  constraints: AttributedConstraint[],
+}
+
+export const emptyAttributedTransition = (): AttributedTransition => ({
+  originState: emptyAttributedState(),
+  targetState: emptyAttributedState(),
+  operator: emptyAction(),
+  constraints: new Array<AttributedConstraint>(),
+});
+
+export interface AttributedConstraint {
+  predicate: string,
+  variables: string[],
+}
+
+export const emptyAttributedConstraint = (): AttributedConstraint => ({
+  predicate: "",
+  variables: [],
+});
