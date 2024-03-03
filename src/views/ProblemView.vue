@@ -97,13 +97,13 @@
 
 <script lang="ts">
 import {
-  encodeProblemDCK,
+  //encodeProblemDCK,
   loadActiveProblem,
 } from "../languageSupport/decomposer/domainLoader";
 import { defineComponent, nextTick } from "vue";
 import ProblemEditor from "../components/ProblemEditor.vue";
 import { useProblemStore } from "../stores/problemStore";
-import { useNodeStore } from "../stores/nodeStore";
+//import { useNodeStore } from "../stores/nodeStore";
 import { getAuth } from "firebase/auth";
 import { NEW_PROBLEM } from "../helpers/consts";
 import EventBus from "../lib/EventBus";
@@ -141,12 +141,12 @@ export default defineComponent({
     },
     encodeDCK() {
       // TODO: Transitioning to a state via an effect doesn't work
-      encodeProblemDCK();
+      //encodeProblemDCK();
       this.$refs.editor.code = this.problemStore.rawActiveProblem;
     },
     saveEncoderState() {
       this.editorState = this.$refs.encoder.editor.save();
-      useNodeStore().loadActiveEditorState(this.editorState);
+      //useNodeStore().loadActiveEditorState(this.editorState);
     },
   },
   components: {

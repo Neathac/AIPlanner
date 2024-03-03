@@ -7,9 +7,13 @@
     </v-tabs>
     <v-window v-model="tab">
       <v-window-item :key="1" :value="1">
-        <v-container fluid>
-          <v-row v-for="dckState in DCKstates" :key="dckState.name">
-            <DckPredForm :state="dckState" />
+        <v-container fluid style="max-height: 80vh; overflow-y: scroll">
+          <v-row v-for="(dckState, i) in DCKstates" :key="dckState.name">
+            <DckPredForm
+              :atb-state="dckState"
+              :index="i"
+              @deleteEvent="deleteState(i)"
+            />
           </v-row>
           <v-row class="justify-center">
             <v-btn color="green" icon="mdi-plus" @click="addDckState"></v-btn>
@@ -18,7 +22,7 @@
       </v-window-item>
       <v-window-item :key="2" :value="2">
         <v-container fluid>
-          <v-row> <DckPredForm /> </v-row>
+          <!--<v-row> <DckPredForm /> </v-row>-->
         </v-container>
       </v-window-item>
       <v-window-item :key="3" :value="3">
@@ -44,12 +48,20 @@ export default defineComponent({
       DCKstates: useAtbStore().getDCKstates,
     };
   },
+  mounted() {
+    console.log(this.DCKstates);
+  },
   methods: {
     addDckState() {
-      this.atbStore.loadNewDckStates(
-        this.atbStore.getDCKstates + [emptyAttributedState()]
-      );
-      this.DCKstates = this.atbStore.getDCKstates;
+      const temp = emptyAttributedState();
+      temp.name = "State_" + this.DCKstates.length;
+      temp.numOfVars = 0;
+      this.DCKstates.push(temp);
+      this.atbStore.loadNewDckStates(this.DCKstates);
+    },
+    deleteState(i: number) {
+      this.DCKstates.splice(i, 1);
+      this.atbStore.loadNewDckStates(this.DCKstates);
     },
   },
   components: {

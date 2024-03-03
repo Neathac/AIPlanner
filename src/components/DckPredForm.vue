@@ -1,47 +1,81 @@
 <template>
   <v-container>
-    <v-row>
-      <!-- Text Field -->
-      <v-col cols="4">
-        <v-text-field
-          v-model="textFieldValue"
-          label="Text Field"
-        ></v-text-field>
-      </v-col>
-
-      <!-- Numeric-only Text Field -->
-      <v-col cols="4">
-        <v-text-field
-          v-model="numericFieldValue"
-          label="Numeric Field"
-          type="number"
-        ></v-text-field>
-      </v-col>
-
-      <!-- Save Button -->
-      <v-col cols="4">
-        <v-btn @click="saveForm" color="primary">Save</v-btn>
-      </v-col>
-    </v-row>
+    <v-form @submit.prevent="submit" ref="form">
+      <v-row>
+        <v-col cols="4">
+          <v-text-field
+            v-model="name"
+            :rules="nameRules"
+            label="Name"
+          ></v-text-field>
+        </v-col>
+        <v-col cols="4">
+          <v-text-field
+            v-model="numVars"
+            label="Number of variables"
+            type="number"
+          ></v-text-field>
+        </v-col>
+        <v-col cols="4">
+          <v-btn type="submit" class="me-4" color="primary">Save</v-btn>
+          <v-btn
+            color="error"
+            icon="mdi-delete"
+            class="me-4"
+            @click="this.$emit('deleteEvent')"
+          ></v-btn>
+        </v-col>
+      </v-row>
+    </v-form>
   </v-container>
 </template>
 
 <script lang="ts">
-import { defineComponent } from "vue";
+import { useAtbStore } from "../stores/atbStore";
+import { defineComponent, ref } from "vue";
 
 export default defineComponent({
-  data() {
+  props: {
+    index: {
+      type: Number,
+      required: true,
+    },
+    atbState: {
+      required: true,
+    },
+  },
+  setup() {
     return {
-      textFieldValue: "",
-      numericFieldValue: null,
+      form: ref(),
     };
   },
+  data() {
+    return {
+      name: "",
+      numVars: null,
+      nameRules: [
+        (value: string) => {
+          if (value.length > 0) return true;
+          return "You must enter a unique non-empty name.";
+        },
+      ],
+    };
+  },
+  mounted() {
+    this.name = this.atbState.name;
+    this.numVars = this.atbState.numOfVars;
+  },
   methods: {
-    saveForm() {
-      // Handle saving form data
-      console.log("Text Field:", this.textFieldValue);
-      console.log("Numeric Field:", this.numericFieldValue);
-      // Add your save logic here
+    async submit(event: { preventDefault: () => any }) {
+      await event.preventDefault();
+      const { valid } = await this.form.validate();
+      if (valid) {
+        // eslint-disable-next-line vue/no-mutating-props
+        this.atbState.name = this.name;
+        // eslint-disable-next-line vue/no-mutating-props
+        this.atbState.numOfVars = this.numVars;
+        this.$emit("saveEvent");
+      }
     },
   },
 });

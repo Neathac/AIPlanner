@@ -2,7 +2,6 @@ import { defineStore } from "pinia";
 import {
   PddlDocument,
   emptyAttributedDCK,
-  AttributedDCK,
   Action,
   Predicate,
   AttributedMemory,
@@ -18,6 +17,14 @@ export const useAtbStore = defineStore("atbStore", {
     getDCKmemory: (state) => state.dck.memory,
     getDCKtransitions: (state) => state.dck.transitions,
     getDomain: (state) => state.dck.domain,
+    getStatesNames: (state) => {
+      const names = [];
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      Object.entries(state.dck.states).forEach(([_, val]) =>
+        names.push(val.name)
+      );
+      return names;
+    },
   },
   actions: {
     loadFreshActiveDomain(pddlDomain: PddlDocument) {
