@@ -10,7 +10,6 @@
           mandatory
           variant="outlined"
           ><v-btn value="Domain"> Domain Editor </v-btn>
-          <!--<v-btn value="DCK"> DCK Encoder </v-btn>-->
           <v-btn value="ATB"> ATB </v-btn>
         </v-btn-toggle>
       </template>
@@ -113,68 +112,20 @@
               Load to DCK Encoder
             </v-btn>
           </template>
-          <!--<template v-if="editorType == 'DCK'">
-            <v-btn
-              :loading="loading"
-              :disabled="loading"
-              color="blue-grey"
-              prepend-icon="mdi-check-bold"
-              variant="flat"
-              @click="saveEncoderState"
-            >
-              Save ATB-DCK
-            </v-btn>
-            <v-btn
-              :loading="loading"
-              :disabled="loading"
-              color="blue-grey"
-              prepend-icon="mdi-check-bold"
-              variant="flat"
-              @click="loadEncoderState"
-            >
-              Load ATB-DCK
-            </v-btn>
-          </template>-->
         </div>
       </template>
     </v-app-bar>
     <DomainEditor v-if="editorType == 'Domain'" ref="editor" />
-    <!--<NodeEditor
-      v-if="editorType == 'DCK'"
-      ref="encoder"
-      @encoderChanged="saveEncoderState"
-      @askForState="loadEncoderState"
-    />-->
-    <AtbEditor
-      v-if="editorType == 'ATB'"
-      ref="encoder"
-      @encoderChanged="saveEncoderState"
-    />
+    <AtbEditor v-if="editorType == 'ATB'" ref="encoder" />
   </div>
 </template>
 
 <script lang="ts">
-import {
-  loadActiveDomain,
-  encodeDCK,
-} from "../languageSupport/decomposer/domainLoader";
+import { loadActiveDomain } from "../languageSupport/decomposer/domainLoader";
 import { defineComponent, nextTick, h } from "vue";
 import DomainEditor from "../components/DomainEditor.vue";
-//import NodeEditor from "../components/NodeEditor.vue";
 import AtbEditor from "../components/AtbEditor.vue";
 import { useDomainStore } from "../stores/domainStore";
-import { useNodeStore } from "../stores/nodeStore";
-import { OptionPlugin } from "@baklavajs/plugin-options-vue3";
-import { ViewPlugin } from "@baklavajs/plugin-renderer-vue3";
-import editorFactory from "../languageSupport/nodeFactory/nodeFactory";
-import ActionSidebarOption from "../components/Sidebars/ActionSidebarOption.vue";
-import GoalSidebarOption from "../components/Sidebars/GoalSidebarOption.vue";
-import StateConstraintSidebarOption from "../components/Sidebars/StateConstraintSidebarOption.vue";
-import { Engine } from "@baklavajs/plugin-engine";
-//import { deepCopy } from "@firebase/util";
-//import { ACTION_NODE_TYPE } from "../languageSupport/nodeFactory/ActionNode";
-//import { STATE_CONSTRAINT_NODE_TYPE } from "../languageSupport/nodeFactory/StateConstraintNode";
-//import { GOAL_NODE_TYPE } from "../languageSupport/nodeFactory/GoalNode";
 import EventBus from "../lib/EventBus";
 import { NEW_DOMAIN } from "../helpers/consts";
 import { Manager } from "../stores/resourceManager";
@@ -183,34 +134,6 @@ import { useDocumentStore } from "../stores/documentStore";
 export default defineComponent({
   name: "DckView",
   data() {
-    /*
-      This whole stupid useless bit is so that the editor instance can remember its state upon changing the viewed editor. 
-      The save/load methods don't function properly with plugins it would seem.
-    */
-   /*
-    const editor = editorFactory();
-    const viewPlugin = new ViewPlugin();
-    const engine = new Engine(true);
-    editor.use(viewPlugin);
-    editor.use(new OptionPlugin());
-    editor.use(engine);
-    // NEVER touch this ever. Oficially legacy code as of today
-    viewPlugin.registerOption("ActionSidebarOption", {
-      components: ActionSidebarOption,
-      render: () => h(ActionSidebarOption),
-    });
-    viewPlugin.registerOption("StateConstraintSidebarOption", {
-      components: StateConstraintSidebarOption,
-      render: () => h(StateConstraintSidebarOption),
-    });
-    viewPlugin.registerOption("GoalSidebarOption", {
-      components: GoalSidebarOption,
-      render: () => h(GoalSidebarOption),
-    });
-
-    if (useNodeStore().getActiveStateNodes.length > 0)
-      editor.load(useNodeStore().getActiveEditorState);
-    */
     return {
       menuVisible: true,
       editorType: "Domain",
@@ -218,11 +141,9 @@ export default defineComponent({
       dialogDomainSave: false,
       dialogDomainRestore: false,
       domainStore: useDomainStore(),
-      //editorState: editor.save(),
     };
   },
   mounted() {
-    // this.loadToDck();
     EventBus.on(NEW_DOMAIN, async (_e) => {
       this.editorType = "a";
       await nextTick();
@@ -242,12 +163,8 @@ export default defineComponent({
     },
     encodeDCK() {
       // TODO: Transitioning to a state via an effect doesn't work
-      encodeDCK();
+      // encodeDCK();
       this.$refs.editor.code = this.domainStore.rawActiveDomain;
-    },
-    saveEncoderState() {
-      this.editorState = this.$refs.encoder.editor.save();
-      useNodeStore().loadActiveEditorState(this.editorState);
     },
     updateDomainState() {
       this.dialogDomainSave = false;

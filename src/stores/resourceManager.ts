@@ -19,13 +19,10 @@ import {
   loadActiveDomain,
   loadActiveProblem,
 } from "@src/languageSupport/decomposer/domainLoader";
-import editorFactory from "@src/languageSupport/nodeFactory/nodeFactory";
-import nodeFactory from "@src/languageSupport/nodeFactory/nodeFactory";
 import EventBus from "@src/lib/EventBus";
 import { store } from "@src/store";
 import { useDocumentStore } from "./documentStore";
 import { useDomainStore } from "./domainStore";
-import { useNodeStore } from "./nodeStore";
 import { useProblemStore } from "./problemStore";
 
 export interface resourceManager {
@@ -144,7 +141,6 @@ export class resourceManagerClass implements resourceManager {
       useDocumentStore().appendDomains(newDomain, []);
       useDocumentStore().setActiveDomain(newDomain.id);
       useDomainStore().loadActiveDomain(emptyPddlDocument(), "");
-      useNodeStore().loadActiveEditorState(nodeFactory().save());
       return newDomain;
     });
   }
@@ -281,9 +277,6 @@ export class resourceManagerClass implements resourceManager {
     useDomainStore().loadActiveDomain(
       loadActiveDomain(domain.rawDomain),
       domain.rawDomain
-    );
-    useNodeStore().loadActiveEditorState(
-      JSON.parse(domain.dckState) ?? editorFactory()
     );
     store.activeDomain = domain.rawDomain;
     EventBus.emit(NEW_DOMAIN);

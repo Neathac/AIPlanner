@@ -8,8 +8,11 @@
     <v-window v-model="tab">
       <v-window-item :key="1" :value="1">
         <v-container fluid>
-          <v-row v-for="dckState in DCKstates">
-            <DckPredForm />
+          <v-row v-for="dckState in DCKstates" :key="dckState.name">
+            <DckPredForm :state="dckState" />
+          </v-row>
+          <v-row class="justify-center">
+            <v-btn color="green" icon="mdi-plus" @click="addDckState"></v-btn>
           </v-row>
         </v-container>
       </v-window-item>
@@ -31,6 +34,7 @@
 import { defineComponent } from "vue";
 import DckPredForm from "./DckPredForm.vue";
 import { useAtbStore } from "../stores/atbStore";
+import { emptyAttributedState } from "@functions/parserTypes";
 
 export default defineComponent({
   data() {
@@ -39,6 +43,14 @@ export default defineComponent({
       tab: null,
       DCKstates: useAtbStore().getDCKstates,
     };
+  },
+  methods: {
+    addDckState() {
+      this.atbStore.loadNewDckStates(
+        this.atbStore.getDCKstates + [emptyAttributedState()]
+      );
+      this.DCKstates = this.atbStore.getDCKstates;
+    },
   },
   components: {
     DckPredForm,

@@ -12,12 +12,12 @@ import {
   Predicate,
 } from "@functions/parserTypes";
 import { useDomainStore } from "../../stores/domainStore";
-import {
+/*import {
   gatherActionModifications,
   gatherGoalModifications,
   gatherInitStateModifications,
   gatherPredicateModifications,
-} from "./nodeLoader";
+} from "./nodeLoader";*/
 import { getProblemDocumentSyntaxTree } from "../problemParser/language";
 import { useProblemStore } from "@src/stores/problemStore";
 
@@ -301,7 +301,7 @@ export const loadActiveDomain = (domainCode: string): PddlDocument => {
 const getNodeValue = (code: string, node: SyntaxNodeRef): string => {
   return code.substring(node.from, node.to);
 };
-
+/*
 export const encodeDCK = (): void => {
   encodePredicatesToDomain(gatherPredicateModifications());
   encodeActionModifications(gatherActionModifications());
@@ -312,7 +312,7 @@ export const encodeProblemDCK = (): void => {
   encodeInitialStatesToProblem(gatherInitStateModifications());
   encodeGoalModifications(gatherGoalModifications());
 };
-
+*/
 export const encodePredicatesToDomain = (
   predicates: Map<string, Predicate>
 ): void => {

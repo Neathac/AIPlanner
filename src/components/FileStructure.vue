@@ -120,7 +120,6 @@ import {
   EMPTY_PROBLEM,
   Problem,
 } from "@functions/systemTypes";
-import editorFactory from "../languageSupport/nodeFactory/nodeFactory";
 import { useDocumentStore } from "../stores/documentStore";
 
 export default defineComponent({
@@ -190,7 +189,6 @@ export default defineComponent({
       this.dialogDomainCreate = false;
       const dom = EMPTY_DOMAIN;
       dom.name = this.newDomainName;
-      dom.dckState = JSON.stringify(editorFactory());
       Manager.createDomain(dom).then((_res) => {
         Manager.getMyDomains().then((res) => {
           this.domains = res;
