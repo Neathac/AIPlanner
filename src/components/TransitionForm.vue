@@ -3,18 +3,27 @@
     <v-form @submit.prevent="submit" ref="form">
       <v-row>
         <v-col cols="4">
-          <v-text-field
-            v-model="name"
-            :rules="nameRules"
-            label="Name"
-          ></v-text-field>
+          <v-autocomplete
+            ref="originState"
+            v-model="originState"
+            :items="atbStates"
+            item-title="name"
+            :rules="[() => !!originState || 'This field is required']"
+            label="Initial state"
+            placeholder="Select..."
+            required
+          ></v-autocomplete>
         </v-col>
         <v-col cols="4">
-          <v-text-field
-            v-model="numVars"
-            label="Number of variables"
-            type="number"
-          ></v-text-field>
+          <v-select
+            v-model="e6"
+            :items="states"
+            :menu-props="{ maxHeight: '400' }"
+            label="Select"
+            :multiple="true"
+            hint="Pick the order of variables"
+            persistent-hint
+          ></v-select>
         </v-col>
         <v-col cols="4">
           <v-btn type="submit" class="me-4" color="primary">Save</v-btn>
@@ -31,6 +40,7 @@
 </template>
 
 <script lang="ts">
+import { useAtbStore } from "../stores/atbStore";
 import { defineComponent, ref } from "vue";
 
 export default defineComponent({
@@ -39,7 +49,7 @@ export default defineComponent({
       type: Number,
       required: true,
     },
-    atbState: {
+    atbTransition: {
       required: true,
     },
   },
@@ -52,6 +62,10 @@ export default defineComponent({
     return {
       name: "",
       numVars: null,
+      atbStore: useAtbStore(),
+      originState: null,
+      targetState: null,
+      atbStates: [],
       nameRules: [
         (value: string) => {
           if (value.length > 0) return true;
@@ -61,8 +75,9 @@ export default defineComponent({
     };
   },
   mounted() {
-    this.name = this.atbState.name;
-    this.numVars = this.atbState.numOfVars;
+    this.atbStates = this.atbStore.getDCKstates;
+    this.originState = this.atbTransition.originState;
+    this.targetState = this.atbTransition.targetState;
   },
   methods: {
     async submit(event: { preventDefault: () => any }) {

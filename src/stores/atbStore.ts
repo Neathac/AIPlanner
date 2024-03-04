@@ -6,6 +6,7 @@ import {
   Predicate,
   AttributedMemory,
   AttributedState,
+  AttributedTransition,
 } from "@functions/parserTypes";
 
 export const useAtbStore = defineStore("atbStore", {
@@ -44,6 +45,9 @@ export const useAtbStore = defineStore("atbStore", {
     },
     loadNewDckMemory(memory: AttributedMemory[]) {
       this.dck.memory = memory;
+    },
+    loadNewDckTransitions(transitions: AttributedTransition[]) {
+      this.dck.transitions = transitions;
     },
   },
 });

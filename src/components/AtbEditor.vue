@@ -21,13 +21,35 @@
         </v-container>
       </v-window-item>
       <v-window-item :key="2" :value="2">
-        <v-container fluid>
-          <!--<v-row> <DckPredForm /> </v-row>-->
+        <v-container fluid style="max-height: 80vh; overflow-y: scroll">
+          <v-row v-for="(dckMem, i) in DCKmemory" :key="dckMem.name">
+            <DckPredForm
+              :atb-state="dckMem"
+              :index="i"
+              @deleteEvent="deleteMemory(i)"
+            />
+          </v-row>
+          <v-row class="justify-center">
+            <v-btn color="green" icon="mdi-plus" @click="addDckMemory"></v-btn>
+          </v-row>
         </v-container>
       </v-window-item>
       <v-window-item :key="3" :value="3">
-        <v-container fluid>
-          <v-row> </v-row>
+        <v-container fluid style="max-height: 80vh; overflow-y: scroll">
+          <v-row v-for="(dckTransition, i) in DCKtransitions" :key="i">
+            <TransitionForm
+              :atb-transition="dckTransition"
+              :index="i"
+              @deleteEvent="deleteTransition(i)"
+            />
+          </v-row>
+          <v-row class="justify-center">
+            <v-btn
+              color="green"
+              icon="mdi-plus"
+              @click="addDckTransition"
+            ></v-btn>
+          </v-row>
         </v-container>
       </v-window-item>
     </v-window>
@@ -38,7 +60,13 @@
 import { defineComponent } from "vue";
 import DckPredForm from "./DckPredForm.vue";
 import { useAtbStore } from "../stores/atbStore";
-import { emptyAttributedState } from "@functions/parserTypes";
+import {
+  emptyAction,
+  emptyAttributedMemory,
+  emptyAttributedState,
+  emptyAttributedTransition,
+} from "@functions/parserTypes";
+import TransitionForm from "./TransitionForm.vue";
 
 export default defineComponent({
   data() {
@@ -46,10 +74,9 @@ export default defineComponent({
       atbStore: useAtbStore(),
       tab: null,
       DCKstates: useAtbStore().getDCKstates,
+      DCKmemory: useAtbStore().getDCKmemory,
+      DCKtransitions: useAtbStore().getDCKtransitions,
     };
-  },
-  mounted() {
-    console.log(this.DCKstates);
   },
   methods: {
     addDckState() {
@@ -63,9 +90,34 @@ export default defineComponent({
       this.DCKstates.splice(i, 1);
       this.atbStore.loadNewDckStates(this.DCKstates);
     },
+    addDckMemory() {
+      const temp = emptyAttributedMemory();
+      temp.name = "Memory_" + this.DCKmemory.length;
+      temp.numOfVars = 0;
+      this.DCKmemory.push(temp);
+      this.atbStore.loadNewDckMemory(this.DCKmemory);
+    },
+    deleteMemory(i: number) {
+      this.DCKmemory.splice(i, 1);
+      this.atbStore.loadNewDckMemory(this.DCKmemory);
+    },
+    addDckTransition() {
+      const temp = emptyAttributedTransition();
+      console.log(this.DCKstates);
+      temp.originState = this.DCKstates[0];
+      temp.targetState = this.DCKstates[0];
+      temp.operator = emptyAction();
+      this.DCKtransitions.push(temp);
+      this.atbStore.loadNewDckTransitions(this.DCKtransitions);
+    },
+    deleteTransition(i: number) {
+      this.DCKtransitions.splice(i, 1);
+      this.atbStore.loadNewDckTransitions(this.DCKtransitions);
+    },
   },
   components: {
     DckPredForm,
+    TransitionForm,
   },
 });
 </script>
