@@ -225,9 +225,11 @@ export const emptyAttributedTransition = (): AttributedTransition => ({
 export interface AttributedConstraint {
   predicate: string,
   variables: string[],
+  negated: boolean,
 }
 
 export const emptyAttributedConstraint = (): AttributedConstraint => ({
   predicate: "",
   variables: [],
+  negated: false,
 });

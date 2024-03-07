@@ -3,7 +3,10 @@
     <v-tabs v-model="tab" color="deep-purple-accent-4" align-tabs="center">
       <v-tab :value="1">Attributed states</v-tab>
       <v-tab :value="2">DCK memory</v-tab>
-      <v-tab :value="3">DCK transitions</v-tab>
+      <v-tab :value="3" v-if="DCKstates.length > 0">DCK transitions</v-tab>
+      <v-tab :value="4" v-if="DCKstates.length > 0"
+        >State initialization rules</v-tab
+      >
     </v-tabs>
     <v-window v-model="tab">
       <v-window-item :key="1" :value="1">
@@ -12,6 +15,7 @@
             <DckPredForm
               :atb-state="dckState"
               :index="i"
+              @saveEvent="save()"
               @deleteEvent="deleteState(i)"
             />
           </v-row>
@@ -26,6 +30,7 @@
             <DckPredForm
               :atb-state="dckMem"
               :index="i"
+              @saveEvent="save()"
               @deleteEvent="deleteMemory(i)"
             />
           </v-row>
@@ -40,6 +45,26 @@
             <TransitionForm
               :atb-transition="dckTransition"
               :index="i"
+              @saveEvent="save()"
+              @deleteEvent="deleteTransition(i)"
+            />
+          </v-row>
+          <v-row class="justify-center">
+            <v-btn
+              color="green"
+              icon="mdi-plus"
+              @click="addDckTransition"
+            ></v-btn>
+          </v-row>
+        </v-container>
+      </v-window-item>
+      <v-window-item :key="4" :value="4">
+        <v-container fluid style="max-height: 80vh; overflow-y: scroll">
+          <v-row v-for="(constraint, i) in possibleConstraints" :key="i">
+            <StateInitRule
+              :rule="constraint"
+              :index="i"
+              @saveEvent="save()"
               @deleteEvent="deleteTransition(i)"
             />
           </v-row>
@@ -67,6 +92,7 @@ import {
   emptyAttributedTransition,
 } from "@functions/parserTypes";
 import TransitionForm from "./TransitionForm.vue";
+import StateInitRule from "./StateInitRule.vue";
 
 export default defineComponent({
   data() {
@@ -76,7 +102,24 @@ export default defineComponent({
       DCKstates: useAtbStore().getDCKstates,
       DCKmemory: useAtbStore().getDCKmemory,
       DCKtransitions: useAtbStore().getDCKtransitions,
+      possibleConstraints: [],
     };
+  },
+  mounted() {
+    useAtbStore().getDCKmemory.forEach((val) =>
+      this.possibleConstraints.value.push({
+        predicate: val.name,
+        variables: val.specificVars ?? [],
+        negated: false,
+      })
+    );
+    useAtbStore().getDCKstates.forEach((val) =>
+      this.possibleConstraints.value.push({
+        predicate: val.name,
+        variables: val.specificVars ?? [],
+        negated: false,
+      })
+    );
   },
   methods: {
     addDckState() {
@@ -103,7 +146,6 @@ export default defineComponent({
     },
     addDckTransition() {
       const temp = emptyAttributedTransition();
-      console.log(this.DCKstates);
       temp.originState = this.DCKstates[0];
       temp.targetState = this.DCKstates[0];
       temp.operator = emptyAction();
@@ -114,10 +156,16 @@ export default defineComponent({
       this.DCKtransitions.splice(i, 1);
       this.atbStore.loadNewDckTransitions(this.DCKtransitions);
     },
+    save() {
+      this.atbStore.loadNewDckStates(this.DCKstates);
+      this.atbStore.loadNewDckMemory(this.DCKmemory);
+      this.atbStore.loadNewDckTransitions(this.DCKtransitions);
+    },
   },
   components: {
     DckPredForm,
     TransitionForm,
+    StateInitRule,
   },
 });
 </script>

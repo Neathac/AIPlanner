@@ -62,7 +62,7 @@ export default defineComponent({
   },
   mounted() {
     this.name = this.atbState.name;
-    this.numVars = this.atbState.numOfVars;
+    this.numVars = Number(this.atbState.numOfVars);
   },
   methods: {
     async submit(event: { preventDefault: () => any }) {
@@ -72,7 +72,7 @@ export default defineComponent({
         // eslint-disable-next-line vue/no-mutating-props
         this.atbState.name = this.name;
         // eslint-disable-next-line vue/no-mutating-props
-        this.atbState.numOfVars = this.numVars;
+        this.atbState.numOfVars = Number(this.numVars);
         this.$emit("saveEvent");
       }
     },
