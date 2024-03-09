@@ -7,6 +7,8 @@ import {
   AttributedMemory,
   AttributedState,
   AttributedTransition,
+  emptyAttributedInitRule,
+  AttributedInitRule,
 } from "@functions/parserTypes";
 
 export const useAtbStore = defineStore("atbStore", {
@@ -26,6 +28,7 @@ export const useAtbStore = defineStore("atbStore", {
       );
       return names;
     },
+    getDCKrules: (state) => state.dck.initRules,
   },
   actions: {
     loadFreshActiveDomain(pddlDomain: PddlDocument) {
@@ -48,6 +51,32 @@ export const useAtbStore = defineStore("atbStore", {
     },
     loadNewDckTransitions(transitions: AttributedTransition[]) {
       this.dck.transitions = transitions;
+    },
+    getSpecificInitRule(rulePredicate: string) {
+      let found = this.dck.initRules.find(
+        (val) => val.rulePredicate.name == rulePredicate
+      );
+      if (!found) {
+        found = emptyAttributedInitRule();
+        found.rulePredicate.name = rulePredicate;
+        this.dck.initRules.push(found);
+      }
+      return found;
+    },
+    loadSpecificInitRule(rulePredicate: AttributedInitRule) {
+      let found = this.dck.initRules.findIndex(
+        (val) => val.rulePredicate.name == rulePredicate
+      );
+      if (found < 0) {
+        this.dck.initRules.push(rulePredicate);
+        found = this.dck.initRules.findIndex(
+          (val) => val.rulePredicate.name == rulePredicate
+        );
+      }
+      return this.dck.initRules[found];
+    },
+    loadNewDckRules(rules: AttributedInitRule[]) {
+      this.dck.initRules = rules;
     },
   },
 });

@@ -177,6 +177,7 @@ export interface AttributedDCK {
   states: AttributedState[],
   memory: AttributedMemory[],
   transitions: AttributedTransition[],
+  initRules: AttributedInitRule[],
 }
 
 export const emptyAttributedDCK = (): AttributedDCK => ({
@@ -184,6 +185,7 @@ export const emptyAttributedDCK = (): AttributedDCK => ({
   states: new Array<AttributedState>(),
   memory: new Array<AttributedMemory>(),
   transitions: new Array<AttributedTransition>(),
+  initRules: new Array<AttributedInitRule>(),
 });
 
 export interface AttributedState {
@@ -231,5 +233,45 @@ export interface AttributedConstraint {
 export const emptyAttributedConstraint = (): AttributedConstraint => ({
   predicate: "",
   variables: [],
+  negated: false,
+});
+
+export interface AttributedInitRule {
+  rulePredicate: RulePredicate,
+  orClause: LogicalOrRule[],
+  hasSimpleValue: boolean,
+  simpleDefaultValue?: boolean,
+}
+
+export const emptyAttributedInitRule = (): AttributedInitRule => ({
+  rulePredicate: emptyRulePredicate(),
+  orClause: [],
+  hasSimpleValue: true,
+  simpleDefaultValue: false,
+});
+
+export interface LogicalOrRule {
+  anyVariables: string[],
+  allVariables: string[],
+  andClause: RulePredicate[],
+}
+
+export const emptyLogicalOrRule = (): LogicalOrRule => ({
+  anyVariables: [],
+  allVariables: [],
+  andClause: [],
+});
+
+export interface RulePredicate {
+  name: string;
+  varNames: string[];
+  isInGoal: boolean;
+  negated: boolean;
+}
+
+export const emptyRulePredicate = (): RulePredicate => ({
+  name: "",
+  varNames: [],
+  isInGoal: false,
   negated: false,
 });

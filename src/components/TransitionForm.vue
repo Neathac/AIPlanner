@@ -95,7 +95,7 @@
             color="error"
             icon="mdi-delete"
             class="me-4"
-            @click="this.$emit('deleteEvent')"
+            @click="deleteConstraint(i)"
           ></v-btn>
         </v-col>
       </v-row>
@@ -238,6 +238,10 @@ function decomposeStringToVariables(varString: String): string[] {
 
 function composeVariablesToString(variables: string[]): String {
   return variables.join(", ");
+}
+
+function deleteConstraint(index: number): void {
+  constraints.value.splice(index, 1);
 }
 
 function dummyVariableString(numOfVars: number): String {

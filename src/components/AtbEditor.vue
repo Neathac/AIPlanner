@@ -60,20 +60,8 @@
       </v-window-item>
       <v-window-item :key="4" :value="4">
         <v-container fluid style="max-height: 80vh; overflow-y: scroll">
-          <v-row v-for="(constraint, i) in possibleConstraints" :key="i">
-            <StateInitRule
-              :rule="constraint"
-              :index="i"
-              @saveEvent="save()"
-              @deleteEvent="deleteTransition(i)"
-            />
-          </v-row>
-          <v-row class="justify-center">
-            <v-btn
-              color="green"
-              icon="mdi-plus"
-              @click="addDckTransition"
-            ></v-btn>
+          <v-row v-for="(rule, i) in initRules" :key="i">
+            <StateInitRule :rule="rule" :index="i" @saveEvent="save()" />
           </v-row>
         </v-container>
       </v-window-item>
@@ -86,7 +74,10 @@ import { defineComponent } from "vue";
 import DckPredForm from "./DckPredForm.vue";
 import { useAtbStore } from "../stores/atbStore";
 import {
+  AttributedConstraint,
+  AttributedInitRule,
   emptyAction,
+  emptyAttributedInitRule,
   emptyAttributedMemory,
   emptyAttributedState,
   emptyAttributedTransition,
@@ -102,26 +93,60 @@ export default defineComponent({
       DCKstates: useAtbStore().getDCKstates,
       DCKmemory: useAtbStore().getDCKmemory,
       DCKtransitions: useAtbStore().getDCKtransitions,
-      possibleConstraints: [],
+      initRules: useAtbStore().getDCKrules,
     };
   },
-  mounted() {
-    useAtbStore().getDCKmemory.forEach((val) =>
-      this.possibleConstraints.value.push({
-        predicate: val.name,
-        variables: val.specificVars ?? [],
-        negated: false,
-      })
-    );
-    useAtbStore().getDCKstates.forEach((val) =>
-      this.possibleConstraints.value.push({
-        predicate: val.name,
-        variables: val.specificVars ?? [],
-        negated: false,
-      })
-    );
-  },
   methods: {
+    updatePossibleRules() {
+      this.initRules = [...new Set(this.initRules)];
+      const possibleRules = new Array<AttributedConstraint>();
+      const newInitRules = new Array<AttributedInitRule>();
+      useAtbStore().getDCKmemory.forEach((val) =>
+        possibleRules.push({
+          predicate: val.name,
+          variables: val.specificVars ?? this.dummyVariables(val.numOfVars),
+          negated: false,
+        })
+      );
+      useAtbStore().getDCKstates.forEach((val) =>
+        possibleRules.push({
+          predicate: val.name,
+          variables: val.specificVars ?? this.dummyVariables(val.numOfVars),
+          negated: false,
+        })
+      );
+      possibleRules.forEach((val) => {
+        const index = this.initRules.findIndex(
+          (rule) => rule.rulePredicate.name == val.predicate
+        );
+        if (index < 0) {
+          const dummyRule = emptyAttributedInitRule();
+          dummyRule.rulePredicate.name = val.predicate;
+          dummyRule.rulePredicate.varNames = val.variables;
+          this.initRules.push(dummyRule);
+        } else if (
+          this.initRules[index].rulePredicate.varNames.length !=
+          val.variables.length
+        ) {
+          this.initRules[index].rulePredicate.varNames = val.variables;
+        }
+      });
+      this.initRules.forEach((rule) => {
+        const found = possibleRules.find(
+          (val) => val.predicate == rule.rulePredicate.name
+        );
+        if (found) newInitRules.push(rule);
+      });
+      this.initRules = [...new Set(newInitRules)];
+    },
+    dummyVariables(numOfVars: number): String[] {
+      if (numOfVars === 0) return [];
+      let str = [];
+      for (let i = 0; i < numOfVars; i++) {
+        str.push("?var_" + i);
+      }
+      return str;
+    },
     addDckState() {
       const temp = emptyAttributedState();
       temp.name = "State_" + this.DCKstates.length;
@@ -160,6 +185,8 @@ export default defineComponent({
       this.atbStore.loadNewDckStates(this.DCKstates);
       this.atbStore.loadNewDckMemory(this.DCKmemory);
       this.atbStore.loadNewDckTransitions(this.DCKtransitions);
+      this.atbStore.loadNewDckRules(this.initRules);
+      this.updatePossibleRules();
     },
   },
   components: {
