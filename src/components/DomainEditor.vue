@@ -19,6 +19,7 @@ import { pddlLanguage } from "../languageSupport/parser/language";
 import { oneDark } from "../languageSupport/parser/theme";
 import { useDomainStore } from "../stores/domainStore";
 import { store } from "../store";
+import { loadActiveDomain } from "../languageSupport/decomposer/domainLoader";
 
 export default defineComponent({
   components: {
@@ -46,8 +47,7 @@ export default defineComponent({
   methods: {
     onChanged() {
       store.activeDomain = this.code;
-      const domainStore = useDomainStore();
-      domainStore.loadRawActiveDomain(store.activeDomain);
+      useDomainStore().loadActiveDomain(loadActiveDomain(this.code), this.code);
     },
   },
 });
