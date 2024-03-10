@@ -206,6 +206,10 @@ import {
   emptyAttributedInitRule,
   emptyLogicalOrRule,
 } from "@functions/parserTypes";
+import {
+  decomposeStringToVariables,
+  composeVariablesToString,
+} from "../languageSupport/decomposer/dckLoader";
 
 const form = ref();
 
@@ -249,6 +253,7 @@ onMounted(() => {
       predicate: val.name,
       variables: val.varNames,
       negated: false,
+      isInEffect: false,
     })
   );
   useAtbStore().getDCKmemory.forEach((val) =>
@@ -256,6 +261,7 @@ onMounted(() => {
       predicate: val.name,
       variables: val.specificVars ?? [],
       negated: false,
+      isInEffect: false,
     })
   );
   useAtbStore().getDCKstates.forEach((val) =>
@@ -263,6 +269,7 @@ onMounted(() => {
       predicate: val.name,
       variables: val.specificVars ?? [],
       negated: false,
+      isInEffect: false,
     })
   );
 });
@@ -322,14 +329,6 @@ function updateClauseVars(orClauseIndex: number, andClauseIndex: number) {
 
 function deleteAndClause(orIndex: number, andIndex: number) {
   thisRule.value.orClause[orIndex].andClause.splice(andIndex, 1);
-}
-
-function decomposeStringToVariables(varString: String): string[] {
-  return varString.trim().split(",");
-}
-
-function composeVariablesToString(variables: string[]): String {
-  return variables.join(", ");
 }
 
 const submit = async (event: { preventDefault: () => any }) => {

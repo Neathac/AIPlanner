@@ -90,7 +90,13 @@
             label="Negate"
           ></v-checkbox>
         </v-col>
-        <v-col cols="3">
+        <v-col cols="2">
+          <v-checkbox
+            v-model="constraints[i].isInEffect"
+            label="Transition effect"
+          ></v-checkbox>
+        </v-col>
+        <v-col cols="2">
           <v-btn
             color="error"
             icon="mdi-delete"
@@ -142,6 +148,11 @@ import {
   AttributedState,
   AttributedTransition,
 } from "@functions/parserTypes";
+import {
+  decomposeStringToVariables,
+  composeVariablesToString,
+  dummyVariableString,
+} from "../languageSupport/decomposer/dckLoader";
 
 const form = ref();
 
@@ -205,6 +216,7 @@ onMounted(() => {
       predicate: val.name,
       variables: val.varNames,
       negated: false,
+      isInEffect: false,
     })
   );
   useAtbStore().getDCKmemory.forEach((val) =>
@@ -212,6 +224,7 @@ onMounted(() => {
       predicate: val.name,
       variables: val.specificVars ?? [],
       negated: false,
+      isInEffect: false,
     })
   );
   useAtbStore().getDCKstates.forEach((val) =>
@@ -219,6 +232,7 @@ onMounted(() => {
       predicate: val.name,
       variables: val.specificVars ?? [],
       negated: false,
+      isInEffect: false,
     })
   );
   // Updating operator variables
@@ -232,25 +246,8 @@ onMounted(() => {
   updateTargetVars();
 });
 
-function decomposeStringToVariables(varString: String): string[] {
-  return varString.trim().split(",");
-}
-
-function composeVariablesToString(variables: string[]): String {
-  return variables.join(", ");
-}
-
 function deleteConstraint(index: number): void {
   constraints.value.splice(index, 1);
-}
-
-function dummyVariableString(numOfVars: number): String {
-  if (numOfVars === 0) return "";
-  let str = "";
-  for (let i = 0; i < numOfVars; i++) {
-    str += "?var_" + i + ", ";
-  }
-  return str.substring(0, str.length - 2);
 }
 
 function updateOriginVars() {

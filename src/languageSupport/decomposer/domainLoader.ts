@@ -1,7 +1,7 @@
 import { getDocumentSyntaxTree } from "../parser/language";
 import { SyntaxNodeRef } from "@lezer/common";
 import {
-  ActionModifications,
+  ActionModification,
   emptyAction,
   emptyPddlDocument,
   emptyPddlProblemDocument,
@@ -12,12 +12,7 @@ import {
   Predicate,
 } from "@functions/parserTypes";
 import { useDomainStore } from "../../stores/domainStore";
-/*import {
-  gatherActionModifications,
-  gatherGoalModifications,
-  gatherInitStateModifications,
-  gatherPredicateModifications,
-} from "./nodeLoader";*/
+import { assembleActionReplacements, gatherActionModification, gatherPredicateModifications } from "./dckLoader";
 import { getProblemDocumentSyntaxTree } from "../problemParser/language";
 import { useProblemStore } from "@src/stores/problemStore";
 
@@ -171,6 +166,7 @@ export const loadActiveDomain = (domainCode: string): PddlDocument => {
   let sameTypeVars = 0;
   let activeSubgroup: string;
   let actionsAmount: number;
+  let groupText: string;
 
   tree.iterate({
     enter: (node: SyntaxNodeRef) => {
@@ -277,6 +273,7 @@ export const loadActiveDomain = (domainCode: string): PddlDocument => {
                   domainCode,
                   node
                 );
+                domain.actions[actionsAmount].rawText = groupText;
               }
               break;
             default:
@@ -291,6 +288,7 @@ export const loadActiveDomain = (domainCode: string): PddlDocument => {
         activeSubgroup = "";
         isInGroup = true;
         currentGroup = foundName;
+        groupText = getNodeValue(domainCode, node);
       }
     },
   });
@@ -300,6 +298,11 @@ export const loadActiveDomain = (domainCode: string): PddlDocument => {
 
 const getNodeValue = (code: string, node: SyntaxNodeRef): string => {
   return code.substring(node.from, node.to);
+};
+
+export const encodeDck = (): void => {
+  encodePredicatesToDomain(gatherPredicateModifications());
+  redefineActions(assembleActionReplacements(gatherActionModification()));
 };
 /*
 export const encodeDCK = (): void => {
@@ -321,7 +324,7 @@ export const encodePredicatesToDomain = (
   let domainText = domainStore.rawActiveDomain;
   let addedPredicates = "";
   predicates.forEach((predicate) => {
-    addedPredicates = addedPredicates + predicate.rawPredicate + "\n";
+    addedPredicates = addedPredicates + predicate.rawPredicate + "\n\t";
   });
   let foundPredicates = false;
   tree.iterate({
@@ -438,12 +441,12 @@ export const getRedefinition = (
 };
 
 export const encodeActionModifications = (
-  actions: ActionModifications[]
+  actions: ActionModification[]
 ): void => {
   const domainStore = useDomainStore();
   const tree = getDocumentSyntaxTree(domainStore.rawActiveDomain);
   let foundActionGroup = false;
-  let foundAction: undefined | ActionModifications = undefined;
+  let foundAction: undefined | ActionModification = undefined;
   const actionRedefinitions: Array<{
     original: string;
     redefinition: string;
@@ -495,6 +498,7 @@ export const encodeActionModifications = (
 export const redefineActions = (
   redefinitions: Array<{ original: string; redefinition: string }>
 ): void => {
+  console.log(redefinitions);
   const domainStore = useDomainStore();
   let domain = domainStore.rawActiveDomain;
   redefinitions.forEach((redefinition) => {

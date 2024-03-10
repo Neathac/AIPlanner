@@ -50,6 +50,7 @@ export interface Action {
     parameters: Parameters;
     preconditions: LogicalExpression | Predicate | string;
     effect: LogicalExpression | Predicate | string;
+    rawText: string;
   }
 
 export interface Parameters {
@@ -74,16 +75,18 @@ export interface StateNodeValues {
     variables: string[];
   }
 
-export interface ActionModifications {
+export interface ActionModification {
     actionName: string;
     extraPreconditions: Predicate[];
     extraEffects: Predicate[];
+    originalOperator: Action;
   }
 
-export const emptyActionModifications = (): ActionModifications => ({
+export const emptyActionModification = (): ActionModification => ({
   actionName: "",
   extraPreconditions: new Array<Predicate>(),
   extraEffects: new Array<Predicate>(),
+  originalOperator: emptyAction(),
 });
 
 export const emptyPddlDocument = (): PddlDocument => ({
@@ -98,6 +101,7 @@ export const emptyAction = (): Action => ({
   parameters: {varName: [], types: [], rawParameters: ""},
   preconditions: "",
   effect: "",
+  rawText: "",
 });
 
 export const emptyPredicate = (): Predicate => ({
@@ -228,12 +232,14 @@ export interface AttributedConstraint {
   predicate: string,
   variables: string[],
   negated: boolean,
+  isInEffect: boolean,
 }
 
 export const emptyAttributedConstraint = (): AttributedConstraint => ({
   predicate: "",
   variables: [],
   negated: false,
+  isInEffect: false,
 });
 
 export interface AttributedInitRule {

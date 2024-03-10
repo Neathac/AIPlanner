@@ -121,7 +121,10 @@
 </template>
 
 <script lang="ts">
-import { loadActiveDomain } from "../languageSupport/decomposer/domainLoader";
+import {
+  encodeDck,
+  loadActiveDomain,
+} from "../languageSupport/decomposer/domainLoader";
 import { defineComponent, nextTick, h } from "vue";
 import DomainEditor from "../components/DomainEditor.vue";
 import AtbEditor from "../components/AtbEditor.vue";
@@ -163,7 +166,7 @@ export default defineComponent({
     },
     encodeDCK() {
       // TODO: Transitioning to a state via an effect doesn't work
-      // encodeDCK();
+      encodeDck();
       this.$refs.editor.code = this.domainStore.rawActiveDomain;
     },
     updateDomainState() {
