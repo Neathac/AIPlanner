@@ -106,6 +106,7 @@ export default defineComponent({
           predicate: val.name,
           variables: val.specificVars ?? this.dummyVariables(val.numOfVars),
           negated: false,
+          isInEffect: false,
         })
       );
       useAtbStore().getDCKstates.forEach((val) =>
@@ -113,6 +114,7 @@ export default defineComponent({
           predicate: val.name,
           variables: val.specificVars ?? this.dummyVariables(val.numOfVars),
           negated: false,
+          isInEffect: false,
         })
       );
       possibleRules.forEach((val) => {

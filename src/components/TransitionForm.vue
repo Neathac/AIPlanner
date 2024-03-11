@@ -222,7 +222,9 @@ onMounted(() => {
   useAtbStore().getDCKmemory.forEach((val) =>
     possibleConstraints.value.push({
       predicate: val.name,
-      variables: val.specificVars ?? [],
+      variables:
+        val.specificVars ??
+        decomposeStringToVariables(dummyVariableString(val.numOfVars)),
       negated: false,
       isInEffect: false,
     })
@@ -230,7 +232,9 @@ onMounted(() => {
   useAtbStore().getDCKstates.forEach((val) =>
     possibleConstraints.value.push({
       predicate: val.name,
-      variables: val.specificVars ?? [],
+      variables:
+        val.specificVars ??
+        decomposeStringToVariables(dummyVariableString(val.numOfVars)),
       negated: false,
       isInEffect: false,
     })
