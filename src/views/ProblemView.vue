@@ -97,6 +97,7 @@
 
 <script lang="ts">
 import {
+  encodeProblemDCK,
   //encodeProblemDCK,
   loadActiveProblem,
 } from "../languageSupport/decomposer/domainLoader";
@@ -139,9 +140,11 @@ export default defineComponent({
         this.$refs.editor.code
       );
     },
-    encodeDCK() {
+    async encodeDCK() {
       // TODO: Transitioning to a state via an effect doesn't work
-      //encodeProblemDCK();
+      console.log(this.problemStore.getStructure);
+      this.loadToDck();
+      await encodeProblemDCK();
       this.$refs.editor.code = this.problemStore.rawActiveProblem;
     },
     saveEncoderState() {

@@ -3,6 +3,7 @@ import { SyntaxNodeRef } from "@lezer/common";
 import {
   ActionModification,
   emptyAction,
+  emptyLogicalExpression,
   emptyPddlDocument,
   emptyPddlProblemDocument,
   emptyPredicate,
@@ -12,9 +13,15 @@ import {
   Predicate,
 } from "@functions/parserTypes";
 import { useDomainStore } from "../../stores/domainStore";
-import { assembleActionReplacements, gatherActionModification, gatherPredicateModifications } from "./dckLoader";
+import {
+  assembleActionReplacements,
+  gatherActionModification,
+  gatherPredicateModifications,
+} from "./dckLoader";
 import { getProblemDocumentSyntaxTree } from "../problemParser/language";
-import { useProblemStore } from "@src/stores/problemStore";
+import { useProblemStore } from "../../stores/problemStore";
+import { composeKnowledgeBase, getConsultResult } from "./prologLoader";
+import { useAtbStore } from "../../stores/atbStore";
 
 const NAME = "NAME";
 const PARAMETERS = "Parameters";
@@ -27,6 +34,7 @@ const DOMAIN_ACTION_GROUP = "DomainActionGroup";
 const DOMAIN_PREDICATES_GROUP = "DomainPredicatesGroup";
 const PREDICATES_SECTION = "PREDICATES_SECTION";
 const PREDICATE_NAME = "PredicateName";
+const OBJECT_NAME = "ObjectName";
 const ACTION_SECTION = "ACTION_SECTION";
 const ACTION_PARAMETERS_SUBGROUP = "ActionParametersSubgroup";
 const ACTION_PRECONDITION_SUBGROUP = "ActionPreconditionSubgroup";
@@ -42,6 +50,9 @@ const PROBLEM_GOAL_GROUP = "ProblemGoalGroup";
 const INIT_PREDICATE = "InitPredicate";
 const INIT_VARIABLES = "InitVariables";
 const LOGICAL_EXPRESSION = "LogicalExpression";
+const CLAUSE_OPERATOR = "CLAUSE_OPERATOR";
+const NOT_OPERATOR = "NOT_OPERATOR";
+const IMPLY_OPERATOR = "IMPLY_OPERATOR";
 
 export const loadActiveProblem = (problemCode: string): PddlProblemDocument => {
   const tree = getProblemDocumentSyntaxTree(problemCode);
@@ -51,19 +62,12 @@ export const loadActiveProblem = (problemCode: string): PddlProblemDocument => {
   let initAmount: number;
   let objectAmount: number;
   let sameTypeVars = 0;
-  let foundRootGoal = 0;
+  let activeLogicalExpressionParent = 0;
 
   tree.iterate({
     enter: (node: SyntaxNodeRef) => {
       const foundName = node.type.name;
-      if (foundRootGoal === 1) {
-        if (foundName === LOGICAL_EXPRESSION) {
-          // This is kinda hacky Possible bug source
-          // Does not cause inconsistencies in Group presence however
-          problem.goal = getNodeValue(problemCode, node);
-          foundRootGoal = 2;
-        }
-      } else if (isInGroup) {
+      if (isInGroup) {
         if (foundName === PROBLEM_GROUP) {
           isInGroup = false;
         } else {
@@ -90,7 +94,7 @@ export const loadActiveProblem = (problemCode: string): PddlProblemDocument => {
               switch (foundName) {
                 case NAME:
                   problem.objects[objectAmount].variables.push(
-                    "?" + getNodeValue(problemCode, node)
+                    getNodeValue(problemCode, node)
                   );
                   break;
                 case TYPE:
@@ -139,7 +143,112 @@ export const loadActiveProblem = (problemCode: string): PddlProblemDocument => {
               }
               break;
             case PROBLEM_GOAL_GROUP:
-              foundRootGoal += 1;
+              if (
+                foundName === LOGICAL_EXPRESSION &&
+                !(
+                  getNodeValue(problemCode, node).startsWith("(and") ||
+                  getNodeValue(problemCode, node).startsWith("(or") ||
+                  getNodeValue(problemCode, node).startsWith("(not") ||
+                  getNodeValue(problemCode, node).startsWith("(imply")
+                )
+              )
+                break;
+              switch (foundName) {
+                case LOGICAL_EXPRESSION:
+                  if (problem.goal.length > 1) {
+                    // Check if current expression still has the same parent
+                    // If not, try the parent of the current parent
+                    while (
+                      !problem.goal[
+                        activeLogicalExpressionParent
+                      ].rawExpression.includes(getNodeValue(problemCode, node))
+                    ) {
+                      activeLogicalExpressionParent =
+                        problem.goal[activeLogicalExpressionParent].parentIndex;
+                    }
+                  }
+                  // Add new logical expression and link it to parent
+                  problem.goal.push(emptyLogicalExpression());
+                  problem.goal[problem.goal.length - 1].parentIndex =
+                    activeLogicalExpressionParent;
+                  problem.goal[problem.goal.length - 1].hasParent = true;
+                  problem.goal[problem.goal.length - 1].rawExpression =
+                    getNodeValue(problemCode, node);
+                  activeLogicalExpressionParent = problem.goal.length - 1;
+                  // First expression has no parent
+                  if (problem.rawGoal === "") {
+                    problem.rawGoal = getNodeValue(problemCode, node);
+                    problem.goal[problem.goal.length - 1].parentIndex = -1;
+                    problem.goal[problem.goal.length - 1].hasParent = false;
+                  }
+                  break;
+                case CLAUSE_OPERATOR:
+                  if (getNodeValue(problemCode, node).includes("and"))
+                    problem.goal[activeLogicalExpressionParent].operator =
+                      "and";
+                  else
+                    problem.goal[activeLogicalExpressionParent].operator = "or";
+                  break;
+                case NOT_OPERATOR:
+                  problem.goal[activeLogicalExpressionParent].operator = "not";
+                  break;
+                case IMPLY_OPERATOR:
+                  problem.goal[activeLogicalExpressionParent].operator =
+                    "imply";
+                  break;
+                case PREDICATE:
+                  if (problem.rawGoal === "") {
+                    problem.rawGoal = getNodeValue(problemCode, node);
+                    problem.goal.push(emptyLogicalExpression());
+                    problem.goal[problem.goal.length - 1].rawExpression =
+                      getNodeValue(problemCode, node);
+                    problem.goal[
+                      problem.goal.length - 1
+                    ].predicateArguments.push(emptyPredicate());
+                    problem.goal[problem.goal.length - 1].predicateArguments[
+                      activeLogicalExpressionParent
+                    ].rawPredicate = getNodeValue(problemCode, node);
+                  } else {
+                    // Check if current expression still has the same parent
+                    // If not, try the parent of the current parent
+                    while (
+                      !problem.goal[
+                        activeLogicalExpressionParent
+                      ].rawExpression.includes(getNodeValue(problemCode, node))
+                    ) {
+                      activeLogicalExpressionParent =
+                        problem.goal[activeLogicalExpressionParent].parentIndex;
+                    }
+                    problem.goal[
+                      activeLogicalExpressionParent
+                    ].predicateArguments.push(emptyPredicate());
+                    problem.goal[
+                      activeLogicalExpressionParent
+                    ].predicateArguments[
+                      problem.goal[activeLogicalExpressionParent]
+                        .predicateArguments.length - 1
+                    ].rawPredicate = getNodeValue(problemCode, node);
+                  }
+                  break;
+                case PREDICATE_NAME:
+                  problem.goal[
+                    activeLogicalExpressionParent
+                  ].predicateArguments[
+                    problem.goal[activeLogicalExpressionParent]
+                      .predicateArguments.length - 1
+                  ].name = getNodeValue(problemCode, node);
+                  break;
+                case OBJECT_NAME:
+                  problem.goal[
+                    activeLogicalExpressionParent
+                  ].predicateArguments[
+                    problem.goal[activeLogicalExpressionParent]
+                      .predicateArguments.length - 1
+                  ].varNames.push(getNodeValue(problemCode, node));
+                  break;
+                default:
+                  break;
+              }
               break;
             default:
               break;
@@ -148,8 +257,12 @@ export const loadActiveProblem = (problemCode: string): PddlProblemDocument => {
       } else {
         isInGroup = true;
         currentGroup = foundName;
-        if (foundName === PROBLEM_OBJECTS_GROUP)
+        if (foundName === PROBLEM_OBJECTS_GROUP) {
           objectAmount = problem.objects.push(emptyProblemObject()) - 1;
+          problem.rawObjects = getNodeValue(problemCode, node);
+        }
+        if (foundName === PROBLEM_INIT_GROUP)
+          problem.rawInit = getNodeValue(problemCode, node);
       }
     },
   });
@@ -304,18 +417,26 @@ export const encodeDck = (): void => {
   encodePredicatesToDomain(gatherPredicateModifications());
   redefineActions(assembleActionReplacements(gatherActionModification()));
 };
-/*
-export const encodeDCK = (): void => {
-  encodePredicatesToDomain(gatherPredicateModifications());
-  encodeActionModifications(gatherActionModifications());
+
+export const encodeProblemDCK = async (): Promise<void> => {
+  const problem_enhancement = await getConsultResult(
+    composeKnowledgeBase(
+      useProblemStore().getStructure,
+      useAtbStore().getDCKrules
+    ),
+    useAtbStore().getDCKrules
+  );
+  redefineInit(
+    getInitialRedefinition(
+      useProblemStore().getStructure.rawInit,
+      problem_enhancement.inits
+    )
+  );
+  /*encodePredicatesToProblem(gatherPredicateModifications());
+  encodeInitialStatesToProblem(gatherInitStateModifications());
+  encodeGoalModifications(gatherGoalModifications());*/
 };
 
-export const encodeProblemDCK = (): void => {
-  encodePredicatesToProblem(gatherPredicateModifications());
-  encodeInitialStatesToProblem(gatherInitStateModifications());
-  encodeGoalModifications(gatherGoalModifications());
-};
-*/
 export const encodePredicatesToDomain = (
   predicates: Map<string, Predicate>
 ): void => {
@@ -421,7 +542,16 @@ export const encodeInitialStatesToProblem = (
   return;
 };
 
-export const getRedefinition = (
+export const getInitialRedefinition = (
+  toModify: string,
+  extraInits: string[]
+): string => {
+  return (
+    toModify.substring(0, toModify.length - 1) + extraInits.join(" ") + ")"
+  );
+};
+
+export const getClauseRedefinition = (
   toModify: string,
   modifiers: Predicate[]
 ): string => {
@@ -473,7 +603,7 @@ export const encodeActionModifications = (
 
         actionRedefinitions.push({
           original: preconditions,
-          redefinition: getRedefinition(
+          redefinition: getClauseRedefinition(
             preconditions,
             foundAction.extraPreconditions
           ),
@@ -486,7 +616,10 @@ export const encodeActionModifications = (
 
         actionRedefinitions.push({
           original: effects,
-          redefinition: getRedefinition(effects, foundAction.extraEffects),
+          redefinition: getClauseRedefinition(
+            effects,
+            foundAction.extraEffects
+          ),
         });
       }
     },
@@ -505,6 +638,17 @@ export const redefineActions = (
     domain = domain.replace(redefinition.original, redefinition.redefinition);
   });
   domainStore.loadActiveDomain(loadActiveDomain(domain), domain);
+};
+
+export const redefineInit = (redefinition: string): void => {
+  const newProblem = useProblemStore().getRawValue.replace(
+    useProblemStore().getStructure.rawInit,
+    redefinition
+  );
+  useProblemStore().loadActiveProblem(
+    loadActiveProblem(newProblem),
+    newProblem
+  );
 };
 
 export const encodeGoalModifications = (

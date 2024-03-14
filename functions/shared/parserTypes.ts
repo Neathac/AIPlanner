@@ -1,17 +1,23 @@
 export interface PddlProblemDocument {
   name: string;
   parentDomain: string;
+  rawObjects: string;
   objects: ProblemObject[];
+  rawInit: string;
   init: Predicate[];
-  goal: LogicalExpression | Predicate | string;
+  rawGoal: string;
+  goal: Array<LogicalExpression>;
 }
 
 export const emptyPddlProblemDocument = (): PddlProblemDocument => ({
   name: "",
   parentDomain: "",
+  rawObjects: "",
   objects: new Array<ProblemObject>(),
+  rawInit: "",
   init: new Array<Predicate>(),
-  goal: "",
+  rawGoal: "",
+  goal: new Array<LogicalExpression>(),
 });
 
 export interface PddlDocument {
@@ -66,9 +72,19 @@ export interface PddlType {
 
 export interface LogicalExpression {
     operator: "and" | "or" | "imply" | "not";
-    logicalArguments: LogicalExpression[];
     predicateArguments: Predicate[];
+    rawExpression: string;
+    hasParent: boolean,
+    parentIndex: number,
   }
+
+export const emptyLogicalExpression = (): LogicalExpression => ({
+  operator: "and",
+  predicateArguments: new Array<Predicate>(),
+  rawExpression: "",
+  hasParent: false,
+  parentIndex: -1,
+});
 
 export interface StateNodeValues {
     name: string;
@@ -271,13 +287,13 @@ export const emptyLogicalOrRule = (): LogicalOrRule => ({
 export interface RulePredicate {
   name: string;
   varNames: string[];
-  isInGoal: boolean;
   negated: boolean;
+  isInGoal: boolean;
 }
 
 export const emptyRulePredicate = (): RulePredicate => ({
   name: "",
   varNames: [],
-  isInGoal: false,
   negated: false,
+  isInGoal: false,
 });

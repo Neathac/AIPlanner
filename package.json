@@ -29,6 +29,7 @@
     "lodash": "^4.17.21",
     "mitt": "^3.0.0",
     "pinia": "^2.0.28",
+    "trealla": "^0.17.36",
     "vite-tsconfig-paths": "^4.0.5",
     "vue": "^3.4.21",
     "vue-codemirror": "^6.1.1",
