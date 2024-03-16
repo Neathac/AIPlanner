@@ -147,6 +147,7 @@ import {
   AttributedConstraint,
   AttributedState,
   AttributedTransition,
+  emptyNoOperator,
 } from "@functions/parserTypes";
 import {
   decomposeStringToVariables,
@@ -240,7 +241,8 @@ onMounted(() => {
     })
   );
   // Updating operator variables
-  chosenOperator.value = props.atbTransition.operator;
+  operators.value.push(emptyNoOperator());
+  chosenOperator.value = props.atbTransition.operator ?? operators.value[operators.value.length - 1];
   updateOperatorVars();
   // Setting up originState values
   originState.value = props.atbTransition.originState;

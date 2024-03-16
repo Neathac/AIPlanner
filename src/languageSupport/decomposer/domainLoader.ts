@@ -2,6 +2,7 @@ import { getDocumentSyntaxTree } from "../parser/language";
 import { SyntaxNodeRef } from "@lezer/common";
 import {
   ActionModification,
+  EMPTY_OPERATOR,
   emptyAction,
   emptyLogicalExpression,
   emptyPddlDocument,
@@ -635,7 +636,15 @@ export const redefineActions = (
   const domainStore = useDomainStore();
   let domain = domainStore.rawActiveDomain;
   redefinitions.forEach((redefinition) => {
-    domain = domain.replace(redefinition.original, redefinition.redefinition);
+    if (redefinition.original.includes(EMPTY_OPERATOR)) {
+      const foundIndex = domain.indexOf("(action");
+      domain = [
+        domain.slice(0, foundIndex),
+        "\n" + redefinition.redefinition + "\n",
+        domain.slice(foundIndex),
+      ].join("");
+    } else
+      domain = domain.replace(redefinition.original, redefinition.redefinition);
   });
   domainStore.loadActiveDomain(loadActiveDomain(domain), domain);
 };
@@ -664,7 +673,7 @@ export const encodeGoalModifications = (
       "(" +
       predicate.name +
       " " +
-      predicate.varNames.join(" ") +
+      predicate.varNames.join("\n") +
       ")";
     addedPredicates = addedPredicates + "\n";
   });

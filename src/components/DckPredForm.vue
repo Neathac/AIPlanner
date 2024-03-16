@@ -9,11 +9,12 @@
             label="Name"
           ></v-text-field>
         </v-col>
-        <v-col cols="4">
+        <v-col cols="2">
           <v-text-field
             v-model="numVars"
             label="Number of variables"
             type="number"
+            :rules="varRules"
           ></v-text-field>
         </v-col>
         <v-col cols="4">
@@ -56,6 +57,12 @@ export default defineComponent({
         (value: string) => {
           if (value.length > 0) return true;
           return "You must enter a unique non-empty name.";
+        },
+      ],
+      varRules: [
+        (value: number) => {
+          if (value < 0) return "Number of variables musn't be negative.";
+          return true;
         },
       ],
     };

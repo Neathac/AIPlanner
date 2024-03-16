@@ -17,7 +17,9 @@
                   (val) => val.trim() != ''
                 ).length == props.rule.rulePredicate.varNames.length
                   ? true
-                  : 'Number of arguments doesn\'t match definition of state',
+                  : 'Number of arguments doesn\'t match definition of state. Should be ' +
+                    props.rule.rulePredicate.varNames.length +
+                    '.',
             ]"
           ></v-text-field>
         </v-col>
@@ -240,7 +242,11 @@ function andClauseVariableRules(orIndex: number, andIndex: number) {
       decomposeStringToVariables(value).filter((val) => val.trim() != "").length
     )
       return true;
-    return "Number of predicate variables in definition must match";
+    return (
+      "Number of predicate variables in definition must match. Should be " +
+      constraint.variables.length +
+      " variables."
+    );
   };
 }
 
@@ -277,6 +283,15 @@ onMounted(() => {
       isInEffect: false,
     })
   );
+  // Populate variables in string form, as they only exist locally
+  thisRule.value.orClause.forEach((orClause, _) => {
+    andClauseStringVariables.value.push([]);
+    orClause.andClause.forEach((andClause) => {
+      andClauseStringVariables.value[
+        andClauseStringVariables.value.length - 1
+      ].push(composeVariablesToString(andClause.varNames));
+    });
+  });
 });
 
 function addOrRule() {
@@ -309,6 +324,7 @@ function updateClauseVars(orClauseIndex: number, andClauseIndex: number) {
       el.predicate ==
       thisRule.value.orClause[orClauseIndex].andClause[andClauseIndex].name
   );
+  console.log(found);
   if (
     found &&
     (!andClauseStringVariables.value[orClauseIndex][andClauseIndex] ||

@@ -95,6 +95,7 @@ export interface ActionModification {
     actionName: string;
     extraPreconditions: Predicate[];
     extraEffects: Predicate[];
+    extraParameters: string[];
     originalOperator: Action;
   }
 
@@ -102,6 +103,7 @@ export const emptyActionModification = (): ActionModification => ({
   actionName: "",
   extraPreconditions: new Array<Predicate>(),
   extraEffects: new Array<Predicate>(),
+  extraParameters: new Array<string>(),
   originalOperator: emptyAction(),
 });
 
@@ -114,6 +116,16 @@ export const emptyPddlDocument = (): PddlDocument => ({
 
 export const emptyAction = (): Action => ({
   name: "",
+  parameters: {varName: [], types: [], rawParameters: ""},
+  preconditions: "",
+  effect: "",
+  rawText: "",
+});
+
+export const EMPTY_OPERATOR = "empty_operator";
+
+export const emptyNoOperator = (): Action => ({
+  name: EMPTY_OPERATOR,
   parameters: {varName: [], types: [], rawParameters: ""},
   preconditions: "",
   effect: "",
@@ -240,7 +252,7 @@ export interface AttributedTransition {
 export const emptyAttributedTransition = (): AttributedTransition => ({
   originState: emptyAttributedState(),
   targetState: emptyAttributedState(),
-  operator: emptyAction(),
+  operator: emptyNoOperator(),
   constraints: new Array<AttributedConstraint>(),
 });
 

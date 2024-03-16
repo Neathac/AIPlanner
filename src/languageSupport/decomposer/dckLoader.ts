@@ -2,6 +2,7 @@ import {
   ActionModification,
   AttributedMemory,
   AttributedState,
+  EMPTY_OPERATOR,
   Predicate,
 } from "@functions/parserTypes";
 import { useAtbStore } from "../../stores/atbStore";
@@ -99,11 +100,44 @@ export const gatherActionModification = (): ActionModification[] => {
   useAtbStore().getDCKtransitions.forEach((trans) => {
     const preconditions: Predicate[] = [];
     const effects: Predicate[] = [];
+    let parameters: string[] = [];
+    // Positive state transition preconditions and effects
     preconditions.push(getPredicateFromAttributedState(trans.originState));
-    effects.push(
-      negatePredicate(getPredicateFromAttributedState(trans.originState), true)
-    );
     effects.push(getPredicateFromAttributedState(trans.targetState));
+    // Take care of transition to same state
+    if (trans.originState.name != trans.targetState.name) {
+      effects.push(
+        negatePredicate(
+          getPredicateFromAttributedState(trans.originState),
+          true
+        )
+      );
+      preconditions.push(
+        negatePredicate(
+          getPredicateFromAttributedState(trans.targetState),
+          true
+        )
+      );
+    }
+    // Populate extra parameters
+    trans.constraints.forEach((cons) => {
+      cons.variables.forEach((variable) => parameters.push(variable));
+    });
+    trans.originState.specificVars.forEach((variable) =>
+      parameters.push(variable)
+    );
+    trans.targetState.specificVars.forEach((variable) =>
+      parameters.push(variable)
+    );
+    trans.operator.parameters.varName.forEach((variable) =>
+      parameters.push(variable)
+    );
+    let tempPars = "";
+    parameters.forEach((parameter) => {
+      if (!tempPars.includes(parameter)) tempPars += parameter + " ";
+    });
+    parameters = tempPars.split(" ");
+    // Extra constraint effects and preconditions
     trans.constraints.forEach((cons) => {
       if (cons.isInEffect) {
         effects.push(
@@ -125,6 +159,7 @@ export const gatherActionModification = (): ActionModification[] => {
       actionName: trans.operator.name,
       extraPreconditions: preconditions,
       extraEffects: effects,
+      extraParameters: parameters,
       originalOperator: trans.operator,
     });
   });
@@ -146,7 +181,7 @@ export const assembleActionReplacements = (
       if (val.rawPredicate) joinedPreconditions += val.rawPredicate;
     });
     let joinedEffects: string = "";
-    mod.extraPreconditions.forEach((val) => {
+    mod.extraEffects.forEach((val) => {
       if (val.rawPredicate) joinedEffects += val.rawPredicate;
     });
     const assembledDckAction =
@@ -155,7 +190,9 @@ export const assembleActionReplacements = (
       "_" +
       index +
       " \n\t:parameters " +
-      mod.originalOperator.parameters.rawParameters +
+      "(" +
+      mod.extraParameters.join(" ") +
+      ")" +
       " \n\t:preconditions (and" +
       joinedPreconditions +
       mod.originalOperator.preconditions +
@@ -169,8 +206,9 @@ export const assembleActionReplacements = (
         mappedModifications.get(mod.originalOperator.rawText) +
           assembledDckAction
       );
-    else
+    else if (mod.originalOperator.name != EMPTY_OPERATOR)
       mappedModifications.set(mod.originalOperator.rawText, assembledDckAction);
+    else mappedModifications.set(EMPTY_OPERATOR + index, assembledDckAction);
   });
   for (const [key, value] of mappedModifications) {
     result.push({ original: key, redefinition: value });

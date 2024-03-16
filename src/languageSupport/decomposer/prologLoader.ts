@@ -183,8 +183,8 @@ export const composeOrRule = (rule: AttributedInitRule): string => {
       result += getArgumentsFromMapping(andRule, varMapping);
       if (andIndex != orRule.andClause.length - 1) result += ",";
     });
-    if (rule.orClause.length - 1 != orIndex) result += PROLOG_OR_SYMBOL;
-    else result += ".";
+    if (rule.orClause.length - 1 != orIndex) result += PROLOG_OR_SYMBOL + "\n";
+    else result += ".\n";
   });
   return result;
 };
