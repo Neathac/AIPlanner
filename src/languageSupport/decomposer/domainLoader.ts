@@ -425,7 +425,8 @@ export const encodeProblemDCK = async (): Promise<void> => {
   const problem_enhancement = await getConsultResult(
     composeKnowledgeBase(
       useProblemStore().getStructure,
-      useAtbStore().getDCKrules
+      useAtbStore().getDCKrules,
+      useDomainStore().getStructure.predicates
     ),
     useAtbStore().getDCKrules
   );

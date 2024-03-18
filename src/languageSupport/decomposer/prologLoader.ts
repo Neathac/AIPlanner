@@ -98,13 +98,15 @@ export const encodeObjectsToPrologFormat = (
 
 export const composeKnowledgeBase = (
   problem: PddlProblemDocument,
-  dckRules: Array<AttributedInitRule>
+  dckRules: Array<AttributedInitRule>,
+  domainPredicates: Array<Predicate>
 ): string => {
   let knowledgeBase = "";
   knowledgeBase += encodeObjectsToPrologFormat(problem.objects);
   knowledgeBase += encodeInitPredicatesToPrologFormat(problem.init);
   knowledgeBase += encodeGoalPredicatesToPrologFormat(problem.goal);
   knowledgeBase += encodeInitRules(dckRules);
+  knowledgeBase += encodePredicateDefaults(domainPredicates);
   console.log(knowledgeBase);
   return knowledgeBase;
 };
@@ -284,7 +286,7 @@ export const decodeSimpleAnswer = (
   return result;
 };
 
-export const composePredicateDefaults = (
+export const encodePredicateDefaults = (
   predicates: Array<Predicate>
 ): string => {
   let result = "\n";
@@ -303,9 +305,11 @@ export const composeSinglePredicateDefault = (predicate: Predicate): string => {
     args += ") " + PROLOG_RULE_SYMBOL + " " + PROLOG_FAIL + ".\n";
     result += INIT_PREFIX + predicate.name + args;
     result += GOAL_PREFIX + predicate.name + args;
+    result += NOT_GOAL_PREFIX + predicate.name + args;
   } else {
     result += INIT_PREFIX + predicate.name + ".\n";
     result += GOAL_PREFIX + predicate.name + ".\n";
+    result += NOT_GOAL_PREFIX + predicate.name + ".\n";
   }
   return result;
 };
