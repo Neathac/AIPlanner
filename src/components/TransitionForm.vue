@@ -241,8 +241,8 @@ onMounted(() => {
     })
   );
   // Updating operator variables
-  operators.value.push(emptyNoOperator());
-  chosenOperator.value = props.atbTransition.operator ?? operators.value[operators.value.length - 1];
+  chosenOperator.value =
+    props.atbTransition.operator ?? operators.value[operators.value.length - 1];
   updateOperatorVars();
   // Setting up originState values
   originState.value = props.atbTransition.originState;
@@ -254,6 +254,7 @@ onMounted(() => {
 
 function deleteConstraint(index: number): void {
   constraints.value.splice(index, 1);
+  constraintStringVariables.value.splice(index, 1);
 }
 
 function updateOriginVars() {

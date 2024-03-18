@@ -40,27 +40,9 @@
           <v-row density="compact">
             <v-col cols="2">
               <v-text-field
-                label="'All' variables"
-                v-model="allVariablesString[i]"
-              >
-              </v-text-field>
-            </v-col>
-            <v-col cols="1">
-              <v-tooltip location="bottom">
-                <template v-slot:activator="{ props }">
-                  <v-icon
-                    v-bind="props"
-                    icon="mdi-help-circle-outline"
-                  ></v-icon>
-                </template>
-                Use of these variables will be treated as 'Statement is true for
-                all objects'
-              </v-tooltip>
-            </v-col>
-            <v-col cols="2">
-              <v-text-field
                 label="'Any' variables"
                 v-model="anyVariablesString[i]"
+                :update:modelValue="updateAnyVariables(i)"
               >
               </v-text-field>
             </v-col>
@@ -83,6 +65,15 @@
                 color="green"
                 @click="addAndRule(i)"
                 >Add AND rule to OR rule</v-btn
+              >
+            </v-col>
+            <v-col cols="3">
+              <v-btn
+                append-icon="mdi-delete"
+                class="me-4"
+                color="error"
+                @click="deleteOrClause(i)"
+                >Delete OR rule</v-btn
               >
             </v-col>
           </v-row>
@@ -110,6 +101,10 @@
               <v-checkbox
                 v-model="orClause.andClause[offset * 3].isInGoal"
                 label="Is in goal"
+              ></v-checkbox>
+              <v-checkbox
+                v-model="orClause.andClause[offset * 3].isInInitial"
+                label="Is in initial state"
               ></v-checkbox>
             </v-col>
             <v-col v-if="orClause.andClause.length > offset * 3" cols="1">
@@ -141,6 +136,10 @@
                 v-model="orClause.andClause[offset * 3 + 1].isInGoal"
                 label="Is in goal"
               ></v-checkbox>
+              <v-checkbox
+                v-model="orClause.andClause[offset * 3 + 1].isInInitial"
+                label="Is in initial state"
+              ></v-checkbox>
             </v-col>
             <v-col v-if="orClause.andClause.length > offset * 3 + 1" cols="1">
               <v-btn
@@ -170,6 +169,10 @@
               <v-checkbox
                 v-model="orClause.andClause[offset * 3 + 2].isInGoal"
                 label="Is in goal"
+              ></v-checkbox>
+              <v-checkbox
+                v-model="orClause.andClause[offset * 3 + 2].isInInitial"
+                label="Is in initial state"
               ></v-checkbox>
             </v-col>
             <v-col v-if="orClause.andClause.length > offset * 3 + 2" cols="1">
@@ -207,6 +210,8 @@ import {
   AttributedInitRule,
   emptyAttributedInitRule,
   emptyLogicalOrRule,
+  equalConstraint,
+  notEqualConstraint,
 } from "@functions/parserTypes";
 import {
   decomposeStringToVariables,
@@ -283,6 +288,8 @@ onMounted(() => {
       isInEffect: false,
     })
   );
+  possibleConstraints.value.push(notEqualConstraint());
+  possibleConstraints.value.push(equalConstraint());
   // Populate variables in string form, as they only exist locally
   thisRule.value.orClause.forEach((orClause, _) => {
     andClauseStringVariables.value.push([]);
@@ -291,6 +298,10 @@ onMounted(() => {
         andClauseStringVariables.value.length - 1
       ].push(composeVariablesToString(andClause.varNames));
     });
+    anyVariablesString.value.push(
+      composeVariablesToString(orClause.anyVariables)
+    );
+    console.log(orClause);
   });
 });
 
@@ -307,6 +318,7 @@ function addAndRule(i: number) {
     varNames: possibleConstraints.value[0].variables,
     isInGoal: false,
     negated: false,
+    isInInitial: false,
   });
 }
 
@@ -318,13 +330,18 @@ function getOffsetArray(cols: number, length: number): Array<number> {
   return arr;
 }
 
-function updateClauseVars(orClauseIndex: number, andClauseIndex: number) {
+function updateAnyVariables(orClauseIndex: number): void {
+  if (anyVariablesString[orClauseIndex])
+    thisRule.value.orClause[orClauseIndex].anyVariables =
+      decomposeStringToVariables(anyVariablesString[orClauseIndex]);
+}
+
+function updateClauseVars(orClauseIndex: number, andClauseIndex: number): void {
   const found = possibleConstraints.value.find(
     (el) =>
       el.predicate ==
       thisRule.value.orClause[orClauseIndex].andClause[andClauseIndex].name
   );
-  console.log(found);
   if (
     found &&
     (!andClauseStringVariables.value[orClauseIndex][andClauseIndex] ||
@@ -348,14 +365,26 @@ function updateClauseVars(orClauseIndex: number, andClauseIndex: number) {
   }
 }
 
-function deleteAndClause(orIndex: number, andIndex: number) {
+function deleteAndClause(orIndex: number, andIndex: number): void {
   thisRule.value.orClause[orIndex].andClause.splice(andIndex, 1);
+  andClauseStringVariables.value[orIndex].splice(andIndex, 1);
+}
+
+function deleteOrClause(orIndex: number): void {
+  thisRule.value.orClause.splice(orIndex, 1);
+  andClauseStringVariables.value.splice(orIndex, 1);
+  anyVariablesString.value.splice(orIndex, 1);
 }
 
 const submit = async (event: { preventDefault: () => any }) => {
   await event.preventDefault();
   const { valid } = await form.value.validate();
   if (valid) {
+    anyVariablesString.value.forEach(
+      (val, i) =>
+        (thisRule.value.orClause[i].anyVariables =
+          decomposeStringToVariables(val))
+    );
     // eslint-disable-next-line vue/no-mutating-props
     props.rule.hasSimpleValue = thisRule.value.hasSimpleValue;
     // eslint-disable-next-line vue/no-mutating-props

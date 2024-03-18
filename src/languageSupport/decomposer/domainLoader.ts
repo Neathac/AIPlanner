@@ -5,6 +5,7 @@ import {
   EMPTY_OPERATOR,
   emptyAction,
   emptyLogicalExpression,
+  emptyNoOperator,
   emptyPddlDocument,
   emptyPddlProblemDocument,
   emptyPredicate,
@@ -406,6 +407,7 @@ export const loadActiveDomain = (domainCode: string): PddlDocument => {
       }
     },
   });
+  domain.actions.push(emptyNoOperator());
   console.log(domain);
   return domain;
 };
@@ -643,9 +645,11 @@ export const redefineActions = (
         "\n" + redefinition.redefinition + "\n",
         domain.slice(foundIndex),
       ].join("");
-    } else
+    } else {
       domain = domain.replace(redefinition.original, redefinition.redefinition);
+    }
   });
+  console.log(domain);
   domainStore.loadActiveDomain(loadActiveDomain(domain), domain);
 };
 

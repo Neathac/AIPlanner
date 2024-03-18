@@ -1,19 +1,20 @@
 import {
   AttributedInitRule,
+  EQUAL_CONSTRAINT,
   LogicalExpression,
-  LogicalOrRule,
+  NOT_EQUAL_CONSTRAINT,
   PddlProblemDocument,
   Predicate,
   ProblemObject,
   RulePredicate,
-  emptyPddlProblemDocument,
 } from "@functions/parserTypes";
 import { Answer, load, Prolog } from "trealla";
 // https://github.com/guregu/trealla-js
 
-export const GOAL_PREFIX = "goal_rule";
+export const GOAL_PREFIX = "goal_rule_";
+export const NOT_GOAL_PREFIX = "not_" + GOAL_PREFIX;
 export const OBJECT_PROLOG_PREDICATE = "atbObjectControl";
-export const INIT_PREFIX = "init_rule";
+export const INIT_PREFIX = "init_rule_";
 export const PROLOG_FAIL = "fail";
 export const PROLOG_RULE_SYMBOL = ":-";
 export const VAR_PROLOG_PREFIX = "V";
@@ -72,8 +73,7 @@ export const encodeGoalPredicatesToPrologFormat = (
     expression.predicateArguments.forEach((predicate) => {
       if (negationDepth % 2 === 1)
         result +=
-          "not_" +
-          GOAL_PREFIX +
+          NOT_GOAL_PREFIX +
           convertInstantiatedPredicateToProlog(predicate) +
           ".\n";
       else
@@ -169,22 +169,39 @@ export const encodeInitRules = (
 export const composeOrRule = (rule: AttributedInitRule): string => {
   let result = INIT_PREFIX + rule.rulePredicate.name;
   const varMapping = createVariableMapping(rule);
-  // Setting left side of rule
-  result += getArgumentsFromMapping(rule.rulePredicate, varMapping);
-  result += " " + PROLOG_RULE_SYMBOL + " ";
-  // Setting right side of rule
+
   rule.orClause.forEach((orRule, orIndex) => {
+    // Setting left side of rule
+    result += getArgumentsFromMapping(rule.rulePredicate, varMapping[orIndex]);
+    result += " " + PROLOG_RULE_SYMBOL + " ";
+    // Setting right side of rule
     orRule.andClause.forEach((andRule, andIndex) => {
-      if (andRule.negated) result += "\\+ ";
-      if (andRule.isInGoal) result += GOAL_PREFIX;
-      else result += INIT_PREFIX;
-      result += andRule.name;
-      // Adding arguements
-      result += getArgumentsFromMapping(andRule, varMapping);
+      if (andRule.name === EQUAL_CONSTRAINT) {
+        result +=
+          varMapping[orIndex].get(andRule.varNames[0]) +
+          "=" +
+          varMapping[orIndex].get(andRule.varNames[1]);
+      } else if (andRule.name === NOT_EQUAL_CONSTRAINT) {
+        result +=
+          varMapping[orIndex].get(andRule.varNames[0]) +
+          "\\=" +
+          varMapping[orIndex].get(andRule.varNames[1]);
+      } else {
+        if (andRule.negated && andRule.isInGoal) {
+          result += NOT_GOAL_PREFIX;
+        } else {
+          if (andRule.negated) result += "\\+ ";
+          if (andRule.isInGoal) result += GOAL_PREFIX;
+          else result += INIT_PREFIX;
+        }
+        result += andRule.name;
+        // Adding arguements
+        result += getArgumentsFromMapping(andRule, varMapping[orIndex]);
+      }
+
       if (andIndex != orRule.andClause.length - 1) result += ",";
+      else result += ".\n";
     });
-    if (rule.orClause.length - 1 != orIndex) result += PROLOG_OR_SYMBOL + "\n";
-    else result += ".\n";
   });
   return result;
 };
@@ -205,22 +222,31 @@ export const getArgumentsFromMapping = (
 
 export const createVariableMapping = (
   rule: AttributedInitRule
-): Map<string, string> => {
-  const varMapping = new Map<string, string>();
-  rule.orClause.forEach((rule) => {
-    rule.anyVariables.forEach((val) => varMapping.set(val, "_"));
-  });
-  rule.orClause.forEach((rule, orIndex) => {
-    rule.andClause.forEach((andR, andIndex) => {
-      andR.varNames.forEach((varName) => {
-        varMapping.set(varName, "O" + orIndex + "A" + andIndex);
+): Array<Map<string, string>> => {
+  const mappingArray = new Array<Map<string, string>>();
+  rule.orClause.forEach((orRule, orIndex) => {
+    mappingArray.push(new Map<string, string>());
+
+    rule.rulePredicate.varNames.forEach((variable, varIndex) => {
+      if (!mappingArray[orIndex].has(variable))
+        mappingArray[orIndex].set(variable, "V" + varIndex + "O" + orIndex);
+    });
+    orRule.anyVariables.forEach((anyVar) => {
+      if (!mappingArray[orIndex].has(anyVar))
+        mappingArray[orIndex].set(anyVar, "_");
+    });
+    orRule.andClause.forEach((andRule, andIndex) => {
+      andRule.varNames.forEach((variable, varIndex) => {
+        if (!mappingArray[orIndex].has(variable))
+          mappingArray[orIndex].set(
+            variable,
+            "O" + orIndex + "A" + andIndex + "V" + varIndex
+          );
       });
     });
   });
-  rule.rulePredicate.varNames.forEach((variable, index) =>
-    varMapping.set(variable, "V" + index)
-  );
-  return varMapping;
+
+  return mappingArray;
 };
 
 export const composeSimpleRuleQuery = (rule: AttributedInitRule): string => {
@@ -254,6 +280,32 @@ export const decodeSimpleAnswer = (
     result = result.substring(0, result.length - 1) + ")\n";
   } else if (answer.status === "success") {
     result = "(" + rule.rulePredicate.name + ")\n";
+  }
+  return result;
+};
+
+export const composePredicateDefaults = (
+  predicates: Array<Predicate>
+): string => {
+  let result = "\n";
+  predicates.forEach((pred) => (result += composeSinglePredicateDefault(pred)));
+  return result;
+};
+
+export const composeSinglePredicateDefault = (predicate: Predicate): string => {
+  let result = "";
+  if (predicate.varNames.length > 0) {
+    let args = "(";
+    predicate.varNames.forEach((_, index) => {
+      args += "_";
+      if (index != predicate.varNames.length - 1) args += ",";
+    });
+    args += ") " + PROLOG_RULE_SYMBOL + " " + PROLOG_FAIL + ".\n";
+    result += INIT_PREFIX + predicate.name + args;
+    result += GOAL_PREFIX + predicate.name + args;
+  } else {
+    result += INIT_PREFIX + predicate.name + ".\n";
+    result += GOAL_PREFIX + predicate.name + ".\n";
   }
   return result;
 };

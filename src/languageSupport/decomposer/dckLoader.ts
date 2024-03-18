@@ -8,11 +8,14 @@ import {
 import { useAtbStore } from "../../stores/atbStore";
 
 export function decomposeStringToVariables(varString: String): string[] {
-  return varString.trim().split(",");
+  return varString
+    .trim()
+    .split(",")
+    .filter((val) => val != "");
 }
 
 export function composeVariablesToString(variables: string[]): String {
-  return variables.join(", ");
+  return variables.join(",");
 }
 
 export function dummyVariableString(numOfVars: number): String {
@@ -53,10 +56,13 @@ export const getPredicateFromAttributedState = (
 ): Predicate => {
   return {
     name: state.name,
-    varNames: decomposeStringToVariables(dummyVariableString(state.numOfVars)),
+    varNames:
+      state.specificVars ??
+      decomposeStringToVariables(dummyVariableString(state.numOfVars)),
     rawPredicate: getRawPredicateFromArray(
       state.name,
-      decomposeStringToVariables(dummyVariableString(state.numOfVars))
+      state.specificVars ??
+        decomposeStringToVariables(dummyVariableString(state.numOfVars))
     ),
   };
 };
@@ -66,10 +72,13 @@ export const getPredicateFromAttributedMemory = (
 ): Predicate => {
   return {
     name: state.name,
-    varNames: decomposeStringToVariables(dummyVariableString(state.numOfVars)),
+    varNames:
+      state.specificVars ??
+      decomposeStringToVariables(dummyVariableString(state.numOfVars)),
     rawPredicate: getRawPredicateFromArray(
       state.name,
-      decomposeStringToVariables(dummyVariableString(state.numOfVars))
+      state.specificVars ??
+        decomposeStringToVariables(dummyVariableString(state.numOfVars))
     ),
   };
 };
@@ -134,7 +143,8 @@ export const gatherActionModification = (): ActionModification[] => {
     );
     let tempPars = "";
     parameters.forEach((parameter) => {
-      if (!tempPars.includes(parameter)) tempPars += parameter + " ";
+      if (!tempPars.includes(parameter.trim()))
+        tempPars += parameter.trim() + " ";
     });
     parameters = tempPars.split(" ");
     // Extra constraint effects and preconditions

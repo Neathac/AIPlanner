@@ -263,6 +263,23 @@ export interface AttributedConstraint {
   isInEffect: boolean,
 }
 
+export const NOT_EQUAL_CONSTRAINT = "DCK_not_equal";
+export const EQUAL_CONSTRAINT = "DCK_equal";
+
+export const notEqualConstraint = (): AttributedConstraint => ({
+  predicate: NOT_EQUAL_CONSTRAINT,
+  variables: ["?x", "?y"],
+  negated: false,
+  isInEffect: false,
+});
+
+export const equalConstraint = (): AttributedConstraint => ({
+  predicate: EQUAL_CONSTRAINT,
+  variables: ["?x", "?y"],
+  negated: false,
+  isInEffect: false,
+});
+
 export const emptyAttributedConstraint = (): AttributedConstraint => ({
   predicate: "",
   variables: [],
@@ -301,6 +318,7 @@ export interface RulePredicate {
   varNames: string[];
   negated: boolean;
   isInGoal: boolean;
+  isInInitial: boolean;
 }
 
 export const emptyRulePredicate = (): RulePredicate => ({
@@ -308,4 +326,5 @@ export const emptyRulePredicate = (): RulePredicate => ({
   varNames: [],
   negated: false,
   isInGoal: false,
+  isInInitial: false,
 });

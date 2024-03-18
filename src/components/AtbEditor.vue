@@ -76,11 +76,11 @@ import { useAtbStore } from "../stores/atbStore";
 import {
   AttributedConstraint,
   AttributedInitRule,
-  emptyAction,
   emptyAttributedInitRule,
   emptyAttributedMemory,
   emptyAttributedState,
   emptyAttributedTransition,
+  emptyNoOperator,
 } from "@functions/parserTypes";
 import TransitionForm from "./TransitionForm.vue";
 import StateInitRule from "./StateInitRule.vue";
@@ -175,7 +175,7 @@ export default defineComponent({
       const temp = emptyAttributedTransition();
       temp.originState = this.DCKstates[0];
       temp.targetState = this.DCKstates[0];
-      temp.operator = emptyAction();
+      temp.operator = emptyNoOperator();
       this.DCKtransitions.push(temp);
       this.atbStore.loadNewDckTransitions(this.DCKtransitions);
     },
