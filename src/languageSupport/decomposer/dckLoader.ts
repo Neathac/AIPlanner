@@ -11,7 +11,8 @@ export function decomposeStringToVariables(varString: String): string[] {
   return varString
     .trim()
     .split(",")
-    .filter((val) => val != "");
+    .filter((val) => val != "")
+    .map((str) => str.trim());
 }
 
 export function composeVariablesToString(variables: string[]): String {
@@ -25,6 +26,15 @@ export function dummyVariableString(numOfVars: number): String {
     str += "?var_" + i + ", ";
   }
   return str.substring(0, str.length - 2);
+}
+
+export function findOverlap(arr1: string[], arr2: string[]): string[] {
+  const result = new Array<string>();
+  const temp = arr2.join(", ");
+  arr1.forEach((str) => {
+    if (temp.includes(str)) result.push(str);
+  });
+  return result;
 }
 
 export function getRawPredicate(name: string, variableString: String): string {
@@ -43,7 +53,8 @@ export function getRawPredicateFromArray(
 export const gatherPredicateModifications = (): Map<string, Predicate> => {
   const result = new Map<string, Predicate>();
   useAtbStore().getDCKmemory.forEach((memPred) => {
-    result.set(memPred.name, getPredicateFromAttributedMemory(memPred));
+    if (!memPred.omitFromProblem)
+      result.set(memPred.name, getPredicateFromAttributedMemory(memPred));
   });
   useAtbStore().getDCKstates.forEach((atbPred) => {
     result.set(atbPred.name, getPredicateFromAttributedState(atbPred));

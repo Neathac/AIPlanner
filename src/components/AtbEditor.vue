@@ -27,8 +27,8 @@
       <v-window-item :key="2" :value="2">
         <v-container fluid style="max-height: 80vh; overflow-y: scroll">
           <v-row v-for="(dckMem, i) in DCKmemory" :key="dckMem.name">
-            <DckPredForm
-              :atb-state="dckMem"
+            <DckMemoryForm
+              :atb-memory="dckMem"
               :index="i"
               @saveEvent="save()"
               @deleteEvent="deleteMemory(i)"
@@ -41,15 +41,32 @@
       </v-window-item>
       <v-window-item :key="3" :value="3">
         <v-container fluid style="max-height: 80vh; overflow-y: scroll">
-          <v-row v-for="(dckTransition, i) in DCKtransitions" :key="i">
-            <TransitionForm
-              :atb-transition="dckTransition"
-              :index="i"
-              @saveEvent="save()"
-              @deleteEvent="deleteTransition(i)"
-            />
-          </v-row>
           <v-row class="justify-center">
+            <v-expansion-panels multiple>
+              <v-expansion-panel
+                v-for="(dckTransition, i) in DCKtransitions"
+                :key="i"
+                :title="
+                  dckTransition.originState.name +
+                  ' ' +
+                  dckTransition.operator.name +
+                  ' ' +
+                  dckTransition.targetState.name
+                "
+              >
+                <v-expansion-panel-text>
+                  <TransitionForm
+                    :atb-transition="dckTransition"
+                    :index="i"
+                    @saveEvent="save()"
+                    @deleteEvent="deleteTransition(i)"
+                  />
+                </v-expansion-panel-text>
+              </v-expansion-panel>
+            </v-expansion-panels>
+          </v-row>
+          <v-divider vertical></v-divider>
+          <v-row class="justify-center mt-3">
             <v-btn
               color="green"
               icon="mdi-plus"
@@ -60,8 +77,18 @@
       </v-window-item>
       <v-window-item :key="4" :value="4">
         <v-container fluid style="max-height: 80vh; overflow-y: scroll">
-          <v-row v-for="(rule, i) in initRules" :key="i">
-            <StateInitRule :rule="rule" :index="i" @saveEvent="save()" />
+          <v-row class="justify-center">
+            <v-expansion-panels multiple>
+              <v-expansion-panel
+                v-for="(rule, i) in initRules"
+                :key="i"
+                :title="rule.rulePredicate.name"
+              >
+                <v-expansion-panel-text>
+                  <StateInitRule :rule="rule" :index="i" @saveEvent="save()" />
+                </v-expansion-panel-text>
+              </v-expansion-panel>
+            </v-expansion-panels>
           </v-row>
         </v-container>
       </v-window-item>
@@ -84,6 +111,7 @@ import {
 } from "@functions/parserTypes";
 import TransitionForm from "./TransitionForm.vue";
 import StateInitRule from "./StateInitRule.vue";
+import DckMemoryForm from "./DckMemoryForm.vue";
 
 export default defineComponent({
   data() {
@@ -140,6 +168,7 @@ export default defineComponent({
         if (found) newInitRules.push(rule);
       });
       this.initRules = [...new Set(newInitRules)];
+      this.atbStore.loadNewDckRules(this.initRules);
     },
     dummyVariables(numOfVars: number): String[] {
       if (numOfVars === 0) return [];
@@ -195,6 +224,7 @@ export default defineComponent({
     DckPredForm,
     TransitionForm,
     StateInitRule,
+    DckMemoryForm,
   },
 });
 </script>

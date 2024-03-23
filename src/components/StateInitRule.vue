@@ -1,7 +1,7 @@
 <template>
   <v-container>
     <v-form @submit.prevent="submit" ref="form">
-      <v-row density="compact">
+      <v-row dense>
         <v-col cols="3">
           <v-text-field
             :value="props.rule.rulePredicate.name"
@@ -36,167 +36,315 @@
         </v-col>
       </v-row>
       <v-container v-if="defaultChoice == 'No simple value'">
-        <v-container v-for="(orClause, i) in thisRule.orClause" :key="i">
-          <v-row density="compact">
-            <v-col cols="2">
-              <v-text-field
-                label="'Any' variables"
-                v-model="anyVariablesString[i]"
-                :update:modelValue="updateAnyVariables(i)"
-              >
-              </v-text-field>
-            </v-col>
-            <v-col cols="1">
-              <v-tooltip location="bottom">
-                <template v-slot:activator="{ props }">
-                  <v-icon
-                    v-bind="props"
-                    icon="mdi-help-circle-outline"
-                  ></v-icon>
-                </template>
-                Use of these variables will be treated as 'There exists an
-                object'
-              </v-tooltip>
-            </v-col>
-            <v-col cols="3">
-              <v-btn
-                append-icon="mdi-plus"
-                class="me-4"
-                color="green"
-                @click="addAndRule(i)"
-                >Add AND rule to OR rule</v-btn
-              >
-            </v-col>
-            <v-col cols="3">
-              <v-btn
-                append-icon="mdi-delete"
-                class="me-4"
-                color="error"
-                @click="deleteOrClause(i)"
-                >Delete OR rule</v-btn
-              >
-            </v-col>
-          </v-row>
-          <v-row
-            v-for="offset in getOffsetArray(3, orClause.andClause.length)"
-            :key="offset"
-            density="compact"
-          >
-            <v-col v-if="orClause.andClause.length > offset * 3" cols="3">
-              <v-autocomplete
-                v-model="orClause.andClause[offset * 3].name"
-                :update:modelValue="updateClauseVars(i, offset * 3)"
-                :items="possibleConstraints"
-                item-title="predicate"
-                label="Constraint condition"
-              ></v-autocomplete>
-              <v-text-field
-                v-model="andClauseStringVariables[i][offset * 3]"
-                label="Variable names"
-              ></v-text-field>
-              <v-checkbox
-                v-model="orClause.andClause[offset * 3].negated"
-                label="Negate"
-              ></v-checkbox>
-              <v-checkbox
-                v-model="orClause.andClause[offset * 3].isInGoal"
-                label="Is in goal"
-              ></v-checkbox>
-              <v-checkbox
-                v-model="orClause.andClause[offset * 3].isInInitial"
-                label="Is in initial state"
-              ></v-checkbox>
-            </v-col>
-            <v-col v-if="orClause.andClause.length > offset * 3" cols="1">
-              <v-btn
-                color="error"
-                icon="mdi-delete"
-                class="me-4"
-                @click="deleteAndClause(i, offset * 3)"
-              ></v-btn>
-            </v-col>
-            <v-col v-if="orClause.andClause.length > offset * 3 + 1" cols="3">
-              <v-autocomplete
-                v-model="orClause.andClause[offset * 3 + 1].name"
-                :update:modelValue="updateClauseVars(i, offset * 3 + 1)"
-                :items="possibleConstraints"
-                item-title="predicate"
-                label="Constraint condition"
-              ></v-autocomplete>
-              <v-text-field
-                v-model="andClauseStringVariables[i][offset * 3 + 1]"
-                label="Variable names"
-                :rules="[andClauseVariableRules(i, offset * 3 + 1)]"
-              ></v-text-field>
-              <v-checkbox
-                v-model="orClause.andClause[offset * 3 + 1].negated"
-                label="Negate"
-              ></v-checkbox>
-              <v-checkbox
-                v-model="orClause.andClause[offset * 3 + 1].isInGoal"
-                label="Is in goal"
-              ></v-checkbox>
-              <v-checkbox
-                v-model="orClause.andClause[offset * 3 + 1].isInInitial"
-                label="Is in initial state"
-              ></v-checkbox>
-            </v-col>
-            <v-col v-if="orClause.andClause.length > offset * 3 + 1" cols="1">
-              <v-btn
-                color="error"
-                icon="mdi-delete"
-                class="me-4"
-                @click="deleteAndClause(i, offset * 3 + 1)"
-              ></v-btn>
-            </v-col>
-            <v-col v-if="orClause.andClause.length > offset * 3 + 2" cols="3">
-              <v-autocomplete
-                v-model="orClause.andClause[offset * 3 + 2].name"
-                :update:modelValue="updateClauseVars(i, offset * 3 + 2)"
-                :items="possibleConstraints"
-                item-title="predicate"
-                label="Constraint condition"
-              ></v-autocomplete>
-              <v-text-field
-                v-model="andClauseStringVariables[i][offset * 3 + 2]"
-                label="Variable names"
-                :rules="[andClauseVariableRules(i, offset * 3 + 2)]"
-              ></v-text-field>
-              <v-checkbox
-                v-model="orClause.andClause[offset * 3 + 2].negated"
-                label="Negate"
-              ></v-checkbox>
-              <v-checkbox
-                v-model="orClause.andClause[offset * 3 + 2].isInGoal"
-                label="Is in goal"
-              ></v-checkbox>
-              <v-checkbox
-                v-model="orClause.andClause[offset * 3 + 2].isInInitial"
-                label="Is in initial state"
-              ></v-checkbox>
-            </v-col>
-            <v-col v-if="orClause.andClause.length > offset * 3 + 2" cols="1">
-              <v-btn
-                color="error"
-                icon="mdi-delete"
-                class="me-4"
-                @click="deleteAndClause(i, offset * 3 + 2)"
-              ></v-btn>
-            </v-col>
-          </v-row>
-        </v-container>
-        <v-row density="compact">
-          <v-col cols="2">
-            <v-btn
-              append-icon="mdi-plus"
-              class="me-4"
-              color="green"
-              @click="addOrRule()"
-              >Add or rule</v-btn
+        <v-row class="justify-center" dense>
+          <v-expansion-panels multiple>
+            <v-expansion-panel
+              v-for="(orClause, i) in thisRule.orClause"
+              :key="i"
+              :title="'OR rule ' + i"
             >
-          </v-col>
+              <v-expansion-panel-text>
+                <v-row dense>
+                  <v-col cols="2">
+                    <v-text-field
+                      label="'Any' variables"
+                      v-model="anyVariablesString[i]"
+                      :update:modelValue="updateAnyVariables(i)"
+                    >
+                    </v-text-field>
+                  </v-col>
+                  <v-col cols="1">
+                    <v-tooltip location="bottom">
+                      <template v-slot:activator="{ props }">
+                        <v-icon
+                          v-bind="props"
+                          icon="mdi-help-circle-outline"
+                        ></v-icon>
+                      </template>
+                      Use of these variables will be treated as 'There exists an
+                      object'
+                    </v-tooltip>
+                  </v-col>
+
+                  <v-col cols="3">
+                    <v-btn
+                      append-icon="mdi-delete"
+                      class="me-4"
+                      color="error"
+                      @click="deleteOrClause(i)"
+                      >Delete OR rule</v-btn
+                    >
+                  </v-col>
+                </v-row>
+                <v-row
+                  v-for="offset in getOffsetArray(3, orClause.andClause.length)"
+                  :key="offset"
+                  dense
+                >
+                  <template v-for="(_, temp) in 3" :key="temp">
+                    <v-col
+                      v-if="orClause.andClause.length > offset * 3 + temp"
+                      cols="3"
+                    >
+                      <v-autocomplete
+                        v-model="orClause.andClause[offset * 3 + temp].name"
+                        :update:modelValue="
+                          updateClauseVars(i, offset * 3 + temp)
+                        "
+                        :items="possibleConstraints"
+                        item-title="predicate"
+                        label="Constraint condition"
+                      ></v-autocomplete>
+                      <v-text-field
+                        v-model="andClauseStringVariables[i][offset * 3 + temp]"
+                        label="Variable names"
+                        :rules="[andClauseVariableRules(i, offset * 3 + temp)]"
+                      ></v-text-field>
+                      <v-checkbox
+                        v-model="orClause.andClause[offset * 3 + temp].negated"
+                        label="Negate"
+                      ></v-checkbox>
+                      <v-checkbox
+                        v-model="orClause.andClause[offset * 3 + temp].isInGoal"
+                        label="Is in goal"
+                      ></v-checkbox>
+                    </v-col>
+                    <v-col
+                      v-if="orClause.andClause.length > offset * 3 + temp"
+                      cols="1"
+                    >
+                      <v-btn
+                        color="error"
+                        icon="mdi-delete"
+                        class="me-4"
+                        @click="deleteAndClause(i, offset * 3 + temp)"
+                      ></v-btn>
+                    </v-col>
+                  </template>
+                </v-row>
+                <v-expansion-panels multiple>
+                  <v-expansion-panel
+                    v-for="(func, j) in orClause.prologFunctions"
+                    :key="j"
+                    :title="func.operator + ' ' + j"
+                  >
+                    <v-expansion-panel-text>
+                      <v-row dense>
+                        <v-col cols="2">
+                          <v-autocomplete
+                            v-model="func.operator"
+                            :items="POSSIBLE_PROLOG_FUNCTIONS"
+                            label="Function"
+                          ></v-autocomplete>
+                        </v-col>
+                        <v-col
+                          cols="1"
+                          v-if="
+                            func.operator == 'max' || func.operator == 'min'
+                          "
+                        >
+                          <v-tooltip location="bottom">
+                            <template v-slot:activator="{ props }">
+                              <v-icon
+                                v-bind="props"
+                                icon="mdi-help-circle-outline"
+                              ></v-icon>
+                            </template>
+                            The selected function will be applied to all
+                            provided predicates. The results will be stored into
+                            matching variables in the field 'Of variables'.
+                          </v-tooltip>
+                        </v-col>
+                        <v-col cols="1" v-if="func.operator == 'count'">
+                          <v-tooltip location="bottom">
+                            <template v-slot:activator="{ props }">
+                              <v-icon
+                                v-bind="props"
+                                icon="mdi-help-circle-outline"
+                              ></v-icon>
+                            </template>
+                            All provided predicates will be treated as a
+                            conjunction for which cardinality is computed as a
+                            whole.
+                          </v-tooltip>
+                        </v-col>
+                        <v-col cols="2">
+                          <v-text-field
+                            v-model="func.variable"
+                            label="Result of function"
+                            :rules="[
+                              () =>
+                                decomposeStringToVariables(
+                                  func.variable
+                                ).filter((val) => val.trim() != '').length == 1
+                                  ? true
+                                  : 'Number of arguments doesn\'t match definition of state. Should be 1.',
+                            ]"
+                          ></v-text-field>
+                        </v-col>
+                        <v-col cols="3">
+                          <v-text-field
+                            v-if="
+                              func.operator == 'max' || func.operator == 'min'
+                            "
+                            label="Of variables:"
+                            v-model="functionSelectionVariables[i][j]"
+                            :update:modelValue="
+                              updateFunctionSelectionVariables(i, j)
+                            "
+                          ></v-text-field>
+                        </v-col>
+                        <v-col
+                          cols="1"
+                          v-if="
+                            func.operator == 'max' || func.operator == 'min'
+                          "
+                        >
+                          <v-tooltip location="bottom">
+                            <template v-slot:activator="{ props }">
+                              <v-icon
+                                v-bind="props"
+                                icon="mdi-help-circle-outline"
+                              ></v-icon>
+                            </template>
+                            There is no type safety, make sure provided
+                            vairables resolve to numbers. Any predicate within
+                            function must have exactly one variable shared with
+                            this list, but listed variables and constants don't
+                            need to be tied to in-function predicates.
+                          </v-tooltip>
+                        </v-col>
+                        <v-col cols="3">
+                          <v-btn
+                            append-icon="mdi-delete"
+                            class="me-4"
+                            color="error"
+                            @click="deleteFunction(i, j)"
+                            >Delete function</v-btn
+                          >
+                        </v-col>
+                      </v-row>
+                      <v-row
+                        v-for="funcOffset in getOffsetArray(
+                          3,
+                          func.predicateArguments.length
+                        )"
+                        :key="funcOffset"
+                        dense
+                      >
+                        <template v-for="(_, temp) in 3" :key="temp">
+                          <v-col
+                            v-if="
+                              func.predicateArguments.length >
+                              funcOffset * 3 + temp
+                            "
+                            cols="3"
+                          >
+                            <v-autocomplete
+                              v-model="
+                                func.predicateArguments[funcOffset * 3 + temp]
+                                  .name
+                              "
+                              :update:modelValue="
+                                updateFuncVars(i, j, funcOffset * 3 + temp)
+                              "
+                              :items="possibleConstraints"
+                              item-title="predicate"
+                              label="Constraint condition"
+                            ></v-autocomplete>
+                            <v-text-field
+                              v-model="
+                                functionVariables[i][j][funcOffset * 3 + temp]
+                              "
+                              label="Variable names"
+                            ></v-text-field>
+                            <v-checkbox
+                              v-model="
+                                func.predicateArguments[funcOffset * 3 + temp]
+                                  .negated
+                              "
+                              label="Negate"
+                            ></v-checkbox>
+                            <v-checkbox
+                              v-model="
+                                func.predicateArguments[funcOffset * 3 + temp]
+                                  .isInGoal
+                              "
+                              label="Is in goal"
+                            ></v-checkbox>
+                          </v-col>
+                          <v-col
+                            v-if="
+                              func.predicateArguments.length >
+                              funcOffset * 3 + temp
+                            "
+                            cols="1"
+                          >
+                            <v-btn
+                              color="error"
+                              icon="mdi-delete"
+                              class="me-4"
+                              @click="
+                                deleteFunctionClause(
+                                  i,
+                                  j,
+                                  funcOffset * 3 + temp
+                                )
+                              "
+                            ></v-btn>
+                          </v-col>
+                        </template>
+                      </v-row>
+                      <v-row dense>
+                        <v-col cols="4">
+                          <v-btn
+                            append-icon="mdi-plus"
+                            class="me-4"
+                            color="green"
+                            @click="addFunctionArg(i, j)"
+                            >Add predicate to function</v-btn
+                          >
+                        </v-col>
+                      </v-row>
+                    </v-expansion-panel-text>
+                  </v-expansion-panel>
+                </v-expansion-panels>
+                <v-row dense>
+                  <v-col cols="3">
+                    <v-btn
+                      append-icon="mdi-plus"
+                      class="me-4 mt-4"
+                      color="green"
+                      @click="addAndRule(i)"
+                      >Add predicate to rule</v-btn
+                    >
+                  </v-col>
+                  <v-col cols="3" dense>
+                    <v-btn
+                      append-icon="mdi-plus"
+                      class="me-4 mt-4"
+                      color="blue"
+                      @click="addFunction(i)"
+                      >Add function to rule</v-btn
+                    >
+                  </v-col>
+                </v-row>
+              </v-expansion-panel-text>
+            </v-expansion-panel>
+          </v-expansion-panels>
         </v-row>
       </v-container>
+      <v-row dense>
+        <v-col cols="2">
+          <v-btn
+            append-icon="mdi-plus"
+            class="me-4 mt-4"
+            color="green"
+            @click="addOrRule()"
+            >Add OR rule</v-btn
+          >
+        </v-col>
+      </v-row>
     </v-form>
   </v-container>
 </template>
@@ -212,12 +360,14 @@ import {
   emptyLogicalOrRule,
   equalConstraint,
   notEqualConstraint,
+  POSSIBLE_PROLOG_FUNCTIONS,
 } from "@functions/parserTypes";
 import {
   decomposeStringToVariables,
   composeVariablesToString,
   dummyVariableString,
 } from "../languageSupport/decomposer/dckLoader";
+import { emptyPrologFunction } from "@functions/parserTypes";
 
 const form = ref();
 
@@ -228,6 +378,8 @@ const defaultChoice: Ref<string> = ref("No simple value");
 const allVariablesString: Ref<Array<String>> = ref([]);
 const anyVariablesString: Ref<Array<String>> = ref([]);
 const andClauseStringVariables: Ref<Array<Array<String>>> = ref([]);
+const functionVariables: Ref<Array<Array<Array<String>>>> = ref([]);
+const functionSelectionVariables: Ref<Array<Array<String>>> = ref([]);
 
 const props = defineProps({
   rule: {
@@ -291,17 +443,29 @@ onMounted(() => {
   possibleConstraints.value.push(notEqualConstraint());
   possibleConstraints.value.push(equalConstraint());
   // Populate variables in string form, as they only exist locally
-  thisRule.value.orClause.forEach((orClause, _) => {
+  thisRule.value.orClause.forEach((orClause, orIndex) => {
+    functionVariables.value.push([]);
     andClauseStringVariables.value.push([]);
+    functionSelectionVariables.value.push([]);
     orClause.andClause.forEach((andClause) => {
-      andClauseStringVariables.value[
-        andClauseStringVariables.value.length - 1
-      ].push(composeVariablesToString(andClause.varNames));
+      andClauseStringVariables.value[orIndex].push(
+        composeVariablesToString(andClause.varNames)
+      );
     });
     anyVariablesString.value.push(
       composeVariablesToString(orClause.anyVariables)
     );
-    console.log(orClause);
+    orClause.prologFunctions.forEach((func, funcInd) => {
+      functionVariables.value[orIndex].push([]);
+      functionSelectionVariables.value[orIndex].push(
+        func.selectionVars.join(", ") ?? ""
+      );
+      func.predicateArguments.forEach((arg) =>
+        functionVariables.value[orIndex][funcInd].push(
+          composeVariablesToString(arg.varNames)
+        )
+      );
+    });
   });
 });
 
@@ -310,6 +474,8 @@ function addOrRule() {
   allVariablesString.value.push("");
   anyVariablesString.value.push("");
   andClauseStringVariables.value.push([]);
+  functionVariables.value.push([]);
+  functionSelectionVariables.value.push([]);
 }
 
 function addAndRule(i: number) {
@@ -320,6 +486,24 @@ function addAndRule(i: number) {
     negated: false,
     isInInitial: false,
   });
+}
+
+function addFunctionArg(orIndex: number, functionIndex: number) {
+  thisRule.value.orClause[orIndex].prologFunctions[
+    functionIndex
+  ].predicateArguments.push({
+    name: possibleConstraints.value[0].predicate,
+    varNames: possibleConstraints.value[0].variables,
+    isInGoal: false,
+    negated: false,
+    isInInitial: false,
+  });
+}
+
+function addFunction(orIndex: number) {
+  thisRule.value.orClause[orIndex].prologFunctions.push(emptyPrologFunction());
+  functionVariables.value[orIndex].push([]);
+  functionSelectionVariables.value[orIndex].push("");
 }
 
 function getOffsetArray(cols: number, length: number): Array<number> {
@@ -334,6 +518,16 @@ function updateAnyVariables(orClauseIndex: number): void {
   if (anyVariablesString[orClauseIndex])
     thisRule.value.orClause[orClauseIndex].anyVariables =
       decomposeStringToVariables(anyVariablesString[orClauseIndex]);
+}
+
+function updateFunctionSelectionVariables(
+  orIndex: number,
+  funcIndex: number
+): void {
+  thisRule.value.orClause[orIndex].prologFunctions[funcIndex].selectionVars =
+    decomposeStringToVariables(
+      functionSelectionVariables.value[orIndex][funcIndex]
+    );
 }
 
 function updateClauseVars(orClauseIndex: number, andClauseIndex: number): void {
@@ -365,6 +559,58 @@ function updateClauseVars(orClauseIndex: number, andClauseIndex: number): void {
   }
 }
 
+function updateFuncVars(
+  orClauseIndex: number,
+  functionIndex: number,
+  argIndex: number
+): void {
+  const found = possibleConstraints.value.find(
+    (el) =>
+      el.predicate ==
+      thisRule.value.orClause[orClauseIndex].prologFunctions[functionIndex]
+        .predicateArguments[argIndex].name
+  );
+  if (
+    found &&
+    (!functionVariables.value[orClauseIndex][functionIndex][argIndex] ||
+      found.variables.length !=
+        decomposeStringToVariables(
+          functionVariables.value[orClauseIndex][functionIndex][argIndex]
+        ).filter((val) => val.trim() != "").length)
+  ) {
+    thisRule.value.orClause[orClauseIndex].prologFunctions[
+      functionIndex
+    ].predicateArguments[argIndex].varNames = found.variables;
+    functionVariables.value[orClauseIndex][functionIndex][argIndex] =
+      composeVariablesToString(
+        thisRule.value.orClause[orClauseIndex].prologFunctions[functionIndex]
+          .predicateArguments[argIndex].varNames
+      );
+  } else {
+    thisRule.value.orClause[orClauseIndex].prologFunctions[
+      functionIndex
+    ].predicateArguments[argIndex].varNames = decomposeStringToVariables(
+      functionVariables.value[orClauseIndex][functionIndex][argIndex]
+    ).filter((val) => val.trim() != "");
+  }
+}
+
+function deleteFunctionClause(
+  orIndex: number,
+  functionIndex: number,
+  argIndex: number
+): void {
+  thisRule.value.orClause[orIndex].prologFunctions[
+    functionIndex
+  ].predicateArguments.splice(argIndex, 1);
+  functionVariables.value[orIndex][functionIndex].splice(argIndex, 1);
+}
+
+function deleteFunction(orIndex: number, functionIndex: number): void {
+  thisRule.value.orClause[orIndex].prologFunctions.splice(functionIndex, 1);
+  functionVariables.value[orIndex].splice(functionIndex, 1);
+}
+
 function deleteAndClause(orIndex: number, andIndex: number): void {
   thisRule.value.orClause[orIndex].andClause.splice(andIndex, 1);
   andClauseStringVariables.value[orIndex].splice(andIndex, 1);
@@ -385,6 +631,10 @@ const submit = async (event: { preventDefault: () => any }) => {
         (thisRule.value.orClause[i].anyVariables =
           decomposeStringToVariables(val))
     );
+    thisRule.value.rulePredicate.varNames = decomposeStringToVariables(
+      ruleVariableText.value
+    );
+    console.log(thisRule.value);
     // eslint-disable-next-line vue/no-mutating-props
     props.rule.hasSimpleValue = thisRule.value.hasSimpleValue;
     // eslint-disable-next-line vue/no-mutating-props

@@ -6,9 +6,11 @@ import {
   PddlProblemDocument,
   Predicate,
   ProblemObject,
+  PrologFunction,
   RulePredicate,
 } from "@functions/parserTypes";
 import { Answer, load, Prolog } from "trealla";
+import { findOverlap } from "./dckLoader";
 // https://github.com/guregu/trealla-js
 
 export const GOAL_PREFIX = "goal_rule_";
@@ -19,24 +21,39 @@ export const PROLOG_FAIL = "fail";
 export const PROLOG_RULE_SYMBOL = ":-";
 export const VAR_PROLOG_PREFIX = "V";
 export const PROLOG_OR_SYMBOL = ";";
+export const CARDINALITY_NAME = "cardinality_query";
+export const CARDINALITY_QUERY =
+  CARDINALITY_NAME +
+  "(N, Predicate) :- findall(X, call(Predicate), L),length(L,N).";
+export const PREDEFINED_FUNCTIONS = [CARDINALITY_QUERY];
+export const FINDALL_PROLOG = "findall";
+export const MAXLIST_PROLOG = "max_list";
+export const MINLIST_PROLOG = "min_list";
 
 export const getConsultResult = async (
   fileContent: string,
   dckRules: Array<AttributedInitRule>
 ): Promise<{ inits: Array<string>; objects: Array<string> }> => {
   const result = { inits: new Array<string>(), objects: new Array<string>() };
+  const tempInit = new Array<string>();
   await load();
   const session = new Prolog();
 
   await session.consultText(fileContent);
+  // await session.consultText(PROLOG_TEST);
 
   for await (const rule of dckRules) {
     console.log(branchRuleTypeQueries(rule));
     const query = session.query(branchRuleTypeQueries(rule));
     for await (const answer of query) {
-      result.inits.push(branchAnswerDecode(rule, answer));
+      console.log(answer);
+      tempInit.push(branchAnswerDecode(rule, answer));
     }
   }
+
+  tempInit.forEach((newInit) => {
+    if (!result.inits.includes(newInit)) result.inits.push(newInit);
+  });
   return result;
 };
 
@@ -96,12 +113,19 @@ export const encodeObjectsToPrologFormat = (
   return result;
 };
 
+export const encodePredefinedFunctions = (): string => {
+  let result = "";
+  PREDEFINED_FUNCTIONS.forEach((func) => (result += func + "\n"));
+  return result;
+};
+
 export const composeKnowledgeBase = (
   problem: PddlProblemDocument,
   dckRules: Array<AttributedInitRule>,
   domainPredicates: Array<Predicate>
 ): string => {
   let knowledgeBase = "";
+  knowledgeBase += encodePredefinedFunctions();
   knowledgeBase += encodeObjectsToPrologFormat(problem.objects);
   knowledgeBase += encodeInitPredicatesToPrologFormat(problem.init);
   knowledgeBase += encodeGoalPredicatesToPrologFormat(problem.goal);
@@ -112,7 +136,7 @@ export const composeKnowledgeBase = (
 };
 
 export const branchRuleTypeQueries = (atbRule: AttributedInitRule): string => {
-  if (atbRule.hasSimpleValue) return composeSimpleRuleQuery(atbRule);
+  if (atbRule) return composeSimpleRuleQuery(atbRule);
   else return "fail.";
 };
 
@@ -120,7 +144,7 @@ export const branchAnswerDecode = (
   atbRule: AttributedInitRule,
   answer: Answer
 ): string => {
-  if (atbRule.hasSimpleValue) return decodeSimpleAnswer(atbRule, answer);
+  if (atbRule) return decodeSimpleAnswer(atbRule, answer);
   return "";
 };
 
@@ -168,42 +192,123 @@ export const encodeInitRules = (
   return rules;
 };
 
-export const composeOrRule = (rule: AttributedInitRule): string => {
-  let result = INIT_PREFIX + rule.rulePredicate.name;
-  const varMapping = createVariableMapping(rule);
+export const composeCardinalityQuery = (
+  func: PrologFunction,
+  mapping: Map<string, string>
+): string => {
+  let result = "";
+  if (func.predicateArguments.length > 0) {
+    result += CARDINALITY_NAME + "(";
+    result += mapping.get(func.variable.trim()) + ",(";
+    func.predicateArguments.forEach((arg, argIndex) => {
+      if (arg.negated) result += "\\+ ";
+      if (arg.isInGoal) result += GOAL_PREFIX;
+      else result += INIT_PREFIX;
+      result += arg.name;
+      // Adding arguements
+      result += getArgumentsFromMapping(arg, mapping);
+      if (argIndex != func.predicateArguments.length - 1) result += ",";
+    });
+    result += "))";
+  }
+  return result;
+};
 
+export const composeMinMaxQuery = (
+  func: PrologFunction,
+  funcIndex: number,
+  mapping: Map<string, string>
+): string => {
+  let result = "";
+
+  func.predicateArguments.forEach((arg, argIndex) => {
+    const overlap = findOverlap(arg.varNames, func.selectionVars);
+    if (overlap.length != 1) return;
+
+    result += FINDALL_PROLOG + "(" + mapping.get(overlap[0]) + ", ";
+    if (arg.isInGoal) result += GOAL_PREFIX;
+    else result += INIT_PREFIX;
+    result +=
+      arg.name +
+      getArgumentsFromMapping(arg, mapping) +
+      ", F" +
+      funcIndex +
+      "A" +
+      argIndex +
+      "), ";
+    if (func.operator == "max") result += MAXLIST_PROLOG + "(";
+    else result += MINLIST_PROLOG + "(";
+    result += "F" + funcIndex + "A" + argIndex + ", " + overlap[0] + "), ";
+  });
+
+  if (func.operator == "max") result += MAXLIST_PROLOG + "(";
+  else result += MINLIST_PROLOG + "(";
+  result += "[";
+  func.selectionVars.forEach((variable, varIndex) => {
+    result += mapping.get(variable.trim());
+    if (varIndex != func.selectionVars.length - 1) result += ", ";
+  });
+  result += "], " + mapping.get(func.variable.trim()) + ")";
+  return result;
+};
+
+export const composeOrRule = (rule: AttributedInitRule): string => {
+  let result = "";
+  const varMapping = createVariableMapping(rule);
+  console.log(varMapping);
   rule.orClause.forEach((orRule, orIndex) => {
-    // Setting left side of rule
-    result += getArgumentsFromMapping(rule.rulePredicate, varMapping[orIndex]);
-    result += " " + PROLOG_RULE_SYMBOL + " ";
-    // Setting right side of rule
-    orRule.andClause.forEach((andRule, andIndex) => {
-      if (andRule.name === EQUAL_CONSTRAINT) {
-        result +=
-          varMapping[orIndex].get(andRule.varNames[0]) +
-          "=" +
-          varMapping[orIndex].get(andRule.varNames[1]);
-      } else if (andRule.name === NOT_EQUAL_CONSTRAINT) {
-        result +=
-          varMapping[orIndex].get(andRule.varNames[0]) +
-          "\\=" +
-          varMapping[orIndex].get(andRule.varNames[1]);
-      } else {
-        if (andRule.negated && andRule.isInGoal) {
-          result += NOT_GOAL_PREFIX;
+    if (orRule.andClause.length > 0 || orRule.prologFunctions.length > 0) {
+      // Setting left side of rule
+      result += INIT_PREFIX + rule.rulePredicate.name;
+      result += getArgumentsFromMapping(
+        rule.rulePredicate,
+        varMapping[orIndex]
+      );
+      result += " " + PROLOG_RULE_SYMBOL + " ";
+      // special function queries
+      orRule.prologFunctions.forEach((func, funcIndex) => {
+        if (func.operator == "count" && func.predicateArguments.length > 0) {
+          result += composeCardinalityQuery(func, varMapping[orIndex]);
+          if (
+            funcIndex != orRule.prologFunctions.length - 1 ||
+            orRule.andClause.length > 0
+          )
+            result += ",";
+        } else if (func.operator == "max" || func.operator == "min") {
+          result += composeMinMaxQuery(func, funcIndex, varMapping[orIndex]);
+          if (
+            funcIndex != orRule.prologFunctions.length - 1 ||
+            orRule.andClause.length > 0
+          )
+            result += ",";
+        }
+      });
+      // Setting right side of rule
+      orRule.andClause.forEach((andRule, andIndex) => {
+        if (andRule.name === EQUAL_CONSTRAINT) {
+          result +=
+            varMapping[orIndex].get(andRule.varNames[0].trim()) +
+            "=" +
+            varMapping[orIndex].get(andRule.varNames[1].trim());
+        } else if (andRule.name === NOT_EQUAL_CONSTRAINT) {
+          result +=
+            varMapping[orIndex].get(andRule.varNames[0].trim()) +
+            "\\=" +
+            varMapping[orIndex].get(andRule.varNames[1].trim());
         } else {
           if (andRule.negated) result += "\\+ ";
           if (andRule.isInGoal) result += GOAL_PREFIX;
           else result += INIT_PREFIX;
+          result += andRule.name;
+          // Adding arguements
+          result += getArgumentsFromMapping(andRule, varMapping[orIndex]);
         }
-        result += andRule.name;
-        // Adding arguements
-        result += getArgumentsFromMapping(andRule, varMapping[orIndex]);
-      }
 
-      if (andIndex != orRule.andClause.length - 1) result += ",";
-      else result += ".\n";
-    });
+        if (andIndex != orRule.andClause.length - 1) result += ",";
+      });
+      if (result.endsWith(",")) result = result.slice(0, -1);
+      result += ".\n";
+    }
   });
   return result;
 };
@@ -215,7 +320,7 @@ export const getArgumentsFromMapping = (
   let result = "";
   if (rulePredicate.varNames.length > 0) result += "(";
   rulePredicate.varNames.forEach((variable, index) => {
-    result += varMapping.get(variable);
+    result += varMapping.get(variable.trim());
     if (index != rulePredicate.varNames.length - 1) result += ",";
     else result += ")";
   });
@@ -230,20 +335,67 @@ export const createVariableMapping = (
     mappingArray.push(new Map<string, string>());
 
     rule.rulePredicate.varNames.forEach((variable, varIndex) => {
-      if (!mappingArray[orIndex].has(variable))
-        mappingArray[orIndex].set(variable, "V" + varIndex + "O" + orIndex);
+      if (!variable.trim().startsWith("?")) {
+        mappingArray[orIndex].set(variable.trim(), variable.trim());
+      }
+      if (!mappingArray[orIndex].has(variable.trim()))
+        mappingArray[orIndex].set(
+          variable.trim(),
+          "V" + varIndex + "O" + orIndex
+        );
     });
+
     orRule.anyVariables.forEach((anyVar) => {
-      if (!mappingArray[orIndex].has(anyVar))
-        mappingArray[orIndex].set(anyVar, "_");
+      if (!mappingArray[orIndex].has(anyVar.trim()))
+        mappingArray[orIndex].set(anyVar.trim(), "_");
     });
+    // And clause substitutions
     orRule.andClause.forEach((andRule, andIndex) => {
       andRule.varNames.forEach((variable, varIndex) => {
-        if (!mappingArray[orIndex].has(variable))
+        if (!variable.trim().startsWith("?")) {
+          mappingArray[orIndex].set(variable.trim(), variable.trim());
+        }
+        if (!mappingArray[orIndex].has(variable.trim()))
           mappingArray[orIndex].set(
-            variable,
+            variable.trim(),
             "O" + orIndex + "A" + andIndex + "V" + varIndex
           );
+      });
+    });
+    // Populate function substitutions
+    orRule.prologFunctions.forEach((func, funcIndex) => {
+      if (!func.variable.trim().startsWith("?")) {
+        mappingArray[orIndex].set(func.variable.trim(), func.variable.trim());
+      } else if (!mappingArray[orIndex].has(func.variable.trim())) {
+        mappingArray[orIndex].set(
+          func.variable.trim(),
+          "O" + orIndex + "F" + funcIndex
+        );
+      }
+
+      func.selectionVars.forEach((variable, varIndex) => {
+        if (!variable.trim().startsWith("?")) {
+          mappingArray[orIndex].set(variable.trim(), variable.trim());
+          return;
+        }
+        if (!mappingArray[orIndex].has(variable.trim()))
+          mappingArray[orIndex].set(
+            variable.trim(),
+            "O" + orIndex + "F" + funcIndex + "S" + varIndex
+          );
+      });
+
+      func.predicateArguments.forEach((pred, predIndex) => {
+        pred.varNames.forEach((variable, varIndex) => {
+          if (!variable.trim().startsWith("?")) {
+            mappingArray[orIndex].set(variable.trim(), variable.trim());
+          }
+          if (!mappingArray[orIndex].has(variable.trim()))
+            mappingArray[orIndex].set(
+              variable.trim(),
+              "O" + orIndex + "F" + funcIndex + "P" + predIndex + "V" + varIndex
+            );
+        });
       });
     });
   });

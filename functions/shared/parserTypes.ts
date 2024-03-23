@@ -235,11 +235,13 @@ export interface AttributedMemory {
   name: string,
   numOfVars: number,
   specificVars?: string[],
+  omitFromProblem: boolean,
 }
 
 export const emptyAttributedMemory = (): AttributedMemory => ({
   name: "",
   numOfVars: 0,
+  omitFromProblem: false,
 });
 
 export interface AttributedTransition {
@@ -262,6 +264,22 @@ export interface AttributedConstraint {
   negated: boolean,
   isInEffect: boolean,
 }
+
+export const POSSIBLE_PROLOG_FUNCTIONS = ["count", "max", "min"];
+
+export interface PrologFunction {
+  variable: string;
+  operator: "count" | "max" | "min" ;
+  predicateArguments: RulePredicate[];
+  selectionVars: string[];
+}
+
+export const emptyPrologFunction = (): PrologFunction => ({
+  variable: "?x",
+  operator: "count",
+  predicateArguments: new Array<RulePredicate>(),
+  selectionVars: new Array<string>(),
+});
 
 export const NOT_EQUAL_CONSTRAINT = "DCK_not_equal";
 export const EQUAL_CONSTRAINT = "DCK_equal";
@@ -303,14 +321,14 @@ export const emptyAttributedInitRule = (): AttributedInitRule => ({
 
 export interface LogicalOrRule {
   anyVariables: string[],
-  allVariables: string[],
   andClause: RulePredicate[],
+  prologFunctions: PrologFunction[],
 }
 
 export const emptyLogicalOrRule = (): LogicalOrRule => ({
   anyVariables: [],
-  allVariables: [],
-  andClause: [],
+  andClause: new Array<RulePredicate>(),
+  prologFunctions: new Array<PrologFunction>(),
 });
 
 export interface RulePredicate {
