@@ -7,6 +7,7 @@
       <v-tab :value="4" v-if="DCKstates.length > 0"
         >State initialization rules</v-tab
       >
+      <v-tab :value="5" v-if="DCKstates.length > 0">Edit rules in Prolog</v-tab>
     </v-tabs>
     <v-window v-model="tab">
       <v-window-item :key="1" :value="1">
@@ -92,17 +93,25 @@
           </v-row>
         </v-container>
       </v-window-item>
+      <v-window-item :key="5" :value="5">
+        <v-container fluid style="max-height: 80vh; overflow-y: scroll">
+          <PrologAtbEditor ref="editor" />
+        </v-container>
+      </v-window-item>
     </v-window>
   </v-card>
 </template>
 
-<script lang="ts">
-import { defineComponent } from "vue";
+<script lang="ts" setup>
+import { Ref, ref } from "vue";
 import DckPredForm from "./DckPredForm.vue";
 import { useAtbStore } from "../stores/atbStore";
 import {
   AttributedConstraint,
   AttributedInitRule,
+  AttributedMemory,
+  AttributedState,
+  AttributedTransition,
   emptyAttributedInitRule,
   emptyAttributedMemory,
   emptyAttributedState,
@@ -112,119 +121,123 @@ import {
 import TransitionForm from "./TransitionForm.vue";
 import StateInitRule from "./StateInitRule.vue";
 import DckMemoryForm from "./DckMemoryForm.vue";
+import PrologAtbEditor from "./PrologAtbEditor.vue";
+import { composeDomainKnowledgeBase } from "../languageSupport/decomposer/prologLoader";
+import { useDocumentStore } from "../stores/documentStore";
 
-export default defineComponent({
-  data() {
-    return {
-      atbStore: useAtbStore(),
-      tab: null,
-      DCKstates: useAtbStore().getDCKstates,
-      DCKmemory: useAtbStore().getDCKmemory,
-      DCKtransitions: useAtbStore().getDCKtransitions,
-      initRules: useAtbStore().getDCKrules,
-    };
-  },
-  methods: {
-    updatePossibleRules() {
-      this.initRules = [...new Set(this.initRules)];
-      const possibleRules = new Array<AttributedConstraint>();
-      const newInitRules = new Array<AttributedInitRule>();
-      useAtbStore().getDCKmemory.forEach((val) =>
-        possibleRules.push({
-          predicate: val.name,
-          variables: val.specificVars ?? this.dummyVariables(val.numOfVars),
-          negated: false,
-          isInEffect: false,
-        })
-      );
-      useAtbStore().getDCKstates.forEach((val) =>
-        possibleRules.push({
-          predicate: val.name,
-          variables: val.specificVars ?? this.dummyVariables(val.numOfVars),
-          negated: false,
-          isInEffect: false,
-        })
-      );
-      possibleRules.forEach((val) => {
-        const index = this.initRules.findIndex(
-          (rule) => rule.rulePredicate.name == val.predicate
-        );
-        if (index < 0) {
-          const dummyRule = emptyAttributedInitRule();
-          dummyRule.rulePredicate.name = val.predicate;
-          dummyRule.rulePredicate.varNames = val.variables;
-          this.initRules.push(dummyRule);
-        } else if (
-          this.initRules[index].rulePredicate.varNames.length !=
-          val.variables.length
-        ) {
-          this.initRules[index].rulePredicate.varNames = val.variables;
-        }
-      });
-      this.initRules.forEach((rule) => {
-        const found = possibleRules.find(
-          (val) => val.predicate == rule.rulePredicate.name
-        );
-        if (found) newInitRules.push(rule);
-      });
-      this.initRules = [...new Set(newInitRules)];
-      this.atbStore.loadNewDckRules(this.initRules);
-    },
-    dummyVariables(numOfVars: number): String[] {
-      if (numOfVars === 0) return [];
-      let str = [];
-      for (let i = 0; i < numOfVars; i++) {
-        str.push("?var_" + i);
-      }
-      return str;
-    },
-    addDckState() {
-      const temp = emptyAttributedState();
-      temp.name = "State_" + this.DCKstates.length;
-      temp.numOfVars = 0;
-      this.DCKstates.push(temp);
-      this.atbStore.loadNewDckStates(this.DCKstates);
-    },
-    deleteState(i: number) {
-      this.DCKstates.splice(i, 1);
-      this.atbStore.loadNewDckStates(this.DCKstates);
-    },
-    addDckMemory() {
-      const temp = emptyAttributedMemory();
-      temp.name = "Memory_" + this.DCKmemory.length;
-      temp.numOfVars = 0;
-      this.DCKmemory.push(temp);
-      this.atbStore.loadNewDckMemory(this.DCKmemory);
-    },
-    deleteMemory(i: number) {
-      this.DCKmemory.splice(i, 1);
-      this.atbStore.loadNewDckMemory(this.DCKmemory);
-    },
-    addDckTransition() {
-      const temp = emptyAttributedTransition();
-      temp.originState = this.DCKstates[0];
-      temp.targetState = this.DCKstates[0];
-      temp.operator = emptyNoOperator();
-      this.DCKtransitions.push(temp);
-      this.atbStore.loadNewDckTransitions(this.DCKtransitions);
-    },
-    deleteTransition(i: number) {
-      this.DCKtransitions.splice(i, 1);
-      this.atbStore.loadNewDckTransitions(this.DCKtransitions);
-    },
-    save() {
-      this.atbStore.loadNewDckStates(this.DCKstates);
-      this.atbStore.loadNewDckMemory(this.DCKmemory);
-      this.atbStore.loadNewDckTransitions(this.DCKtransitions);
-      this.atbStore.loadNewDckRules(this.initRules);
-      this.updatePossibleRules();
-    },
-  },
-  components: {
-    DckPredForm,
-    TransitionForm,
-    StateInitRule,
-    DckMemoryForm,
-  },
-});
+const tab: Ref<number> = ref(null);
+const DCKstates: Ref<Array<AttributedState>> = ref(useAtbStore().getDCKstates);
+const DCKmemory: Ref<Array<AttributedMemory>> = ref(useAtbStore().getDCKmemory);
+const DCKtransitions: Ref<Array<AttributedTransition>> = ref(
+  useAtbStore().getDCKtransitions
+);
+const initRules: Ref<Array<AttributedInitRule>> = ref(
+  useAtbStore().getDCKrules
+);
+const editor = ref(null);
+
+function updatePossibleRules() {
+  initRules.value = [...new Set(initRules.value)];
+  const possibleRules = new Array<AttributedConstraint>();
+  const newInitRules = new Array<AttributedInitRule>();
+  useAtbStore().getDCKmemory.forEach((val) =>
+    possibleRules.push({
+      predicate: val.name,
+      variables: val.specificVars ?? dummyVariables(val.numOfVars),
+      negated: false,
+      isInEffect: false,
+    })
+  );
+  useAtbStore().getDCKstates.forEach((val) =>
+    possibleRules.push({
+      predicate: val.name,
+      variables: val.specificVars ?? dummyVariables(val.numOfVars),
+      negated: false,
+      isInEffect: false,
+    })
+  );
+  possibleRules.forEach((val) => {
+    const index = initRules.value.findIndex(
+      (rule) => rule.rulePredicate.name == val.predicate
+    );
+    if (index < 0) {
+      const dummyRule = emptyAttributedInitRule();
+      dummyRule.rulePredicate.name = val.predicate;
+      dummyRule.rulePredicate.varNames = val.variables;
+      initRules.value.push(dummyRule);
+    } else if (
+      initRules.value[index].rulePredicate.varNames.length !=
+      val.variables.length
+    ) {
+      initRules.value[index].rulePredicate.varNames = val.variables;
+    }
+  });
+  initRules.value.forEach((rule) => {
+    const found = possibleRules.find(
+      (val) => val.predicate == rule.rulePredicate.name
+    );
+    if (found) newInitRules.push(rule);
+  });
+  initRules.value = [...new Set(newInitRules)];
+  useAtbStore().loadNewDckRules(initRules.value);
+}
+function dummyVariables(numOfVars: number): string[] {
+  if (numOfVars === 0) return [];
+  let str = [];
+  for (let i = 0; i < numOfVars; i++) {
+    str.push("?var_" + i);
+  }
+  return str;
+}
+function addDckState() {
+  const temp = emptyAttributedState();
+  temp.name = "State_" + DCKstates.value.length;
+  temp.numOfVars = 0;
+  DCKstates.value.push(temp);
+  useAtbStore().loadNewDckStates(DCKstates.value);
+}
+function deleteState(i: number) {
+  DCKstates.value.splice(i, 1);
+  useAtbStore().loadNewDckStates(DCKstates.value);
+}
+function addDckMemory() {
+  const temp = emptyAttributedMemory();
+  temp.name = "Memory_" + DCKmemory.value.length;
+  temp.numOfVars = 0;
+  DCKmemory.value.push(temp);
+  useAtbStore().loadNewDckMemory(DCKmemory.value);
+}
+function deleteMemory(i: number) {
+  DCKmemory.value.splice(i, 1);
+  useAtbStore().loadNewDckMemory(DCKmemory.value);
+}
+function addDckTransition() {
+  const temp = emptyAttributedTransition();
+  temp.originState = DCKstates.value[0];
+  temp.targetState = DCKstates.value[0];
+  temp.operator = emptyNoOperator();
+  DCKtransitions.value.push(temp);
+  useAtbStore().loadNewDckTransitions(DCKtransitions.value);
+}
+function deleteTransition(i: number) {
+  DCKtransitions.value.splice(i, 1);
+  useAtbStore().loadNewDckTransitions(DCKtransitions.value);
+}
+function save() {
+  useAtbStore().loadNewDckStates(DCKstates.value);
+  useAtbStore().loadNewDckMemory(DCKmemory.value);
+  useAtbStore().loadNewDckTransitions(DCKtransitions.value);
+  useAtbStore().loadNewDckRules(initRules.value);
+  useAtbStore().loadPrologInit(
+    composeDomainKnowledgeBase(useAtbStore().getDCKrules)
+  );
+  if (useDocumentStore().getActiveDomain) {
+    const tempDomain = useDocumentStore().getActiveDomain;
+    tempDomain.atbDck = useAtbStore().dck;
+    useDocumentStore().modifyDomain(tempDomain);
+  }
+
+  if (editor.value) editor.value.code = useAtbStore().getDCKprologInit;
+  updatePossibleRules();
+}
 </script>

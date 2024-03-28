@@ -210,6 +210,7 @@ export interface AttributedDCK {
   memory: AttributedMemory[],
   transitions: AttributedTransition[],
   initRules: AttributedInitRule[],
+  prologDomainInit: string,
 }
 
 export const emptyAttributedDCK = (): AttributedDCK => ({
@@ -218,6 +219,7 @@ export const emptyAttributedDCK = (): AttributedDCK => ({
   memory: new Array<AttributedMemory>(),
   transitions: new Array<AttributedTransition>(),
   initRules: new Array<AttributedInitRule>(),
+  prologDomainInit: "",
 });
 
 export interface AttributedState {
@@ -281,8 +283,29 @@ export const emptyPrologFunction = (): PrologFunction => ({
   selectionVars: new Array<string>(),
 });
 
-export const NOT_EQUAL_CONSTRAINT = "DCK_not_equal";
-export const EQUAL_CONSTRAINT = "DCK_equal";
+export const UNUNIFIABLE_CONSTRAINT = "\\=";
+export const UNIFIABLE_CONSTRAINT = "=";
+export const EQUAL_CONSTRAINT = "==";
+export const NOT_EQUAL_CONSTRAINT = "\\==";
+export const GREATER_CONSTRAINT = ">";
+export const GREATER_EQUAL_CONSTRAINT = ">=";
+export const IS_CONSTRAINT = "is";
+
+export const PREDEFINED_CONSTRAINTS = [NOT_EQUAL_CONSTRAINT, EQUAL_CONSTRAINT, GREATER_CONSTRAINT, GREATER_EQUAL_CONSTRAINT, IS_CONSTRAINT];
+
+export const unifiableConstraint = (): AttributedConstraint => ({
+  predicate: UNIFIABLE_CONSTRAINT,
+  variables: ["?x", "?y"],
+  negated: false,
+  isInEffect: false,
+});
+
+export const unUnifiableConstraint = (): AttributedConstraint => ({
+  predicate: UNUNIFIABLE_CONSTRAINT,
+  variables: ["?x", "?y"],
+  negated: false,
+  isInEffect: false,
+});
 
 export const notEqualConstraint = (): AttributedConstraint => ({
   predicate: NOT_EQUAL_CONSTRAINT,
@@ -293,6 +316,27 @@ export const notEqualConstraint = (): AttributedConstraint => ({
 
 export const equalConstraint = (): AttributedConstraint => ({
   predicate: EQUAL_CONSTRAINT,
+  variables: ["?x", "?y"],
+  negated: false,
+  isInEffect: false,
+});
+
+export const greaterConstraint = (): AttributedConstraint => ({
+  predicate: GREATER_CONSTRAINT,
+  variables: ["?x", "?y"],
+  negated: false,
+  isInEffect: false,
+});
+
+export const greaterEqualConstraint = (): AttributedConstraint => ({
+  predicate: GREATER_EQUAL_CONSTRAINT,
+  variables: ["?x", "?y"],
+  negated: false,
+  isInEffect: false,
+});
+
+export const isConstraint = (): AttributedConstraint => ({
+  predicate: IS_CONSTRAINT,
   variables: ["?x", "?y"],
   negated: false,
   isInEffect: false,
@@ -309,14 +353,14 @@ export interface AttributedInitRule {
   rulePredicate: RulePredicate,
   orClause: LogicalOrRule[],
   hasSimpleValue: boolean,
-  simpleDefaultValue?: boolean,
+  simpleDefaultValue?: "True" | "False" | "Constant",
 }
 
 export const emptyAttributedInitRule = (): AttributedInitRule => ({
   rulePredicate: emptyRulePredicate(),
   orClause: [],
   hasSimpleValue: true,
-  simpleDefaultValue: false,
+  simpleDefaultValue: "False",
 });
 
 export interface LogicalOrRule {

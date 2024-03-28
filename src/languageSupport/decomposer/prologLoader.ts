@@ -1,8 +1,7 @@
 import {
   AttributedInitRule,
-  EQUAL_CONSTRAINT,
   LogicalExpression,
-  NOT_EQUAL_CONSTRAINT,
+  PREDEFINED_CONSTRAINTS,
   PddlProblemDocument,
   Predicate,
   ProblemObject,
@@ -29,13 +28,20 @@ export const PREDEFINED_FUNCTIONS = [CARDINALITY_QUERY];
 export const FINDALL_PROLOG = "findall";
 export const MAXLIST_PROLOG = "max_list";
 export const MINLIST_PROLOG = "min_list";
+export const SUPPORTED_OPERATORS = ["+", "-", "*", "/", "**", "//", "mod"];
 
 export const getConsultResult = async (
   fileContent: string,
-  dckRules: Array<AttributedInitRule>
+  dckRules: Array<AttributedInitRule>,
+  objects: ProblemObject[]
 ): Promise<{ inits: Array<string>; objects: Array<string> }> => {
   const result = { inits: new Array<string>(), objects: new Array<string>() };
   const tempInit = new Array<string>();
+  const newObjectsMapping = new Map<string, string>();
+  const flatObjects = [];
+  objects.forEach((obj) => {
+    obj.variables.forEach((val) => flatObjects.push(val));
+  });
   await load();
   const session = new Prolog();
 
@@ -47,7 +53,19 @@ export const getConsultResult = async (
     const query = session.query(branchRuleTypeQueries(rule));
     for await (const answer of query) {
       console.log(answer);
-      tempInit.push(branchAnswerDecode(rule, answer));
+      if (answer.status == "success") {
+        Object.entries(answer.answer).forEach(([_, val]) => {
+          const temp = val.toString().replaceAll("'", "");
+          if (!flatObjects.includes(temp) && !newObjectsMapping.has(temp)) {
+            if (typeof +temp == "number")
+              newObjectsMapping.set(temp, "DCK_num_" + temp);
+            else newObjectsMapping.set(temp, temp);
+            result.objects.push(newObjectsMapping.get(temp));
+          }
+        });
+      }
+
+      tempInit.push(decodeAnswer(rule, answer, newObjectsMapping));
     }
   }
 
@@ -119,19 +137,27 @@ export const encodePredefinedFunctions = (): string => {
   return result;
 };
 
-export const composeKnowledgeBase = (
-  problem: PddlProblemDocument,
-  dckRules: Array<AttributedInitRule>,
-  domainPredicates: Array<Predicate>
+export const composeProblemKnowledgeBase = (
+  problem: PddlProblemDocument
 ): string => {
   let knowledgeBase = "";
-  knowledgeBase += encodePredefinedFunctions();
+
   knowledgeBase += encodeObjectsToPrologFormat(problem.objects);
   knowledgeBase += encodeInitPredicatesToPrologFormat(problem.init);
   knowledgeBase += encodeGoalPredicatesToPrologFormat(problem.goal);
+
+  return knowledgeBase;
+};
+
+export const composeDomainKnowledgeBase = (
+  dckRules: Array<AttributedInitRule>
+): string => {
+  let knowledgeBase = "";
+  knowledgeBase += "% Cardinality function \n";
+  knowledgeBase += encodePredefinedFunctions();
+  knowledgeBase +=
+    "% Initialization rules of states and memory for encoding to problems \n";
   knowledgeBase += encodeInitRules(dckRules);
-  knowledgeBase += encodePredicateDefaults(domainPredicates);
-  console.log(knowledgeBase);
   return knowledgeBase;
 };
 
@@ -140,19 +166,17 @@ export const branchRuleTypeQueries = (atbRule: AttributedInitRule): string => {
   else return "fail.";
 };
 
-export const branchAnswerDecode = (
-  atbRule: AttributedInitRule,
-  answer: Answer
-): string => {
-  if (atbRule) return decodeSimpleAnswer(atbRule, answer);
-  return "";
-};
-
 export const composeSimpleValueInitRule = (
   atbRule: AttributedInitRule
 ): string => {
   let rules = "";
-  if (atbRule.rulePredicate.varNames.length > 0) {
+  if (atbRule.simpleDefaultValue && atbRule.simpleDefaultValue == "Constant") {
+    rules = INIT_PREFIX + atbRule.rulePredicate.name;
+    if (atbRule.rulePredicate.varNames.length > 0) {
+      rules += "(" + atbRule.rulePredicate.varNames.join(",") + ")";
+    }
+    rules += ".\n";
+  } else if (atbRule.rulePredicate.varNames.length > 0) {
     let leftSide = INIT_PREFIX + atbRule.rulePredicate.name + "(";
     let rightSide = PROLOG_RULE_SYMBOL + " ";
     atbRule.rulePredicate.varNames.forEach((_, index) => {
@@ -164,9 +188,11 @@ export const composeSimpleValueInitRule = (
         rightSide += ", ";
       }
     });
-    rules += leftSide + ") " + rightSide + ".\n";
+    if (atbRule.simpleDefaultValue == "False")
+      rules += leftSide + ") " + PROLOG_RULE_SYMBOL + " " + PROLOG_FAIL + ".\n";
+    else rules += leftSide + ") " + rightSide + ".\n";
   } else {
-    if (!atbRule.simpleDefaultValue)
+    if (atbRule.simpleDefaultValue == "False")
       rules +=
         INIT_PREFIX +
         atbRule.rulePredicate.name +
@@ -238,7 +264,8 @@ export const composeMinMaxQuery = (
       "), ";
     if (func.operator == "max") result += MAXLIST_PROLOG + "(";
     else result += MINLIST_PROLOG + "(";
-    result += "F" + funcIndex + "A" + argIndex + ", " + overlap[0] + "), ";
+    result +=
+      "F" + funcIndex + "A" + argIndex + ", " + mapping.get(overlap[0]) + "), ";
   });
 
   if (func.operator == "max") result += MAXLIST_PROLOG + "(";
@@ -265,6 +292,31 @@ export const composeOrRule = (rule: AttributedInitRule): string => {
         varMapping[orIndex]
       );
       result += " " + PROLOG_RULE_SYMBOL + " ";
+
+      // Setting right side of rule
+      orRule.andClause.forEach((andRule, andIndex) => {
+        let foundOperator = false;
+        PREDEFINED_CONSTRAINTS.forEach((cons) => {
+          if (cons == andRule.name) foundOperator = true;
+        });
+        if (foundOperator) {
+          result +=
+            varMapping[orIndex].get(andRule.varNames[0].trim()) +
+            " " +
+            andRule.name +
+            " " +
+            varMapping[orIndex].get(andRule.varNames[1].trim());
+        } else {
+          if (andRule.negated) result += "\\+ ";
+          if (andRule.isInGoal) result += GOAL_PREFIX;
+          else result += INIT_PREFIX;
+          result += andRule.name;
+          // Adding arguements
+          result += getArgumentsFromMapping(andRule, varMapping[orIndex]);
+        }
+
+        if (andIndex != orRule.andClause.length - 1) result += ",";
+      });
       // special function queries
       orRule.prologFunctions.forEach((func, funcIndex) => {
         if (func.operator == "count" && func.predicateArguments.length > 0) {
@@ -282,29 +334,6 @@ export const composeOrRule = (rule: AttributedInitRule): string => {
           )
             result += ",";
         }
-      });
-      // Setting right side of rule
-      orRule.andClause.forEach((andRule, andIndex) => {
-        if (andRule.name === EQUAL_CONSTRAINT) {
-          result +=
-            varMapping[orIndex].get(andRule.varNames[0].trim()) +
-            "=" +
-            varMapping[orIndex].get(andRule.varNames[1].trim());
-        } else if (andRule.name === NOT_EQUAL_CONSTRAINT) {
-          result +=
-            varMapping[orIndex].get(andRule.varNames[0].trim()) +
-            "\\=" +
-            varMapping[orIndex].get(andRule.varNames[1].trim());
-        } else {
-          if (andRule.negated) result += "\\+ ";
-          if (andRule.isInGoal) result += GOAL_PREFIX;
-          else result += INIT_PREFIX;
-          result += andRule.name;
-          // Adding arguements
-          result += getArgumentsFromMapping(andRule, varMapping[orIndex]);
-        }
-
-        if (andIndex != orRule.andClause.length - 1) result += ",";
       });
       if (result.endsWith(",")) result = result.slice(0, -1);
       result += ".\n";
@@ -327,6 +356,44 @@ export const getArgumentsFromMapping = (
   return result;
 };
 
+export const deconstructExpression = (expression: string): string[] => {
+  const splitWords = [];
+  let temp = "";
+  let skipNext = false;
+  Array.from(expression).forEach((char, ind) => {
+    let t = false;
+    if (
+      (char === "/" || char === "*") &&
+      expression.length >= ind + 1 &&
+      (expression.substring(ind, ind + 1) === "//" ||
+        expression.substring(ind, ind + 1) === "**")
+    ) {
+      if (temp.length > 0) splitWords.push(temp);
+      splitWords.push(expression.substring(ind, ind + 1));
+      temp = "";
+      skipNext = true;
+    } else if (skipNext) {
+      skipNext = false;
+    } else if (char === " ") {
+      if (temp.length > 0) splitWords.push(temp);
+      temp = "";
+    } else {
+      SUPPORTED_OPERATORS.forEach((val) => {
+        if (char === val) {
+          if (temp.length > 0) splitWords.push(temp);
+          splitWords.push(char);
+          temp = "";
+          t = true;
+        }
+      });
+      if (!t) temp += char;
+    }
+  });
+  splitWords.push(temp);
+
+  return splitWords;
+};
+
 export const createVariableMapping = (
   rule: AttributedInitRule
 ): Array<Map<string, string>> => {
@@ -335,14 +402,34 @@ export const createVariableMapping = (
     mappingArray.push(new Map<string, string>());
 
     rule.rulePredicate.varNames.forEach((variable, varIndex) => {
-      if (!variable.trim().startsWith("?")) {
-        mappingArray[orIndex].set(variable.trim(), variable.trim());
+      const expressions = deconstructExpression(variable);
+      if (expressions.length > 1) {
+        let rightSide = "";
+        expressions.forEach((ex, exInd) => {
+          if (!mappingArray[orIndex].has(ex.trim())) {
+            if (!ex.trim().startsWith("?")) {
+              mappingArray[orIndex].set(ex.trim(), ex.trim());
+            }
+            if (!mappingArray[orIndex].has(ex.trim()))
+              mappingArray[orIndex].set(
+                ex.trim(),
+                "V" + varIndex + "O" + orIndex + "E" + exInd
+              );
+          }
+          rightSide += mappingArray[orIndex].get(ex.trim()) + " ";
+        });
+        if (!mappingArray[orIndex].has(variable.trim()))
+          mappingArray[orIndex].set(variable.trim(), rightSide);
+      } else {
+        if (!variable.trim().startsWith("?")) {
+          mappingArray[orIndex].set(variable.trim(), variable.trim());
+        }
+        if (!mappingArray[orIndex].has(variable.trim()))
+          mappingArray[orIndex].set(
+            variable.trim(),
+            "V" + varIndex + "O" + orIndex
+          );
       }
-      if (!mappingArray[orIndex].has(variable.trim()))
-        mappingArray[orIndex].set(
-          variable.trim(),
-          "V" + varIndex + "O" + orIndex
-        );
     });
 
     orRule.anyVariables.forEach((anyVar) => {
@@ -352,14 +439,34 @@ export const createVariableMapping = (
     // And clause substitutions
     orRule.andClause.forEach((andRule, andIndex) => {
       andRule.varNames.forEach((variable, varIndex) => {
-        if (!variable.trim().startsWith("?")) {
-          mappingArray[orIndex].set(variable.trim(), variable.trim());
+        const expressions = deconstructExpression(variable);
+        if (expressions.length > 1) {
+          let rightSide = "";
+          expressions.forEach((ex, exInd) => {
+            if (!mappingArray[orIndex].has(ex.trim())) {
+              if (!ex.trim().startsWith("?")) {
+                mappingArray[orIndex].set(ex.trim(), ex.trim());
+              }
+              if (!mappingArray[orIndex].has(ex.trim()))
+                mappingArray[orIndex].set(
+                  ex.trim(),
+                  "O" + orIndex + "A" + andIndex + "V" + varIndex + "E" + exInd
+                );
+            }
+            rightSide += mappingArray[orIndex].get(ex.trim()) + " ";
+          });
+          if (!mappingArray[orIndex].has(variable.trim()))
+            mappingArray[orIndex].set(variable.trim(), rightSide);
+        } else {
+          if (!variable.trim().startsWith("?")) {
+            mappingArray[orIndex].set(variable.trim(), variable.trim());
+          }
+          if (!mappingArray[orIndex].has(variable.trim()))
+            mappingArray[orIndex].set(
+              variable.trim(),
+              "O" + orIndex + "A" + andIndex + "V" + varIndex
+            );
         }
-        if (!mappingArray[orIndex].has(variable.trim()))
-          mappingArray[orIndex].set(
-            variable.trim(),
-            "O" + orIndex + "A" + andIndex + "V" + varIndex
-          );
       });
     });
     // Populate function substitutions
@@ -374,27 +481,83 @@ export const createVariableMapping = (
       }
 
       func.selectionVars.forEach((variable, varIndex) => {
-        if (!variable.trim().startsWith("?")) {
-          mappingArray[orIndex].set(variable.trim(), variable.trim());
-          return;
-        }
-        if (!mappingArray[orIndex].has(variable.trim()))
-          mappingArray[orIndex].set(
-            variable.trim(),
-            "O" + orIndex + "F" + funcIndex + "S" + varIndex
-          );
-      });
-
-      func.predicateArguments.forEach((pred, predIndex) => {
-        pred.varNames.forEach((variable, varIndex) => {
+        const expressions = deconstructExpression(variable);
+        if (expressions.length > 1) {
+          let rightSide = "";
+          expressions.forEach((ex, exInd) => {
+            if (!mappingArray[orIndex].has(ex.trim())) {
+              if (!ex.trim().startsWith("?")) {
+                mappingArray[orIndex].set(ex.trim(), ex.trim());
+              }
+              if (!mappingArray[orIndex].has(ex.trim()))
+                mappingArray[orIndex].set(
+                  ex.trim(),
+                  "O" + orIndex + "F" + funcIndex + "S" + varIndex + "E" + exInd
+                );
+            }
+            rightSide += mappingArray[orIndex].get(ex.trim()) + " ";
+          });
+          if (!mappingArray[orIndex].has(variable.trim()))
+            mappingArray[orIndex].set(variable.trim(), rightSide);
+        } else {
           if (!variable.trim().startsWith("?")) {
             mappingArray[orIndex].set(variable.trim(), variable.trim());
+            return;
           }
           if (!mappingArray[orIndex].has(variable.trim()))
             mappingArray[orIndex].set(
               variable.trim(),
-              "O" + orIndex + "F" + funcIndex + "P" + predIndex + "V" + varIndex
+              "O" + orIndex + "F" + funcIndex + "S" + varIndex
             );
+        }
+      });
+
+      func.predicateArguments.forEach((pred, predIndex) => {
+        pred.varNames.forEach((variable, varIndex) => {
+          const expressions = deconstructExpression(variable);
+          if (expressions.length > 1) {
+            let rightSide = "";
+            expressions.forEach((ex, exInd) => {
+              if (!mappingArray[orIndex].has(ex.trim())) {
+                if (!ex.trim().startsWith("?")) {
+                  mappingArray[orIndex].set(ex.trim(), ex.trim());
+                }
+                if (!mappingArray[orIndex].has(ex.trim()))
+                  mappingArray[orIndex].set(
+                    ex.trim(),
+                    "O" +
+                      orIndex +
+                      "F" +
+                      funcIndex +
+                      "P" +
+                      predIndex +
+                      "V" +
+                      varIndex +
+                      "E" +
+                      exInd
+                  );
+              }
+              rightSide += mappingArray[orIndex].get(ex.trim()) + " ";
+            });
+            if (!mappingArray[orIndex].has(variable.trim()))
+              mappingArray[orIndex].set(variable.trim(), rightSide);
+          } else {
+            if (!variable.trim().startsWith("?")) {
+              mappingArray[orIndex].set(variable.trim(), variable.trim());
+            }
+            if (!mappingArray[orIndex].has(variable.trim()))
+              mappingArray[orIndex].set(
+                variable.trim(),
+                "O" +
+                  orIndex +
+                  "F" +
+                  funcIndex +
+                  "P" +
+                  predIndex +
+                  "V" +
+                  varIndex
+              );
+          }
         });
       });
     });
@@ -419,9 +582,10 @@ export const composeSimpleRuleQuery = (rule: AttributedInitRule): string => {
   return result;
 };
 
-export const decodeSimpleAnswer = (
+export const decodeAnswer = (
   rule: AttributedInitRule,
-  answer: Answer
+  answer: Answer,
+  newObjects: Map<string, string>
 ): string => {
   let result = "";
   if (answer.status === "error" || answer.status === "failure") return result;
@@ -429,7 +593,9 @@ export const decodeSimpleAnswer = (
     result = "(" + rule.rulePredicate.name + " ";
     Object.entries(answer.answer).forEach(([_, val]) => {
       console.log(val);
-      result += val.toString().replaceAll("'", "") + " ";
+      const temp = val.toString().replaceAll("'", "");
+      if (newObjects.has(temp)) result += newObjects.get(temp) + " ";
+      else result += temp + " ";
     });
     result = result.substring(0, result.length - 1) + ")\n";
   } else if (answer.status === "success") {

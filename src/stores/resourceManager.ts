@@ -2,10 +2,17 @@ import {
   emptyPddlDocument,
   emptyPddlProblemDocument,
 } from "@functions/parserTypes";
-import { Domain, Problem, User } from "@functions/systemTypes";
+import {
+  Domain,
+  EMPTY_DOMAIN,
+  NOBODY,
+  Problem,
+  User,
+} from "@functions/systemTypes";
 import {
   createDomain,
   createProblem,
+  deleteDomain,
   getDomain,
   getDomainProblems,
   getMyDomains,
@@ -13,17 +20,26 @@ import {
   getSelf,
   updateDomain,
   updateProblem,
-} from "@src/client";
-import { NEW_DOMAIN, NEW_PROBLEM } from "@src/helpers/consts";
+} from "../client";
+import {
+  ADVANCED_BLOCKSWORLD_PROBLEM_TEST,
+  ADVANCED_BLOCKSWORLD_TEST,
+  DCK_ROUTE,
+  NEW_DOMAIN,
+  NEW_PROBLEM,
+  PROBLEM_ROUTE,
+} from "../helpers/consts";
 import {
   loadActiveDomain,
   loadActiveProblem,
-} from "@src/languageSupport/decomposer/domainLoader";
-import EventBus from "@src/lib/EventBus";
-import { store } from "@src/store";
+} from "../languageSupport/decomposer/domainLoader";
+import EventBus from "../lib/EventBus";
+import { store } from "../store";
 import { useDocumentStore } from "./documentStore";
 import { useDomainStore } from "./domainStore";
 import { useProblemStore } from "./problemStore";
+import router from "../router";
+import { useAtbStore } from "./atbStore";
 
 export interface resourceManager {
   /**
@@ -141,6 +157,7 @@ export class resourceManagerClass implements resourceManager {
       useDocumentStore().appendDomains(newDomain, []);
       useDocumentStore().setActiveDomain(newDomain.id);
       useDomainStore().loadActiveDomain(emptyPddlDocument(), "");
+      useAtbStore().loadFreshDck(newDomain);
       return newDomain;
     });
   }
@@ -175,15 +192,10 @@ export class resourceManagerClass implements resourceManager {
   }
 
   async getMyDomains(): Promise<Domain[]> {
-    if (
-      store.me.domainIds.length !==
-      useDocumentStore().getAvailableDomains.length
-    ) {
-      return getMyDomains().then((domains) => {
-        useDocumentStore().overrideDomains(domains);
-        return domains;
-      });
-    } else return useDocumentStore().getAvailableDomains;
+    return getMyDomains().then((domains) => {
+      useDocumentStore().overrideDomains(domains);
+      return domains;
+    });
   }
 
   async updateDomain(domain: Partial<Domain>): Promise<Domain> {
@@ -191,47 +203,25 @@ export class resourceManagerClass implements resourceManager {
       return getDomainProblems(newDomain.id).then((problems) => {
         useDocumentStore().modifyDomain(newDomain);
         useDocumentStore().setDomainProblems(newDomain.id, problems);
+        useAtbStore().loadFreshDck(newDomain);
         return newDomain;
       });
     });
   }
 
   async createProblem(problem: Problem): Promise<Problem> {
-    return createProblem(problem).then((problem) => {
-      return getDomain(problem.parentDomain).then((domain) => {
+    return createProblem(problem).then((newProblem) => {
+      return getDomain(newProblem.parentDomain).then((domain) => {
         useDocumentStore().modifyDomain(domain);
         useDocumentStore().appendDomainProblems(problem);
         useProblemStore().loadActiveProblem(emptyPddlProblemDocument(), "");
-        return problem;
+        useDocumentStore().activeProblem = newProblem.id;
+        return newProblem;
       });
     });
   }
-
   async getProblem(problemId: string): Promise<Problem | undefined> {
-    const problem = useDocumentStore().getActiveProblemById(problemId);
-    if (problem) {
-      useProblemStore().loadActiveProblem(
-        loadActiveProblem(problem.rawProblem),
-        problem.rawProblem
-      );
-      return problem;
-    } else if (
-      useDocumentStore().getActiveDomain.associatedProblems.includes(
-        problemId
-      ) ||
-      useDocumentStore().getAvailableDomains.find((domain) =>
-        domain.associatedProblems.includes(problemId)
-      )
-    ) {
-      return getProblem(problemId).then((problem) => {
-        useDocumentStore().appendDomainProblems(problem);
-        useProblemStore().loadActiveProblem(
-          loadActiveProblem(problem.rawProblem),
-          problem.rawProblem
-        );
-        return problem;
-      });
-    } else return undefined;
+    throw new Error("Method not implemented.");
   }
 
   async updateProblem(problem: Partial<Problem>): Promise<Problem> {
@@ -265,7 +255,17 @@ export class resourceManagerClass implements resourceManager {
   }
 
   async deleteDomain(domainId: string): Promise<void> {
-    throw new Error("Method not implemented.");
+    return deleteDomain(domainId).then((_) => {
+      useDocumentStore().removeDomain(domainId);
+      if (useDocumentStore().domains.length > 0) {
+        this.selectDomain(useDocumentStore().domains[0]);
+        return;
+      } else {
+        return Manager.createDomain(EMPTY_DOMAIN).then((_) => {
+          return;
+        });
+      }
+    });
   }
 
   async deleteProblem(problemid: string): Promise<void> {
@@ -278,7 +278,9 @@ export class resourceManagerClass implements resourceManager {
       loadActiveDomain(domain.rawDomain),
       domain.rawDomain
     );
+    useAtbStore().loadFreshDck(domain);
     store.activeDomain = domain.rawDomain;
+    router.push(DCK_ROUTE);
     EventBus.emit(NEW_DOMAIN);
   }
 
@@ -288,7 +290,38 @@ export class resourceManagerClass implements resourceManager {
       problem.rawProblem
     );
     store.activeProblem = problem.rawProblem;
+    useDocumentStore().activeProblem = problem.id;
+    router.push(PROBLEM_ROUTE);
     EventBus.emit(NEW_PROBLEM);
+  }
+
+  flushUserData(): void {
+    store.activeDomain = ADVANCED_BLOCKSWORLD_TEST;
+    store.me = NOBODY;
+    store.activeProblem = ADVANCED_BLOCKSWORLD_PROBLEM_TEST;
+    useDocumentStore().overrideDomains([]);
+    useDocumentStore().activeDomain = "";
+  }
+
+  async renewDomain(domainId: string): Promise<Domain> {
+    return getDomain(domainId).then((dom) => {
+      useDocumentStore().modifyDomain(dom);
+      useDomainStore().loadActiveDomain(
+        loadActiveDomain(dom.rawDomain),
+        dom.rawDomain
+      );
+      return dom;
+    });
+  }
+
+  async renewProblem(problemId: string): Promise<Problem> {
+    return getProblem(problemId).then((prob) => {
+      useProblemStore().loadActiveProblem(
+        loadActiveProblem(prob.rawProblem),
+        prob.rawProblem
+      );
+      return prob;
+    });
   }
 }
 

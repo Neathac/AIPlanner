@@ -22,7 +22,11 @@ import {
 } from "./dckLoader";
 import { getProblemDocumentSyntaxTree } from "../problemParser/language";
 import { useProblemStore } from "../../stores/problemStore";
-import { composeKnowledgeBase, getConsultResult } from "./prologLoader";
+import {
+  composeProblemKnowledgeBase,
+  encodePredicateDefaults,
+  getConsultResult,
+} from "./prologLoader";
 import { useAtbStore } from "../../stores/atbStore";
 
 const NAME = "NAME";
@@ -422,16 +426,34 @@ export const encodeDck = (): void => {
 };
 
 export const encodeProblemDCK = async (): Promise<void> => {
+  const domainBase = encodePredicateDefaults(
+    useDomainStore().getStructure.predicates
+  );
+  const problemBase = composeProblemKnowledgeBase(
+    useProblemStore().getStructure
+  );
+
+  const includedRules = [];
+  useAtbStore().getDCKrules.forEach((rule) => {
+    const foundMem = useAtbStore().getDCKmemory.find(
+      (mem) => mem.name == rule.rulePredicate.name
+    );
+    if (!foundMem || !foundMem.omitFromProblem) includedRules.push(rule);
+  });
+
   const problem_enhancement = await getConsultResult(
-    composeKnowledgeBase(
-      useProblemStore().getStructure,
-      useAtbStore().getDCKrules,
-      useDomainStore().getStructure.predicates
-    ),
-    useAtbStore().getDCKrules
+    problemBase + useAtbStore().getDCKprologInit + domainBase,
+    includedRules,
+    useProblemStore().getStructure.objects
+  );
+  redefineObjects(
+    getRedefinition(
+      useProblemStore().getStructure.rawObjects,
+      problem_enhancement.objects
+    )
   );
   redefineInit(
-    getInitialRedefinition(
+    getRedefinition(
       useProblemStore().getStructure.rawInit,
       problem_enhancement.inits
     )
@@ -546,7 +568,7 @@ export const encodeInitialStatesToProblem = (
   return;
 };
 
-export const getInitialRedefinition = (
+export const getRedefinition = (
   toModify: string,
   extraInits: string[]
 ): string => {
@@ -657,6 +679,17 @@ export const redefineActions = (
 export const redefineInit = (redefinition: string): void => {
   const newProblem = useProblemStore().getRawValue.replace(
     useProblemStore().getStructure.rawInit,
+    redefinition
+  );
+  useProblemStore().loadActiveProblem(
+    loadActiveProblem(newProblem),
+    newProblem
+  );
+};
+
+export const redefineObjects = (redefinition: string): void => {
+  const newProblem = useProblemStore().getRawValue.replace(
+    useProblemStore().getStructure.rawObjects,
     redefinition
   );
   useProblemStore().loadActiveProblem(

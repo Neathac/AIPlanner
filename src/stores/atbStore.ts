@@ -10,6 +10,7 @@ import {
   emptyAttributedInitRule,
   AttributedInitRule,
 } from "@functions/parserTypes";
+import { Domain } from "@functions/systemTypes";
 
 export const useAtbStore = defineStore("atbStore", {
   state: () => ({
@@ -29,6 +30,7 @@ export const useAtbStore = defineStore("atbStore", {
       return names;
     },
     getDCKrules: (state) => state.dck.initRules,
+    getDCKprologInit: (state) => state.dck.prologDomainInit,
   },
   actions: {
     loadFreshActiveDomain(pddlDomain: PddlDocument) {
@@ -77,6 +79,12 @@ export const useAtbStore = defineStore("atbStore", {
     },
     loadNewDckRules(rules: AttributedInitRule[]) {
       this.dck.initRules = rules;
+    },
+    loadFreshDck(domain: Domain) {
+      this.dck = domain.atbDck;
+    },
+    loadPrologInit(code: string) {
+      this.dck.prologDomainInit = code;
     },
   },
 });

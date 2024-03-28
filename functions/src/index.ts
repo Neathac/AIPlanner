@@ -134,8 +134,10 @@ export const deleteDomain = theFunctions()
           domain.associatedProblems.forEach((problemId) => {
             Dao.deleteProblem(problemId);
           });
-          user.domainIds.splice(user.domainIds.indexOf(domainId));
-          return Dao.updateUser(user.id, user).then((_res) => {
+          const newUser = user;
+          newUser.docNum -= 1;
+          newUser.domainIds = user.domainIds.filter((domId) => domId != domainId);
+          return Dao.updateUser(user.id, newUser).then((_res) => {
             return Dao.deleteDomain(domainId);
           });
         });

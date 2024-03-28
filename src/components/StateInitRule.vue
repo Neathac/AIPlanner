@@ -27,7 +27,7 @@
           <v-select
             label="Simple default value"
             v-model="defaultChoice"
-            :items="['No simple value', 'True', 'False']"
+            :items="['No simple value', 'True', 'False', 'Constant']"
             def
           ></v-select>
         </v-col>
@@ -359,8 +359,13 @@ import {
   emptyAttributedInitRule,
   emptyLogicalOrRule,
   equalConstraint,
+  greaterConstraint,
+  isConstraint,
   notEqualConstraint,
+  greaterEqualConstraint,
   POSSIBLE_PROLOG_FUNCTIONS,
+  unUnifiableConstraint,
+  unifiableConstraint,
 } from "@functions/parserTypes";
 import {
   decomposeStringToVariables,
@@ -441,7 +446,12 @@ onMounted(() => {
     })
   );
   possibleConstraints.value.push(notEqualConstraint());
+  possibleConstraints.value.push(unUnifiableConstraint());
   possibleConstraints.value.push(equalConstraint());
+  possibleConstraints.value.push(unifiableConstraint());
+  possibleConstraints.value.push(greaterConstraint());
+  possibleConstraints.value.push(greaterEqualConstraint());
+  possibleConstraints.value.push(isConstraint());
   // Populate variables in string form, as they only exist locally
   thisRule.value.orClause.forEach((orClause, orIndex) => {
     functionVariables.value.push([]);
@@ -648,8 +658,13 @@ const submit = async (event: { preventDefault: () => any }) => {
       // eslint-disable-next-line vue/no-mutating-props
       props.rule.hasSimpleValue = true;
       // eslint-disable-next-line vue/no-mutating-props
-      props.rule.simpleDefaultValue =
-        defaultChoice.value == "True" ? true : false;
+      if (defaultChoice.value == "True") props.rule.simpleDefaultValue = "True";
+      else if (defaultChoice.value == "False")
+        // eslint-disable-next-line vue/no-mutating-props
+        props.rule.simpleDefaultValue = "False";
+      else if (defaultChoice.value == "Constant")
+        // eslint-disable-next-line vue/no-mutating-props
+        props.rule.simpleDefaultValue = "Constant";
     }
     emit("saveEvent");
   }

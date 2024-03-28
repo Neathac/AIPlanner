@@ -1,3 +1,5 @@
+import {AttributedDCK, emptyAttributedDCK} from "./parserTypes";
+
 export interface User {
     id: string;
     name: string;
@@ -19,70 +21,45 @@ export interface Domain {
   id: string;
   name: string;
   rawDomain: string;
-  dckState?: string;
+  atbDck: AttributedDCK;
   associatedProblems: Array<string>;
 }
 
 export const EMPTY_DOMAIN: Domain = {
   id: "",
-  name: "",
-  rawDomain: `(define
-    (domain construction)
-    (:extends building)
-    (:requirements :strips :typing)
-    (:types
-        site material - object
-        bricks cables windows - material
-    )
-    (:constants mainsite - site)
-
-    ;(:domain-variables ) ;deprecated
-
-    (:predicates
-        (walls-built ?s - site)
-        (windows-fitted ?s - site)
-        (foundations-set ?s - site)
-        (cables-installed ?s - site)
-        (site-built ?s - site)
-        (on-site ?m - material ?s - site)
-        (material-used ?m - material)
-    )
-
-    (:timeless (foundations-set mainsite))
-
-    ;(:safety
-        ;(forall
-        ;    (?s - site) (walls-built ?s)))
-        ;deprecated
-
-    (:action BUILD-WALL
-        :parameters (?s - site ?b - bricks)
-        :precondition (and
-            (on-site ?b ?s)
-            (foundations-set ?s)
-            (not (walls-built ?s))
-            (not (material-used ?b))
-        )
-        :effect (and
-            (walls-built ?s)
-            (material-used ?b)
-        )
-        ; :expansion ;deprecated
-    )
-
-    (:axiom
-        :vars (?s - site)
-        :context (and
-            (walls-built ?s)
-            (windows-fitted ?s)
-            (cables-installed ?s)
-        )
-        :implies (site-built ?s)
-    )
-
-    ;Actions omitted for brevity
-)`,
-  dckState: "",
+  name: "Blocksworld",
+  rawDomain: `(define (domain blocksworld)
+  (:requirements :strips :equality)
+  (:predicates (clear ?x)
+               (on-table ?x)
+               (arm-empty)
+               (holding ?x)
+               (on ?x ?y))
+  
+  (:action pickup
+    :parameters (?ob)
+    :precondition (and (clear ?ob) (on-table ?ob) (arm-empty))
+    :effect (and (holding ?ob) (not (clear ?ob)) (not (on-table ?ob)) 
+                 (not (arm-empty))))
+  
+  (:action putdown
+    :parameters  (?ob)
+    :precondition (and (holding ?ob))
+    :effect (and (clear ?ob) (arm-empty) (on-table ?ob) 
+                 (not (holding ?ob))))
+  
+  (:action stack
+    :parameters  (?ob ?underob)
+    :precondition (and  (clear ?underob) (holding ?ob))
+    :effect (and (arm-empty) (clear ?ob) (on ?ob ?underob)
+                 (not (clear ?underob)) (not (holding ?ob))))
+  
+  (:action unstack
+    :parameters  (?ob ?underob)
+    :precondition (and (on ?ob ?underob) (clear ?ob) (arm-empty))
+    :effect (and (holding ?ob) (clear ?underob)
+                 (not (on ?ob ?underob)) (not (clear ?ob)) (not (arm-empty)))))`,
+  atbDck: emptyAttributedDCK(),
   associatedProblems: [],
 };
 
@@ -97,26 +74,13 @@ export const EMPTY_PROBLEM: Problem = {
   id: "",
   name: "",
   parentDomain: "",
-  rawProblem: `(define
-    (problem buildingahouse)
-    (:domain construction)
-    ;(:situation <situation_name>) ;deprecated
-    (:objects 
-        s1 - site 
-        b - bricks 
-        w - windows 
-        c - cables
-    )
-    (:goal (and
-            (walls-built ?s1)
-            (cables-installed ?s1)
-            (windows-fitted ?s1)
-        )
-    )
-    (:init
-        (on-site b s1)
-        (on-site c s1)
-        (on-site w s1)
-    )
-)`,
+  rawProblem: `(define (problem pb10)
+  (:domain blocksworld)
+  (:objects a b c d e f g h i j - someType)
+  (:init (on-table a) (on-table b) (on-table c) (on-table d) (on-table e) 
+         (on-table f) (on-table g) (on-table h) (on-table i) (on-table j) 
+         (clear a)  (clear b) (clear c) (clear d) (clear e) (clear j) 
+         (clear f)  (clear g) (clear h) (clear i) (arm-empty))
+  (:goal (and (on a b) (on b c) (on c d) (on d e) (on e f) (on f g)
+              (on g h) (on h i) (on i j) )))`,
 };

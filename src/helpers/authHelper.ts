@@ -1,5 +1,10 @@
-import { Manager } from "@src/stores/resourceManager";
-import { getAuth, signInWithPopup, GoogleAuthProvider } from "firebase/auth";
+import { Manager } from "../stores/resourceManager";
+import {
+  getAuth,
+  signInWithPopup,
+  GoogleAuthProvider,
+  signOut,
+} from "firebase/auth";
 import { getSelf } from "../client";
 import { store } from "../store";
 
@@ -11,9 +16,16 @@ export async function signin(): Promise<void> {
     getSelf().then((u) => {
       if (u) {
         store.me = u;
-        store.avatar = u.pic ?? store.avatar;
         Manager.initiateUser();
       }
     });
+  });
+}
+
+export async function signout(): Promise<void> {
+  // Also possible to import useRouter and store it in data. See About for example
+  const auth = getAuth();
+  return signOut(auth).then(() => {
+    Manager.flushUserData();
   });
 }

@@ -10,87 +10,122 @@
           mandatory
           variant="outlined"
           ><v-btn value="Domain"> Domain Editor </v-btn>
-          <v-btn value="ATB"> ATB </v-btn>
+          <v-btn value="ATB" @click="loadToDck"> ATB </v-btn>
         </v-btn-toggle>
       </template>
       <template v-slot:append>
         <div class="d-flex justify-center align-baseline" style="gap: 1rem">
           <template v-if="editorType == 'Domain'">
-            <v-dialog v-model="dialogDomainSave" persistent width="auto">
-              <template v-slot:activator="{ props }">
-                <v-btn
-                  :loading="loading"
-                  :disabled="loading"
-                  color="blue-grey"
-                  v-bind="props"
-                  variant="flat"
-                  prepend-icon="mdi-check-bold"
-                >
-                  Save Domain
-                </v-btn>
-              </template>
-              <v-card>
-                <v-card-title class="text-h5"> Save domain? </v-card-title>
-                <v-card-text
-                  >This action is irreversible! Previous versions of the file
-                  will be discarded and the current changes will become
-                  permanent.</v-card-text
-                >
-                <v-card-actions>
-                  <v-spacer></v-spacer>
+            <template v-if="loggedIn">
+              <v-dialog v-model="dialogSaveAsNew" persistent>
+                <template v-slot:activator="{ props }">
+                  <v-btn v-bind="props"> Save as new Domain </v-btn>
+                </template>
+                <v-card>
+                  <v-card-title class="text-h5"> Create domain </v-card-title>
+                  <v-card-item>
+                    <v-text-field
+                      v-model="newName"
+                      label="Domain name"
+                    ></v-text-field>
+                  </v-card-item>
+                  <v-card-actions>
+                    <v-spacer></v-spacer>
+                    <v-btn
+                      color="green-darken-1"
+                      variant="text"
+                      @click="createAsNew(newName)"
+                    >
+                      Save
+                    </v-btn>
+                    <v-btn
+                      color="error"
+                      variant="text"
+                      @click="dialogSaveAsNew = false"
+                    >
+                      Cancel
+                    </v-btn>
+                  </v-card-actions>
+                </v-card>
+              </v-dialog>
+              <v-dialog v-model="dialogDomainSave" persistent width="auto">
+                <template v-slot:activator="{ props }">
                   <v-btn
-                    color="green-darken-1"
-                    variant="text"
-                    @click="updateDomainState()"
+                    :loading="loading"
+                    :disabled="loading"
+                    color="blue-grey"
+                    v-bind="props"
+                    variant="flat"
+                    prepend-icon="mdi-check-bold"
                   >
-                    Save
+                    Save Domain
                   </v-btn>
+                </template>
+                <v-card>
+                  <v-card-title class="text-h5"> Save domain? </v-card-title>
+                  <v-card-text
+                    >This action is irreversible! Previous versions of the file
+                    will be discarded and the current changes will become
+                    permanent.</v-card-text
+                  >
+                  <v-card-actions>
+                    <v-spacer></v-spacer>
+                    <v-btn
+                      color="green-darken-1"
+                      variant="text"
+                      @click="updateDomainState()"
+                    >
+                      Save
+                    </v-btn>
+                    <v-btn
+                      color="error"
+                      variant="text"
+                      @click="dialogDomainSave = false"
+                    >
+                      Cancel
+                    </v-btn>
+                  </v-card-actions>
+                </v-card>
+              </v-dialog>
+              <v-dialog v-model="dialogDomainRestore" persistent width="auto">
+                <template v-slot:activator="{ props }">
                   <v-btn
-                    color="error"
-                    variant="text"
-                    @click="dialogDomainSave = false"
+                    color="blue-grey"
+                    v-bind="props"
+                    prepend-icon="mdi-rotate-left"
+                    variant="flat"
                   >
-                    Cancel
+                    Restore to previous version
                   </v-btn>
-                </v-card-actions>
-              </v-card>
-            </v-dialog>
-            <v-dialog v-model="dialogDomainRestore" persistent width="auto">
-              <template v-slot:activator="{ props }">
-                <v-btn
-                  color="blue-grey"
-                  v-bind="props"
-                  prepend-icon="mdi-rotate-left"
-                  variant="flat"
-                >
-                  Restore to previous version
-                </v-btn>
-              </template>
-              <v-card>
-                <v-card-title class="text-h5"> Discard changes? </v-card-title>
-                <v-card-text
-                  >This action is irreversible. Any changes you made to this
-                  file after last save will be discarded.</v-card-text
-                >
-                <v-card-actions>
-                  <v-spacer></v-spacer>
-                  <v-btn
-                    color="green-darken-1"
-                    variant="text"
-                    @click="dialogDomainRestore = false"
+                </template>
+                <v-card>
+                  <v-card-title class="text-h5">
+                    Discard changes?
+                  </v-card-title>
+                  <v-card-text
+                    >This action is irreversible. Any changes you made to this
+                    file after last save will be discarded.</v-card-text
                   >
-                    Restore
-                  </v-btn>
-                  <v-btn
-                    color="error"
-                    variant="text"
-                    @click="dialogDomainRestore = false"
-                  >
-                    Cancel
-                  </v-btn>
-                </v-card-actions>
-              </v-card>
-            </v-dialog>
+                  <v-card-actions>
+                    <v-spacer></v-spacer>
+                    <v-btn
+                      color="green-darken-1"
+                      variant="text"
+                      @click="restoreDomain"
+                    >
+                      Restore
+                    </v-btn>
+                    <v-btn
+                      color="error"
+                      variant="text"
+                      @click="dialogDomainRestore = false"
+                    >
+                      Cancel
+                    </v-btn>
+                  </v-card-actions>
+                </v-card>
+              </v-dialog>
+            </template>
             <v-btn
               :loading="loading"
               :disabled="loading"
@@ -101,16 +136,6 @@
             >
               Encode DCK to Domain
             </v-btn>
-            <v-btn
-              :loading="loading"
-              :disabled="loading"
-              color="blue-grey"
-              prepend-icon="mdi-cloud-upload"
-              variant="flat"
-              @click="loadToDck"
-            >
-              Load to DCK Encoder
-            </v-btn>
           </template>
         </div>
       </template>
@@ -120,108 +145,98 @@
   </div>
 </template>
 
-<script lang="ts">
+<script setup lang="ts">
 import {
   encodeDck,
   loadActiveDomain,
 } from "../languageSupport/decomposer/domainLoader";
-import { defineComponent, nextTick, h } from "vue";
+import { nextTick, ref, Ref, onMounted } from "vue";
 import DomainEditor from "../components/DomainEditor.vue";
 import AtbEditor from "../components/AtbEditor.vue";
 import { useDomainStore } from "../stores/domainStore";
 import EventBus from "../lib/EventBus";
-import { NEW_DOMAIN } from "../helpers/consts";
+import { NEW_DOMAIN, NEW_FILE } from "../helpers/consts";
 import { Manager } from "../stores/resourceManager";
 import { useDocumentStore } from "../stores/documentStore";
+import { getAuth, onAuthStateChanged } from "firebase/auth";
+import { useAtbStore } from "../stores/atbStore";
+import { EMPTY_DOMAIN } from "@functions/systemTypes";
 
-export default defineComponent({
-  name: "DckView",
-  data() {
-    return {
-      menuVisible: true,
-      editorType: "Domain",
-      loading: false,
-      dialogDomainSave: false,
-      dialogDomainRestore: false,
-      domainStore: useDomainStore(),
-    };
-  },
-  mounted() {
-    EventBus.on(NEW_DOMAIN, async (_e) => {
-      this.editorType = "a";
-      await nextTick();
-      this.editorType = "Domain";
-    });
-  },
-  methods: {
-    load() {
-      this.loading = true;
-      setTimeout(() => (this.loading = false), 3000);
-    },
-    loadToDck() {
-      this.domainStore.loadActiveDomain(
-        loadActiveDomain(this.$refs.editor.code),
-        this.$refs.editor.code
-      );
-    },
-    encodeDCK() {
-      // TODO: Transitioning to a state via an effect doesn't work
-      encodeDck();
-      this.$refs.editor.code = this.domainStore.rawActiveDomain;
-    },
-    updateDomainState() {
-      this.dialogDomainSave = false;
-      this.loading = true;
-      Manager.updateDomain({
-        id: useDocumentStore().getActiveDomain.id,
-        rawDomain: this.$refs.editor.code,
-      }).then(() => {
-        this.loading = false;
-      });
-    },
-    updateEncoderState() {
-      this.dialogDomainSave = false;
-      this.loading = true;
-      Manager.updateDomain({
-        id: useDocumentStore().getActiveDomain.id,
-        dckState: JSON.stringify(this.$refs.encoder.editor.save()),
-      }).then(() => {
-        this.loading = false;
-      });
-    },
-    /*loadEncoderState() {
-      // We need to manually fill in the options, as load doesn't consider them
-      const stateCopy = deepCopy(this.editorState);
-      this.$refs.encoder.editor.load(this.editorState);
-      for (const node of stateCopy.nodes) {
-        const nodeRef = this.$refs.encoder.editor.nodes.find((val) => {
-          return val.id === node.id;
-        });
-        if (nodeRef) {
-          node.options.forEach((option) => {
-            if (!nodeRef.options.has(option[0])) {
-              if (node.type === ACTION_NODE_TYPE) {
-                nodeRef.addNewPredicate();
-                nodeRef.setOptionValue(option[0], option[1]);
-              } else if (node.type === STATE_CONSTRAINT_NODE_TYPE) {
-                nodeRef.addConstraintOption();
-                nodeRef.setOptionValue(option[0], option[1]);
-              } else if (node.type === GOAL_NODE_TYPE) {
-                nodeRef.addNewPredicate();
-                nodeRef.setOptionValue(option[0], option[1]);
-              }
-            }
-          });
-        }
-      }
-    },*/
-  },
-  components: {
-    DomainEditor,
-    //NodeEditor,
-    AtbEditor,
-  },
+const editorType: Ref<string> = ref("Domain");
+const loading: Ref<boolean> = ref(false);
+const dialogDomainSave: Ref<boolean> = ref(false);
+const dialogDomainRestore: Ref<boolean> = ref(false);
+const loggedIn: Ref<boolean> = ref(false);
+const editor = ref(null);
+const auth = ref(getAuth());
+const dialogSaveAsNew: Ref<boolean> = ref(false);
+const newName: Ref<string> = ref("Default name");
+
+onAuthStateChanged(auth.value, (user) => {
+  if (user) {
+    loggedIn.value = true;
+  } else {
+    loggedIn.value = false;
+  }
 });
+
+onMounted(() => {
+  EventBus.on(NEW_DOMAIN, async (_e) => {
+    editorType.value = "a";
+    await nextTick();
+    editorType.value = "Domain";
+  });
+  if (getAuth().currentUser) loggedIn.value = true;
+});
+
+function loadToDck() {
+  useDomainStore().loadActiveDomain(
+    loadActiveDomain(editor.value.code),
+    editor.value.code
+  );
+}
+
+async function restoreDomain() {
+  loading.value = true;
+  await Manager.renewDomain(useDocumentStore().getActiveDomain.id);
+  editor.value.code = useDomainStore().rawActiveDomain;
+  dialogDomainRestore.value = false;
+  loading.value = false;
+}
+
+function encodeDCK() {
+  // TODO: Transitioning to a state via an effect doesn't work
+  encodeDck();
+  editor.value.code = useDomainStore().rawActiveDomain;
+}
+function updateDomainState() {
+  dialogDomainSave.value = false;
+  loading.value = true;
+  Manager.updateDomain({
+    id: useDocumentStore().getActiveDomain.id,
+    rawDomain: editor.value.code,
+    atbDck: useAtbStore().dck,
+  }).then(() => {
+    loading.value = false;
+  });
+}
+
+async function createAsNew(domainName: string) {
+  loading.value = true;
+  const dummyDomain = EMPTY_DOMAIN;
+  dummyDomain.name = domainName;
+  dummyDomain.rawDomain = useDomainStore().getRawValue;
+  dummyDomain.atbDck = useAtbStore().dck;
+  Manager.createDomain(dummyDomain).then((res) => {
+    useDomainStore().loadActiveDomain(
+      loadActiveDomain(res.rawDomain),
+      res.rawDomain
+    );
+    EventBus.emit(NEW_FILE);
+    loading.value = false;
+    dialogSaveAsNew.value = false;
+  });
+}
 </script>
 
 <style>

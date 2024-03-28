@@ -1,21 +1,19 @@
 <script lang="ts">
 import { defineComponent } from "vue";
 import FileStructure from "./components/FileStructure.vue";
-import LoginAvatar from "./components/LoginAvatar.vue";
-import { ABOUT_ROUTE, HOME_ROUTE } from "./helpers/consts";
+import { DCK_ROUTE, HOME_ROUTE } from "./helpers/consts";
 
 export default defineComponent({
   name: "App",
   components: {
     FileStructure,
-    LoginAvatar,
   },
   data() {
     return {
       menuVisible: true,
       items: [
         { text: "Domů", icon: "mdi-home", to: HOME_ROUTE },
-        { text: "About", icon: "mdi-information", to: ABOUT_ROUTE },
+        { text: "PDDL editor", icon: "mdi-book", to: DCK_ROUTE },
       ],
     };
   },
@@ -25,17 +23,13 @@ export default defineComponent({
 <template>
   <v-app>
     <v-navigation-drawer theme="dark" rail permanent style="width: 60px">
-      <LoginAvatar />
-
-      <v-divider></v-divider>
-
       <v-list>
         <v-list-item
           v-for="(item, i) in items"
           :key="i"
           :value="item"
           :to="item.to"
-          active-color="primary"
+          base-color="primary"
         >
           <template v-slot:prepend>
             <v-icon :icon="item.icon"></v-icon>
