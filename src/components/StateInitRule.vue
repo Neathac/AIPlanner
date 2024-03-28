@@ -11,16 +11,7 @@
         <v-col cols="3">
           <v-text-field
             v-model="ruleVariableText"
-            :rules="[
-              () =>
-                decomposeStringToVariables(ruleVariableText).filter(
-                  (val) => val.trim() != ''
-                ).length == props.rule.rulePredicate.varNames.length
-                  ? true
-                  : 'Number of arguments doesn\'t match definition of state. Should be ' +
-                    props.rule.rulePredicate.varNames.length +
-                    '.',
-            ]"
+            :rules="[stateVariableRules(ruleVariableText)]"
           ></v-text-field>
         </v-col>
         <v-col cols="3">
@@ -334,7 +325,7 @@
           </v-expansion-panels>
         </v-row>
       </v-container>
-      <v-row dense>
+      <v-row dense v-if="defaultChoice == 'No simple value'">
         <v-col cols="2">
           <v-btn
             append-icon="mdi-plus"
@@ -377,7 +368,7 @@ import { emptyPrologFunction } from "@functions/parserTypes";
 const form = ref();
 
 const possibleConstraints: Ref<Array<AttributedConstraint>> = ref([]);
-const ruleVariableText: Ref<String> = ref("");
+const ruleVariableText: Ref<string> = ref("");
 const thisRule: Ref<AttributedInitRule> = ref(emptyAttributedInitRule());
 const defaultChoice: Ref<string> = ref("No simple value");
 const allVariablesString: Ref<Array<String>> = ref([]);
@@ -392,6 +383,25 @@ const props = defineProps({
     required: true,
   },
 });
+
+function stateVariableRules(ruleVariableText: string) {
+  const decomposed = decomposeStringToVariables(ruleVariableText).filter(
+    (val) => val.trim() != ""
+  );
+  if (
+    defaultChoice.value == "Constant" &&
+    decomposed.some((el) => el.startsWith("?"))
+  )
+    return "Variables can only be used in non-constant value rules. Hint: remove '?' from start of constant.";
+  if (decomposed.length == props.rule.rulePredicate.varNames.length)
+    return true;
+
+  return (
+    "Number of arguments doesn't match definition of state. Should be " +
+    props.rule.rulePredicate.varNames.length +
+    "."
+  );
+}
 
 function andClauseVariableRules(orIndex: number, andIndex: number) {
   const constraint = possibleConstraints.value.find(
@@ -417,6 +427,8 @@ const emit = defineEmits(["saveEvent"]);
 onMounted(() => {
   ruleVariableText.value = props.rule.rulePredicate.varNames.join(", ");
   thisRule.value = Object.assign({}, props.rule);
+  if (thisRule.value.simpleDefaultValue)
+    defaultChoice.value = thisRule.value.simpleDefaultValue;
   useDomainStore().getStructure.predicates.forEach((val) =>
     possibleConstraints.value.push({
       predicate: val.name,
@@ -644,7 +656,6 @@ const submit = async (event: { preventDefault: () => any }) => {
     thisRule.value.rulePredicate.varNames = decomposeStringToVariables(
       ruleVariableText.value
     );
-    console.log(thisRule.value);
     // eslint-disable-next-line vue/no-mutating-props
     props.rule.hasSimpleValue = thisRule.value.hasSimpleValue;
     // eslint-disable-next-line vue/no-mutating-props

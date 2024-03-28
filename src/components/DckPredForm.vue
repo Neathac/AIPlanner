@@ -32,6 +32,7 @@
 </template>
 
 <script lang="ts">
+import { useAtbStore } from "../stores/atbStore";
 import { defineComponent, ref } from "vue";
 
 export default defineComponent({
@@ -55,7 +56,12 @@ export default defineComponent({
       numVars: null,
       nameRules: [
         (value: string) => {
-          if (value.length > 0) return true;
+          if (
+            value.length > 0 &&
+            useAtbStore().getStatesNames.filter((name) => name == value)
+              .length < 2
+          )
+            return true;
           return "You must enter a unique non-empty name.";
         },
       ],

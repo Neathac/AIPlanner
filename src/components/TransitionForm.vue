@@ -189,7 +189,9 @@ const originVariableRules = [
         .length == originStateNumVariables.value
     )
       return true;
-    return "You must enter a unique non-empty name.";
+    return (
+      "Number of specified variables should be " + originStateNumVariables.value
+    );
   },
 ];
 const targetVariableRules = [
@@ -199,7 +201,9 @@ const targetVariableRules = [
         .length == targetStateNumVariables.value
     )
       return true;
-    return "You must enter a unique non-empty name.";
+    return (
+      "Number of specified variables should be " + targetStateNumVariables.value
+    );
   },
 ];
 

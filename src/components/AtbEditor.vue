@@ -195,10 +195,12 @@ function addDckState() {
   temp.numOfVars = 0;
   DCKstates.value.push(temp);
   useAtbStore().loadNewDckStates(DCKstates.value);
+  save();
 }
 function deleteState(i: number) {
   DCKstates.value.splice(i, 1);
   useAtbStore().loadNewDckStates(DCKstates.value);
+  save();
 }
 function addDckMemory() {
   const temp = emptyAttributedMemory();
@@ -206,10 +208,12 @@ function addDckMemory() {
   temp.numOfVars = 0;
   DCKmemory.value.push(temp);
   useAtbStore().loadNewDckMemory(DCKmemory.value);
+  save();
 }
 function deleteMemory(i: number) {
   DCKmemory.value.splice(i, 1);
   useAtbStore().loadNewDckMemory(DCKmemory.value);
+  save();
 }
 function addDckTransition() {
   const temp = emptyAttributedTransition();
@@ -218,10 +222,12 @@ function addDckTransition() {
   temp.operator = emptyNoOperator();
   DCKtransitions.value.push(temp);
   useAtbStore().loadNewDckTransitions(DCKtransitions.value);
+  save();
 }
 function deleteTransition(i: number) {
   DCKtransitions.value.splice(i, 1);
   useAtbStore().loadNewDckTransitions(DCKtransitions.value);
+  save();
 }
 function save() {
   useAtbStore().loadNewDckStates(DCKstates.value);

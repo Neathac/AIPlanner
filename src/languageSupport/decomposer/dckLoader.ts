@@ -140,15 +140,26 @@ export const gatherActionModification = (): ActionModification[] => {
       );
     }
     // Populate extra parameters
-    trans.constraints.forEach((cons) => {
-      cons.variables.forEach((variable) => parameters.push(variable));
-    });
-    trans.originState.specificVars.forEach((variable) =>
-      parameters.push(variable)
-    );
-    trans.targetState.specificVars.forEach((variable) =>
-      parameters.push(variable)
-    );
+    if (trans && trans.constraints)
+      trans.constraints.forEach((cons) => {
+        cons.variables.forEach((variable) => parameters.push(variable));
+      });
+    if (trans.originState.specificVars)
+      trans.originState.specificVars.forEach((variable) =>
+        parameters.push(variable)
+      );
+    else
+      dummyVariableString(trans.originState.numOfVars)
+        .split(",")
+        .forEach((variable) => parameters.push(variable));
+    if (trans.targetState.specificVars)
+      trans.targetState.specificVars.forEach((variable) =>
+        parameters.push(variable)
+      );
+    else
+      dummyVariableString(trans.targetState.numOfVars)
+        .split(",")
+        .forEach((variable) => parameters.push(variable));
     trans.operator.parameters.varName.forEach((variable) =>
       parameters.push(variable)
     );

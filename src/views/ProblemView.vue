@@ -3,7 +3,7 @@
     <v-app-bar>
       <template v-slot:append>
         <div class="d-flex justify-center align-baseline" style="gap: 1rem">
-          <v-container>
+          <v-container v-if="loggedIn">
             <v-dialog v-model="dialogSaveAsNew" persistent>
               <template v-slot:activator="{ props }">
                 <v-btn v-bind="props"> Save as new Problem </v-btn>
@@ -36,7 +36,7 @@
               </v-card>
             </v-dialog>
           </v-container>
-          <v-container>
+          <v-container v-if="loggedIn">
             <v-dialog v-model="dialogProblemSave" persistent width="auto">
               <template v-slot:activator="{ props }">
                 <v-btn

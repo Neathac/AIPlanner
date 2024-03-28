@@ -49,15 +49,13 @@ export const getConsultResult = async (
   // await session.consultText(PROLOG_TEST);
 
   for await (const rule of dckRules) {
-    console.log(branchRuleTypeQueries(rule));
     const query = session.query(branchRuleTypeQueries(rule));
     for await (const answer of query) {
-      console.log(answer);
       if (answer.status == "success") {
         Object.entries(answer.answer).forEach(([_, val]) => {
           const temp = val.toString().replaceAll("'", "");
           if (!flatObjects.includes(temp) && !newObjectsMapping.has(temp)) {
-            if (typeof +temp == "number")
+            if (/^\d+$/.test(temp))
               newObjectsMapping.set(temp, "DCK_num_" + temp);
             else newObjectsMapping.set(temp, temp);
             result.objects.push(newObjectsMapping.get(temp));
@@ -282,7 +280,6 @@ export const composeMinMaxQuery = (
 export const composeOrRule = (rule: AttributedInitRule): string => {
   let result = "";
   const varMapping = createVariableMapping(rule);
-  console.log(varMapping);
   rule.orClause.forEach((orRule, orIndex) => {
     if (orRule.andClause.length > 0 || orRule.prologFunctions.length > 0) {
       // Setting left side of rule
@@ -592,7 +589,6 @@ export const decodeAnswer = (
   if (rule.rulePredicate.varNames.length > 0) {
     result = "(" + rule.rulePredicate.name + " ";
     Object.entries(answer.answer).forEach(([_, val]) => {
-      console.log(val);
       const temp = val.toString().replaceAll("'", "");
       if (newObjects.has(temp)) result += newObjects.get(temp) + " ";
       else result += temp + " ";

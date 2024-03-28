@@ -107,7 +107,6 @@ export const useDocumentStore = defineStore("documentStore", {
       const stateProblems: Map<string, Array<Problem>> = new Map(
         JSON.parse(this.problems)
       );
-      console.log(stateProblems);
       if (stateProblems.has(problem.parentDomain)) {
         const foundProblem = stateProblems
           .get(problem.parentDomain)

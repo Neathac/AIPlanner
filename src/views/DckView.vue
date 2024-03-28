@@ -181,7 +181,7 @@ onAuthStateChanged(auth.value, (user) => {
 });
 
 onMounted(() => {
-  EventBus.on(NEW_DOMAIN, async (_e) => {
+  EventBus.on(NEW_DOMAIN, async (_) => {
     editorType.value = "a";
     await nextTick();
     editorType.value = "Domain";
@@ -205,10 +205,10 @@ async function restoreDomain() {
 }
 
 function encodeDCK() {
-  // TODO: Transitioning to a state via an effect doesn't work
   encodeDck();
   editor.value.code = useDomainStore().rawActiveDomain;
 }
+
 function updateDomainState() {
   dialogDomainSave.value = false;
   loading.value = true;

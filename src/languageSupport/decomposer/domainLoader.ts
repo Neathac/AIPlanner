@@ -272,7 +272,6 @@ export const loadActiveProblem = (problemCode: string): PddlProblemDocument => {
       }
     },
   });
-  console.log(problem);
   return problem;
 };
 
@@ -412,7 +411,6 @@ export const loadActiveDomain = (domainCode: string): PddlDocument => {
     },
   });
   domain.actions.push(emptyNoOperator());
-  console.log(domain);
   return domain;
 };
 
@@ -496,7 +494,6 @@ export const encodePredicatesToProblem = (
   predicates: Map<string, Predicate>
 ): void => {
   const problemStore = useProblemStore();
-  console.log(predicates);
   const tree = getProblemDocumentSyntaxTree(problemStore.rawActiveProblem);
   let problemText = problemStore.rawActiveProblem;
   let addedPredicates = "";
@@ -657,7 +654,6 @@ export const encodeActionModifications = (
 export const redefineActions = (
   redefinitions: Array<{ original: string; redefinition: string }>
 ): void => {
-  console.log(redefinitions);
   const domainStore = useDomainStore();
   let domain = domainStore.rawActiveDomain;
   redefinitions.forEach((redefinition) => {
@@ -672,7 +668,6 @@ export const redefineActions = (
       domain = domain.replace(redefinition.original, redefinition.redefinition);
     }
   });
-  console.log(domain);
   domainStore.loadActiveDomain(loadActiveDomain(domain), domain);
 };
 

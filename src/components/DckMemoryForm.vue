@@ -36,6 +36,7 @@
 </template>
 
 <script lang="ts">
+import { useAtbStore } from "../stores/atbStore";
 import { defineComponent, ref } from "vue";
 
 export default defineComponent({
@@ -60,7 +61,12 @@ export default defineComponent({
       omitFromProblem: false,
       nameRules: [
         (value: string) => {
-          if (value.length > 0) return true;
+          if (
+            value.length > 0 &&
+            useAtbStore().getDCKmemory.filter((mem) => mem.name == value)
+              .length < 2
+          )
+            return true;
           return "You must enter a unique non-empty name.";
         },
       ],
