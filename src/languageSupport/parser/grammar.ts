@@ -28,10 +28,10 @@ DomainPredicatesGroup {
     "(" PREDICATES_SECTION (Predicate)+ ")"
 }
 Predicate {
-    "(" PredicateName (VARIABLE (TYPE)?)+ ")"
+    "(" PredicateName (VARIABLE (TYPE)?)* ")"
 }
 PredicateName {
-    NAME ("-" NAME)?
+    NAME
 }
 DomainTimelessGroup {
     "(" TIMELESS_SECTION (Timeless)+ ")"
@@ -52,7 +52,10 @@ Parameter {
     "(" VARIABLE (TYPE)? ")"
 }
 ActionPreconditionSubgroup {
-    PRECONDITION_SUBSECTION LogicalExpression
+    PRECONDITION_SUBSECTION PreconditionContent
+}
+PreconditionContent {
+    LogicalExpression
 }
 LogicalExpression {
     ( 
@@ -65,7 +68,10 @@ LogicalExpression {
     )
 }
 ActionEffectSubgroup {
-    EFFECT_SUBSECTION LogicalExpression
+    EFFECT_SUBSECTION EffectContent
+}
+EffectContent {
+    LogicalExpression
 }
 DomainAxiomGroup {
     "(" AXIOM_SECTION AxiomVarsSubgroup AxiomContextSubgroup AxiomImpliesSubgroup ")"
@@ -100,7 +106,7 @@ FOR_OPERATOR { @specialize<NAME,"forall"> }
 WHEN_OPERATOR { @specialize<NAME,"when"> }
 EXISTS_OPERATOR { @specialize<NAME,"exists"> }
 @tokens {
-    NAME { @asciiLetter+ }
+    NAME { $[a-zA-Z_0-9éèâùûôïîöëç\\.\\+\\'’&]+ ("-"$[a-zA-Z_0-9éèâùûôïîöëç\\.\\+\\'’&]+)*}
     KEYWORD { "define" | "domain" }
     SPACE { @whitespace }
     LINE_COMMENT { ";" ![\n]* }

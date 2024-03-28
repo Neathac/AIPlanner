@@ -4,8 +4,10 @@ import { defineStore } from "pinia";
 export const useDocumentStore = defineStore("documentStore", {
   state: () => ({
     domains: [] as Array<Domain>,
+    //problems: new Map<string, Array<Problem>>(),
     problems: JSON.stringify(Array.from(new Map<string, Array<Problem>>())),
     activeDomain: "",
+    activeProblem: "",
   }),
   getters: {
     getAvailableDomains: (state) => state.domains,
@@ -79,6 +81,18 @@ export const useDocumentStore = defineStore("documentStore", {
       }
       this.problems = JSON.stringify(Array.from(stateProblems));
     },
+
+    modifyActiveProblem(problem: Problem) {
+      const problems: Map<string, Array<Problem>> = new Map(
+        JSON.parse(this.problems)
+      );
+      const found = problems
+        .get(this.activeDomain)
+        .findIndex((prob) => prob.id == problem.id);
+      problems.get(this.activeDomain)[found] = problem;
+      this.problems = JSON.stringify(Array.from(problems));
+    },
+
     overrideDomains(domains: Domain[]) {
       this.domains = [];
       const problems = new Map<string, Array<Problem>>();
@@ -93,7 +107,6 @@ export const useDocumentStore = defineStore("documentStore", {
       const stateProblems: Map<string, Array<Problem>> = new Map(
         JSON.parse(this.problems)
       );
-      console.log(stateProblems);
       if (stateProblems.has(problem.parentDomain)) {
         const foundProblem = stateProblems
           .get(problem.parentDomain)

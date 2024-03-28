@@ -1,9 +1,4 @@
-import {
-  ABOUT_ROUTE,
-  HOME_ROUTE,
-  DCK_ROUTE,
-  PROBLEM_ROUTE,
-} from "../helpers/consts";
+import { HOME_ROUTE, DCK_ROUTE, PROBLEM_ROUTE } from "../helpers/consts";
 import { getAuth } from "firebase/auth";
 import { createRouter, createWebHistory } from "vue-router";
 import HomeView from "../views/HomeView.vue";
@@ -17,14 +12,6 @@ const router = createRouter({
       path: HOME_ROUTE,
       name: "Home",
       component: HomeView,
-    },
-    {
-      path: ABOUT_ROUTE,
-      name: "About",
-      // route level code-splitting
-      // this generates a separate chunk (About.[hash].js) for this route
-      // which is lazy-loaded when the route is visited.
-      component: () => import("../views/AboutView.vue"),
     },
     {
       path: DCK_ROUTE,

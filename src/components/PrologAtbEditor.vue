@@ -13,23 +13,19 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, shallowRef, ref } from "vue";
+import { defineComponent, ref, shallowRef } from "vue";
 import { Codemirror } from "vue-codemirror";
-import { pddlLanguage } from "../languageSupport/parser/language";
-import { oneDark } from "../languageSupport/parser/theme";
-import { useDomainStore } from "../stores/domainStore";
-import { store } from "../store";
-import { loadActiveDomain } from "../languageSupport/decomposer/domainLoader";
+import { prologLanguage } from "../languageSupport/prologParser/language";
+import { useAtbStore } from "../stores/atbStore";
 
 export default defineComponent({
   components: {
     Codemirror,
   },
   setup() {
-    const domainStore = useDomainStore();
-    domainStore.loadRawActiveDomain(store.activeDomain);
-    const code = ref(domainStore.rawActiveDomain);
-    const extensions = [pddlLanguage(), oneDark];
+    const atbStore = useAtbStore();
+    const code = ref(atbStore.getDCKprologInit);
+    const extensions = [prologLanguage()];
 
     // Codemirror EditorView instance ref
     const view = shallowRef();
@@ -46,8 +42,8 @@ export default defineComponent({
   },
   methods: {
     onChanged() {
-      store.activeDomain = this.code;
-      useDomainStore().loadActiveDomain(loadActiveDomain(this.code), this.code);
+      const atbStore = useAtbStore();
+      atbStore.loadPrologInit(this.code);
     },
   },
 });

@@ -3,91 +3,130 @@
     <v-app-bar>
       <template v-slot:append>
         <div class="d-flex justify-center align-baseline" style="gap: 1rem">
-          <v-dialog v-model="dialogProblemSave" persistent width="auto">
-            <template v-slot:activator="{ props }">
-              <v-btn
-                v-if="user"
-                color="blue-grey"
-                v-bind="props"
-                variant="flat"
-                prepend-icon="mdi-check-bold"
-              >
-                Save Problem
-              </v-btn>
-            </template>
-            <v-card>
-              <v-card-title class="text-h5"> Save problem? </v-card-title>
-              <v-card-text
-                >This action is irreversible! Previous versions of the file will
-                be discarded and the current changes will become
-                permanent.</v-card-text
-              >
-              <v-card-actions>
-                <v-spacer></v-spacer>
+          <v-container v-if="loggedIn">
+            <v-dialog v-model="dialogSaveAsNew" persistent>
+              <template v-slot:activator="{ props }">
+                <v-btn v-bind="props"> Save as new Problem </v-btn>
+              </template>
+              <v-card>
+                <v-card-title class="text-h5"> Create Problem </v-card-title>
+                <v-card-item>
+                  <v-text-field
+                    v-model="newName"
+                    label="Domain name"
+                  ></v-text-field>
+                </v-card-item>
+                <v-card-actions>
+                  <v-spacer></v-spacer>
+                  <v-btn
+                    color="green-darken-1"
+                    variant="text"
+                    @click="createAsNew(newName)"
+                  >
+                    Save
+                  </v-btn>
+                  <v-btn
+                    color="error"
+                    variant="text"
+                    @click="dialogSaveAsNew = false"
+                  >
+                    Cancel
+                  </v-btn>
+                </v-card-actions>
+              </v-card>
+            </v-dialog>
+          </v-container>
+          <v-container v-if="loggedIn">
+            <v-dialog v-model="dialogProblemSave" persistent width="auto">
+              <template v-slot:activator="{ props }">
                 <v-btn
-                  color="green-darken-1"
-                  variant="text"
-                  @click="dialogProblemSave = false"
+                  v-if="loggedIn"
+                  color="blue-grey"
+                  v-bind="props"
+                  variant="flat"
+                  prepend-icon="mdi-check-bold"
                 >
-                  Save
+                  Save Problem
                 </v-btn>
+              </template>
+              <v-card>
+                <v-card-title class="text-h5"> Save problem? </v-card-title>
+                <v-card-text
+                  >This action is irreversible! Previous versions of the file
+                  will be discarded and the current changes will become
+                  permanent.</v-card-text
+                >
+                <v-card-actions>
+                  <v-spacer></v-spacer>
+                  <v-btn
+                    color="green-darken-1"
+                    variant="text"
+                    @click="saveProblem"
+                  >
+                    Save
+                  </v-btn>
+                  <v-btn
+                    color="error"
+                    variant="text"
+                    @click="dialogProblemSave = false"
+                  >
+                    Cancel
+                  </v-btn>
+                </v-card-actions>
+              </v-card>
+            </v-dialog>
+          </v-container>
+          <v-container>
+            <v-dialog v-model="dialogProblemRestore" persistent width="auto">
+              <template v-slot:activator="{ props }">
                 <v-btn
-                  color="error"
-                  variant="text"
-                  @click="dialogProblemSave = false"
+                  v-if="loggedIn"
+                  color="blue-grey"
+                  v-bind="props"
+                  prepend-icon="mdi-rotate-left"
+                  variant="flat"
                 >
-                  Cancel
+                  Restore to previous version
                 </v-btn>
-              </v-card-actions>
-            </v-card>
-          </v-dialog>
-          <v-dialog v-model="dialogProblemRestore" persistent width="auto">
-            <template v-slot:activator="{ props }">
-              <v-btn
-                v-if="user"
-                color="blue-grey"
-                v-bind="props"
-                prepend-icon="mdi-rotate-left"
-                variant="flat"
-              >
-                Restore to previous version
-              </v-btn>
-            </template>
-            <v-card>
-              <v-card-title class="text-h5"> Discard changes? </v-card-title>
-              <v-card-text
-                >This action is irreversible. Any changes you made to this file
-                after last save will be discarded.</v-card-text
-              >
-              <v-card-actions>
-                <v-spacer></v-spacer>
-                <v-btn
-                  color="green-darken-1"
-                  variant="text"
-                  @click="dialogProblemRestore = false"
+              </template>
+              <v-card>
+                <v-card-title class="text-h5"> Discard changes? </v-card-title>
+                <v-card-text
+                  >This action is irreversible. Any changes you made to this
+                  file after last save will be discarded.</v-card-text
                 >
-                  Restore
-                </v-btn>
-                <v-btn
-                  color="error"
-                  variant="text"
-                  @click="dialogProblemRestore = false"
-                >
-                  Cancel
-                </v-btn>
-              </v-card-actions>
-            </v-card>
-          </v-dialog>
-          <v-btn
-            :loading="loading[2]"
-            :disabled="loading[2]"
-            color="blue-grey"
-            variant="flat"
-            prepend-icon="mdi-auto-fix"
-            @click="encodeDCK"
-          >
-            Encode DCK to Problem
-          </v-btn>
+                <v-card-actions>
+                  <v-spacer></v-spacer>
+                  <v-btn
+                    color="green-darken-1"
+                    variant="text"
+                    @click="restoreProblem"
+                  >
+                    Restore
+                  </v-btn>
+                  <v-btn
+                    color="error"
+                    variant="text"
+                    @click="dialogProblemRestore = false"
+                  >
+                    Cancel
+                  </v-btn>
+                </v-card-actions>
+              </v-card>
+            </v-dialog>
+          </v-container>
+          <v-container>
+            <v-btn
+              :loading="loading[2]"
+              :disabled="loading[2]"
+              color="blue-grey"
+              variant="flat"
+              prepend-icon="mdi-auto-fix"
+              @click="encodeDCK"
+            >
+              Encode DCK to Problem
+            </v-btn>
+          </v-container>
         </div>
       </template>
     </v-app-bar>
@@ -95,64 +134,95 @@
   </div>
 </template>
 
-<script lang="ts">
+<script lang="ts" setup>
 import {
-  encodeDCK,
+  encodeProblemDCK,
+  //encodeProblemDCK,
   loadActiveProblem,
 } from "../languageSupport/decomposer/domainLoader";
-import { defineComponent, nextTick } from "vue";
+import { Ref, onMounted, ref } from "vue";
 import ProblemEditor from "../components/ProblemEditor.vue";
 import { useProblemStore } from "../stores/problemStore";
-import { useNodeStore } from "../stores/nodeStore";
-import { getAuth } from "firebase/auth";
-import { NEW_PROBLEM } from "../helpers/consts";
+//import { useNodeStore } from "../stores/nodeStore";
+import { getAuth, onAuthStateChanged } from "firebase/auth";
+import { Manager } from "../stores/resourceManager";
+import { useDocumentStore } from "../stores/documentStore";
+import { EMPTY_PROBLEM } from "@functions/systemTypes";
 import EventBus from "../lib/EventBus";
+import { NEW_FILE } from "../helpers/consts";
+const loading: Ref<boolean> = ref(false);
+const loggedIn: Ref<boolean> = ref(false);
+const dialogProblemSave: Ref<boolean> = ref(false);
+const dialogProblemRestore: Ref<boolean> = ref(false);
+const editor = ref(null);
+const auth = ref(getAuth());
+const dialogSaveAsNew: Ref<boolean> = ref(false);
+const newName: Ref<string> = ref("Default name");
 
-export default defineComponent({
-  name: "ProblemView",
-  data() {
-    return {
-      user: getAuth().currentUser,
-      menuVisible: true,
-      loading: [],
-      dialogProblemSave: false,
-      dialogProblemRestore: false,
-      problemStore: useProblemStore(),
-    };
-  },
-  mounted() {
-    this.loadToDck();
-    EventBus.on(NEW_PROBLEM, async (_e) => {
-      this.menuVisible = false;
-      await nextTick();
-      this.menuVisible = true;
-    });
-  },
-  methods: {
-    load(i: number) {
-      this.loading[i] = true;
-      setTimeout(() => (this.loading[i] = false), 3000);
-    },
-    loadToDck() {
-      this.problemStore.loadActiveProblem(
-        loadActiveProblem(this.$refs.editor.code),
-        this.$refs.editor.code
-      );
-    },
-    encodeDCK() {
-      // TODO: Transitioning to a state via an effect doesn't work
-      encodeDCK();
-      this.$refs.editor.code = this.problemStore.rawActiveProblem;
-    },
-    saveEncoderState() {
-      this.editorState = this.$refs.encoder.editor.save();
-      useNodeStore().loadActiveEditorState(this.editorState);
-    },
-  },
-  components: {
-    ProblemEditor,
-  },
+onMounted(() => {
+  loadToDck();
+  if (getAuth().currentUser) loggedIn.value = true;
 });
+
+onAuthStateChanged(auth.value, (user) => {
+  if (user) {
+    loggedIn.value = true;
+  } else {
+    loggedIn.value = false;
+  }
+});
+
+function loadToDck() {
+  useProblemStore().loadActiveProblem(
+    loadActiveProblem(editor.value.code),
+    editor.value.code
+  );
+}
+
+async function encodeDCK() {
+  loadToDck();
+  await encodeProblemDCK();
+  editor.value.code = useProblemStore().rawActiveProblem;
+}
+
+async function saveProblem() {
+  loading.value = true;
+  const prob = useDocumentStore().getActiveProblemById(
+    useDocumentStore().activeProblem
+  );
+  prob.rawProblem = editor.value.code;
+  return Manager.updateProblem(prob).then(() => {
+    dialogProblemSave.value = false;
+    loading.value = false;
+    return;
+  });
+}
+
+async function restoreProblem() {
+  loading.value = true;
+  Manager.renewProblem(useDocumentStore().activeProblem).then((prob) => {
+    editor.value.code = prob.rawProblem;
+    dialogProblemRestore.value = false;
+    loading.value = false;
+  });
+}
+
+async function createAsNew(problemName: string) {
+  loading.value = true;
+  const dummyProblem = EMPTY_PROBLEM;
+  dummyProblem.name = problemName;
+  dummyProblem.parentDomain = useDocumentStore().activeDomain;
+  dummyProblem.rawProblem = useProblemStore().getRawValue;
+  Manager.createProblem(dummyProblem).then((res) => {
+    useProblemStore().loadActiveProblem(
+      loadActiveProblem(res.rawProblem),
+      res.rawProblem
+    );
+    EventBus.emit(NEW_FILE);
+    loading.value = false;
+    dialogSaveAsNew.value = false;
+  });
+}
 </script>
 
 <style>

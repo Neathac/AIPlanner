@@ -1,3 +1,4 @@
+import {AttributedDCK} from "../shared/parserTypes";
 import {User, Domain, Problem} from "../shared/systemTypes";
 
 /**
@@ -69,7 +70,7 @@ export interface DomainEntity {
   id: string;
   name: string;
   rawDomain: string;
-  dckState?: string;
+  atbDck: AttributedDCK;
   associatedProblems: Array<string>;
 }
 
@@ -83,7 +84,7 @@ export function toDomain(entity: DomainEntity | undefined): Domain | undefined {
     id: entity.id,
     name: entity.name,
     rawDomain: entity.rawDomain,
-    dckState: entity.dckState,
+    atbDck: entity.atbDck,
     associatedProblems: entity.associatedProblems,
   } : undefined;
 }
@@ -99,7 +100,7 @@ export function toDomainEntityPatch(
     id: domainPatch.id,
     name: domainPatch.name,
     rawDomain: domainPatch.rawDomain,
-    dckState: domainPatch.dckState,
+    atbDck: domainPatch.atbDck,
     associatedProblems: domainPatch.associatedProblems,
   };
 }
@@ -115,7 +116,7 @@ export function toDomainEntity(
     id: domain.id,
     name: domain.name,
     rawDomain: domain.rawDomain,
-    dckState: domain.dckState,
+    atbDck: domain.atbDck,
     associatedProblems: domain.associatedProblems,
   };
 }

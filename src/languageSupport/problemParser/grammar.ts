@@ -14,7 +14,7 @@ ProblemNameGroup {
 ProblemDomainGroup { "(" DOMAIN_SECTION NAME ")" }
 ProblemSituationGroup { "(" SITUATION_SECTION NAME ")" }
 ProblemObjectsGroup {
-    "(" OBJECTS_SECTION ((NAME)+ TYPE)+ ")"
+    "(" OBJECTS_SECTION (ObjectName (TYPE)?)+ ")"
 }
 ProblemGoalGroup {
     "(" GOAL_SECTION LogicalExpression ")"
@@ -23,16 +23,19 @@ ProblemInitGroup {
     "(" INIT_SECTION (InitPredicate)+ ")"
 }
 InitPredicate {
-    "(" PredicateName InitVariables ")"
+    "(" PredicateName InitVariables? ")"
 }
 InitVariables {
-    (NAME (TYPE)?)+
+    (ObjectName (TYPE)?)+
 }
 Predicate {
-    "(" PredicateName (VARIABLE (TYPE)?)+ ")"
+    "(" PredicateName (ObjectName(TYPE)?)+ ")"
+}
+ObjectName {
+    NAME
 }
 PredicateName {
-    NAME ("-" NAME)?
+    NAME
 }
 Parameters {
     "(" (VARIABLE (TYPE)? )+ ")"
@@ -62,13 +65,13 @@ FOR_OPERATOR { @specialize<NAME,"forall"> }
 WHEN_OPERATOR { @specialize<NAME,"when"> }
 EXISTS_OPERATOR { @specialize<NAME,"exists"> }
 @tokens {
-    NAME { $[a-zA-Z_0-9éèâùûôïîöëç\\.\\+\\'’&]+ }
+    NAME { $[a-zA-Z_0-9éèâùûôïîöëç\\.\\+\\'’&]+ ("-"$[a-zA-Z_0-9éèâùûôïîöëç\\.\\+\\'’&]+)*}
     KEYWORD { "define" | "domain" | "problem" }
     SPACE { @whitespace }
     LINE_COMMENT { ";" ![\n]* }
     SECTION { ":" $[a-zA-Z_0-9éèâùûôïîöëç\\.\\+\\-\\'’&]+ }
-    TYPE { "- " $[a-zA-Z_0-9éèâùûôïîöëç\\.\\+\\-\\'’&]+ }
-    VARIABLE { "?" $[a-zA-Z_0-9éèâùûôïîöëç\\.\\+\\-\\'’&]+ }
+    TYPE { "- " $[a-zA-Z_0-9éèâùûôïîöëç\\.\\+\\-\\'’&]+ ("-"$[a-zA-Z_0-9éèâùûôïîöëç\\.\\+\\'’&]+)*}
+    VARIABLE { "?" $[a-zA-Z_0-9éèâùûôïîöëç\\.\\+\\-\\'’&]+ ("-"$[a-zA-Z_0-9éèâùûôïîöëç\\.\\+\\'’&]+)*}
 }
 @skip { SPACE | LINE_COMMENT }
 `;
