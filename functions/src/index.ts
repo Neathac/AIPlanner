@@ -4,6 +4,8 @@ import {toDomain, toDomainEntity, toProblem, toProblemEntity, toUser} from "./En
 import * as Dao from "./Dao";
 import {UserRecord} from "firebase-admin/lib/auth/user-record";
 import {User, Domain, Problem} from "../shared/systemTypes";
+import * as admin from "firebase-admin";
+admin.initializeApp();
 
 // // Start writing Firebase Functions
 // // https://firebase.google.com/docs/functions/typescript
@@ -34,8 +36,7 @@ export const getSelf = theFunctions()
         throw new functions.https.HttpsError("unauthenticated", "you need to authenticate");
       }
       const auth = context.auth;
-      const us = Dao.getUser(auth.uid).then(toUser);
-      return us;
+      return Dao.getUser(auth.uid).then(toUser);
     });
 
 export const helloWorld = theFunctions()

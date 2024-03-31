@@ -13,10 +13,10 @@ export async function signin(): Promise<void> {
   const auth = getAuth();
   const provider = new GoogleAuthProvider();
   return signInWithPopup(auth, provider).then(() => {
-    getSelf().then((u) => {
+    return getSelf().then((u) => {
       if (u) {
         store.me = u;
-        Manager.initiateUser();
+        return Manager.initiateUser();
       }
     });
   });
