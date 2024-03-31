@@ -14,7 +14,6 @@ import {
 } from "./consts";
 
 export const initEmulators = (): void => {
-  console.log("EMULATORS");
   if (DEV_ENVIRONMENT) {
     if (AUTH_EMULATOR) {
       connectAuthEmulator(getAuth(), AUTH_EMULATOR);
