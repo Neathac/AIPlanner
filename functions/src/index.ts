@@ -95,7 +95,7 @@ export const getDomainProblems = theFunctions()
       return Dao.getUser(context.auth.uid).then((user) => {
         if (!user) throw new functions.https.HttpsError("internal", "Authenticated user does not correspond to a database entry");
         if (!user.domainIds.includes(data)) throw new functions.https.HttpsError("permission-denied", "User does not have access to the specified domain");
-        return Dao.getAllProblemsForDomain(data).then(problemEntities => problemEntities.map(entity => toProblem(entity)));
+        return Dao.getAllProblemsForDomain(data).then((problemEntities) => problemEntities.map((entity) => toProblem(entity)));
       });
     });
 
@@ -105,7 +105,7 @@ export const getMyDomains = theFunctions()
         throw new functions.https.HttpsError("unauthenticated", "you need to authenticate");
       }
       return Dao.getUser(context.auth.uid).then((u) => {
-        if (u) return Dao.getAllDomainsForUser(u.domainIds).then(domainEntities => domainEntities.map(entity => toDomain(entity)));
+        if (u) return Dao.getAllDomainsForUser(u.domainIds).then((domainEntities) => domainEntities.map((entity) => toDomain(entity)));
         else return [];
       });
     });
@@ -211,19 +211,18 @@ export const deleteProblem = theFunctions()
       return Dao.getUser(context.auth.uid).then(async (user) => {
         return Dao.getDomain(data.parentDomain).then(async (domain) => {
           if (!domain || !user) throw new functions.https.HttpsError("not-found", "Could not find user or domain entity the problem belongs to");
-          if (!user.domainIds.includes(domain.id) || !domain.associatedProblems.includes(data.id))
+          if (!user.domainIds.includes(domain.id) || !domain.associatedProblems.includes(data.id)) {
             throw new functions.https.HttpsError("invalid-argument", "Domain or problem are not associated");
+          }
           domain.associatedProblems.splice(domain.associatedProblems.indexOf(data.id));
           return Dao.updateDomain(domain.id, domain).then((_dom) => {
             return Dao.deleteProblem(data.id);
-          })
+          });
         });
       });
     });
 
 
-
-const uid = function(){
-    return Date.now().toString(36) + Math.random().toString(36).substr(2);
-  }
-  
+const uid = function() {
+  return Date.now().toString(36) + Math.random().toString(36).substr(2);
+};
