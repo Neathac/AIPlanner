@@ -385,7 +385,7 @@ function switchProblem(problem: Problem) {
     selectedProblem.value.id
   );
   temp.rawProblem = useProblemStore().getRawValue;
-  useDocumentStore().modifyActiveProblem(selectedProblem.value);
+  useDocumentStore().modifyActiveProblem(temp);
   selectedProblem.value = problem;
   Manager.selectProblem(problem);
 }

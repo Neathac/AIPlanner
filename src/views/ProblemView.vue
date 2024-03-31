@@ -6,7 +6,9 @@
           <v-container v-if="loggedIn">
             <v-dialog v-model="dialogSaveAsNew" persistent>
               <template v-slot:activator="{ props }">
-                <v-btn v-bind="props"> Save as new Problem </v-btn>
+                <v-btn v-bind="props" :loading="loading" :disabled="loading">
+                  Save as new Problem
+                </v-btn>
               </template>
               <v-card>
                 <v-card-title class="text-h5"> Create Problem </v-card-title>
@@ -41,6 +43,8 @@
               <template v-slot:activator="{ props }">
                 <v-btn
                   v-if="loggedIn"
+                  :loading="loading"
+                  :disabled="loading"
                   color="blue-grey"
                   v-bind="props"
                   variant="flat"
@@ -81,6 +85,8 @@
               <template v-slot:activator="{ props }">
                 <v-btn
                   v-if="loggedIn"
+                  :loading="loading"
+                  :disabled="loading"
                   color="blue-grey"
                   v-bind="props"
                   prepend-icon="mdi-rotate-left"
@@ -117,8 +123,8 @@
           </v-container>
           <v-container>
             <v-btn
-              :loading="loading[2]"
-              :disabled="loading[2]"
+              :loading="loading"
+              :disabled="loading"
               color="blue-grey"
               variant="flat"
               prepend-icon="mdi-auto-fix"
@@ -130,7 +136,9 @@
         </div>
       </template>
     </v-app-bar>
-    <ProblemEditor ref="editor" />
+    <template v-if="editorType == 'Problem'">
+      <ProblemEditor ref="editor" />
+    </template>
   </div>
 </template>
 
@@ -140,7 +148,7 @@ import {
   //encodeProblemDCK,
   loadActiveProblem,
 } from "../languageSupport/decomposer/domainLoader";
-import { Ref, onMounted, ref } from "vue";
+import { Ref, nextTick, onMounted, ref } from "vue";
 import ProblemEditor from "../components/ProblemEditor.vue";
 import { useProblemStore } from "../stores/problemStore";
 //import { useNodeStore } from "../stores/nodeStore";
@@ -149,7 +157,7 @@ import { Manager } from "../stores/resourceManager";
 import { useDocumentStore } from "../stores/documentStore";
 import { EMPTY_PROBLEM } from "@functions/systemTypes";
 import EventBus from "../lib/EventBus";
-import { NEW_FILE } from "../helpers/consts";
+import { NEW_FILE, NEW_PROBLEM } from "../helpers/consts";
 const loading: Ref<boolean> = ref(false);
 const loggedIn: Ref<boolean> = ref(false);
 const dialogProblemSave: Ref<boolean> = ref(false);
@@ -158,9 +166,15 @@ const editor = ref(null);
 const auth = ref(getAuth());
 const dialogSaveAsNew: Ref<boolean> = ref(false);
 const newName: Ref<string> = ref("Default name");
+const editorType: Ref<string> = ref("Problem");
 
 onMounted(() => {
   loadToDck();
+  EventBus.on(NEW_PROBLEM, async (_) => {
+    editorType.value = "a";
+    await nextTick();
+    editorType.value = "Problem";
+  });
   if (getAuth().currentUser) loggedIn.value = true;
 });
 
@@ -187,12 +201,12 @@ async function encodeDCK() {
 
 async function saveProblem() {
   loading.value = true;
+  dialogProblemSave.value = false;
   const prob = useDocumentStore().getActiveProblemById(
     useDocumentStore().activeProblem
   );
   prob.rawProblem = editor.value.code;
   return Manager.updateProblem(prob).then(() => {
-    dialogProblemSave.value = false;
     loading.value = false;
     return;
   });
@@ -209,6 +223,7 @@ async function restoreProblem() {
 
 async function createAsNew(problemName: string) {
   loading.value = true;
+  dialogSaveAsNew.value = false;
   const dummyProblem = EMPTY_PROBLEM;
   dummyProblem.name = problemName;
   dummyProblem.parentDomain = useDocumentStore().activeDomain;
@@ -220,7 +235,6 @@ async function createAsNew(problemName: string) {
     );
     EventBus.emit(NEW_FILE);
     loading.value = false;
-    dialogSaveAsNew.value = false;
   });
 }
 </script>
