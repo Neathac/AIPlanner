@@ -215,8 +215,9 @@ export const deleteProblem = theFunctions()
           if (!user.domainIds.includes(domain.id) || !domain.associatedProblems.includes(data.id)) {
             throw new functions.https.HttpsError("invalid-argument", "Domain or problem are not associated");
           }
-          domain.associatedProblems.splice(domain.associatedProblems.indexOf(data.id));
-          return Dao.updateDomain(domain.id, domain).then((_dom) => {
+          const newDom = domain;
+          newDom.associatedProblems = newDom.associatedProblems.filter((val) => val != data.id);
+          return Dao.updateDomain(newDom.id, newDom).then((_dom) => {
             return Dao.deleteProblem(data.id);
           });
         });

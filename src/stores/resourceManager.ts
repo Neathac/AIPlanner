@@ -13,6 +13,7 @@ import {
   createDomain,
   createProblem,
   deleteDomain,
+  deleteProblem,
   getDomain,
   getDomainProblems,
   getMyDomains,
@@ -213,7 +214,7 @@ export class resourceManagerClass implements resourceManager {
     return createProblem(problem).then((newProblem) => {
       return getDomain(newProblem.parentDomain).then((domain) => {
         useDocumentStore().modifyDomain(domain);
-        useDocumentStore().appendDomainProblems(problem);
+        useDocumentStore().appendDomainProblems(newProblem);
         useProblemStore().loadActiveProblem(emptyPddlProblemDocument(), "");
         useDocumentStore().activeProblem = newProblem.id;
         return newProblem;
@@ -269,7 +270,20 @@ export class resourceManagerClass implements resourceManager {
   }
 
   async deleteProblem(problemid: string): Promise<void> {
-    throw new Error("Method not implemented.");
+    return deleteProblem(
+      useDocumentStore().getActiveProblemById(problemid)
+    ).then((_) => {
+      useDocumentStore().setDomainProblems(
+        useDocumentStore().activeDomain,
+        useDocumentStore().getActiveProblems.filter(
+          (prob) => prob.id != problemid
+        )
+      );
+      if (useDocumentStore().getActiveProblems.length > 0)
+        useDocumentStore().activeProblem =
+          useDocumentStore().getActiveProblems[0].id;
+      else useDocumentStore().activeProblem = "";
+    });
   }
 
   selectDomain(domain: Domain): void {
