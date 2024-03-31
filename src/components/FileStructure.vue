@@ -20,6 +20,8 @@
         <v-container>
           <v-autocomplete
             label="Domains"
+            :loading="loading"
+            :disabled="loading"
             v-model="selectedDomain"
             :items="domains"
             item-title="name"
@@ -37,6 +39,8 @@
         <v-container>
           <v-autocomplete
             label="Problems"
+            :loading="loading"
+            :disabled="loading"
             v-model="selectedProblem"
             :items="problems"
             item-title="name"
@@ -53,7 +57,9 @@
         <v-container>
           <v-dialog v-model="dialogDomainCreate" persistent>
             <template v-slot:activator="{ props }">
-              <v-btn v-bind="props"> Create new Domain </v-btn>
+              <v-btn v-bind="props" :loading="loading" :disabled="loading">
+                Create new Domain
+              </v-btn>
             </template>
             <v-card>
               <v-card-title class="text-h5"> Create domain </v-card-title>
@@ -86,7 +92,9 @@
         <v-container>
           <v-dialog v-model="dialogProblemCreate" persistent>
             <template v-slot:activator="{ props }">
-              <v-btn v-bind="props"> Create new Problem </v-btn>
+              <v-btn v-bind="props" :loading="loading" :disabled="loading">
+                Create new Problem
+              </v-btn>
             </template>
             <v-card>
               <v-card-title class="text-h5"> Create Problem</v-card-title>
@@ -120,7 +128,14 @@
         <v-container>
           <v-dialog v-model="dialogDomainDelete" persistent>
             <template v-slot:activator="{ props }">
-              <v-btn v-bind="props" color="error"> Delete Domain </v-btn>
+              <v-btn
+                v-bind="props"
+                color="error"
+                :loading="loading"
+                :disabled="loading"
+              >
+                Delete Domain
+              </v-btn>
             </template>
             <v-card>
               <v-card-title class="text-h5"> Delete domain </v-card-title>
@@ -151,7 +166,14 @@
         <v-container>
           <v-dialog v-model="dialogProblemDelete" persistent>
             <template v-slot:activator="{ props }">
-              <v-btn v-bind="props" color="error"> Delete Problem </v-btn>
+              <v-btn
+                v-bind="props"
+                color="error"
+                :loading="loading"
+                :disabled="loading"
+              >
+                Delete Problem
+              </v-btn>
             </template>
             <v-card>
               <v-card-title class="text-h5"> Delete problem </v-card-title>
@@ -191,6 +213,8 @@
         </template>
         <template v-else>
           <v-btn
+            :loading="loading"
+            :disabled="loading"
             :onclick="signoutWrapper"
             color="error"
             variant="flat"
@@ -295,6 +319,7 @@ async function signoutWrapper() {
 
 async function createDomain(domainName: string) {
   loading.value = true;
+  dialogDomainCreate.value = false;
   const dummyDomain = EMPTY_DOMAIN;
   dummyDomain.name = domainName;
   Manager.createDomain(dummyDomain).then((res) => {
@@ -303,12 +328,12 @@ async function createDomain(domainName: string) {
       selectedDomain.value = res;
     }
     loading.value = false;
-    dialogDomainCreate.value = false;
   });
 }
 
 async function deleteDomain(domain: Domain) {
   loading.value = true;
+  dialogDomainDelete.value = false;
   Manager.deleteDomain(domain.id).then((_) => {
     Manager.getDomainProblems(useDocumentStore().getActiveDomain.id).then(
       (probs) => {
@@ -316,7 +341,7 @@ async function deleteDomain(domain: Domain) {
         if (probs.length > 0) selectedProblem.value = probs[0];
         selectedDomain.value = useDocumentStore().getActiveDomain;
         domains.value = useDocumentStore().getAvailableDomains;
-        dialogDomainDelete.value = false;
+        loading.value = false;
       }
     );
   });
@@ -342,16 +367,16 @@ function switchDomain(domain: Domain) {
 
 async function createProblem(problemName: string) {
   loading.value = true;
+  dialogProblemCreate.value = false;
   const dummyProblem = EMPTY_PROBLEM;
   dummyProblem.name = problemName;
-  dummyProblem.parentDomain = selectedDomain.value.id;
+  dummyProblem.parentDomain = useDocumentStore().activeDomain;
   Manager.createProblem(dummyProblem).then((res) => {
     if (res) {
       problems.value.push(res);
       selectedProblem.value = res;
     }
     loading.value = false;
-    dialogProblemCreate.value = false;
   });
 }
 
@@ -367,14 +392,17 @@ function switchProblem(problem: Problem) {
 
 async function deleteProblem(problem: Problem) {
   loading.value = true;
+  dialogProblemDelete.value = false;
+  console.log(problem);
   Manager.deleteProblem(problem.id).then((_) => {
     Manager.getDomainProblems(useDocumentStore().getActiveDomain.id).then(
       (probs) => {
         problems.value = probs;
         if (probs.length > 0) selectedProblem.value = probs[0];
+        else selectedProblem.value = null;
         selectedDomain.value = useDocumentStore().getActiveDomain;
         domains.value = useDocumentStore().getAvailableDomains;
-        dialogProblemDelete.value = false;
+        loading.value = false;
       }
     );
   });
