@@ -25,9 +25,9 @@
             item-title="name"
             v-bind:key="control"
           >
-            <template v-slot:item="{ props, item }">
+            <template v-slot:item="{ item }">
               <v-list-item
-                v-bind="props"
+                v-bind="item"
                 :title="item.raw.name"
                 @click="switchDomain(item.raw)"
               ></v-list-item>
@@ -41,9 +41,9 @@
             :items="problems"
             item-title="name"
           >
-            <template v-slot:item="{ props, item }">
+            <template v-slot:item="{ item }">
               <v-list-item
-                v-bind="props"
+                v-bind="item"
                 :title="item.raw.name"
                 @click="switchProblem(item.raw)"
               ></v-list-item>
