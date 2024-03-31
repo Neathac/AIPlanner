@@ -382,7 +382,7 @@ async function createProblem(problemName: string) {
 
 function switchProblem(problem: Problem) {
   const temp = useDocumentStore().getActiveProblemById(
-    useDocumentStore().activeProblem
+    selectedProblem.value.id
   );
   temp.rawProblem = useProblemStore().getRawValue;
   useDocumentStore().modifyActiveProblem(selectedProblem.value);
@@ -393,7 +393,6 @@ function switchProblem(problem: Problem) {
 async function deleteProblem(problem: Problem) {
   loading.value = true;
   dialogProblemDelete.value = false;
-  console.log(problem);
   Manager.deleteProblem(problem.id).then((_) => {
     Manager.getDomainProblems(useDocumentStore().getActiveDomain.id).then(
       (probs) => {
