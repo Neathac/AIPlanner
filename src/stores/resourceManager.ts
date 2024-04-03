@@ -216,6 +216,7 @@ export class resourceManagerClass implements resourceManager {
         useDocumentStore().modifyDomain(domain);
         useDocumentStore().appendDomainProblems(newProblem);
         useProblemStore().loadActiveProblem(emptyPddlProblemDocument(), "");
+        store.activeProblem = "";
         useDocumentStore().activeProblem = newProblem.id;
         return newProblem;
       });
@@ -232,6 +233,7 @@ export class resourceManagerClass implements resourceManager {
         loadActiveProblem(problem.rawProblem),
         problem.rawProblem
       );
+      store.activeProblem = problem.rawProblem;
       return newProblem;
     });
   }
@@ -334,6 +336,7 @@ export class resourceManagerClass implements resourceManager {
         loadActiveProblem(prob.rawProblem),
         prob.rawProblem
       );
+      store.activeProblem = prob.rawProblem;
       return prob;
     });
   }

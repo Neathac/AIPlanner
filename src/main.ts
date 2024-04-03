@@ -37,4 +37,8 @@ const app = initializeApp(firebaseConfig);
 initEmulators();
 initClient(app);
 
-createApp(App).use(router).use(createPinia()).use(vuetify).mount("#app");
+const VueApp = createApp(App).use(router).use(createPinia()).use(vuetify);
+VueApp.config.warnHandler = function (_, __, ___) {
+  return null;
+};
+VueApp.mount("#app");

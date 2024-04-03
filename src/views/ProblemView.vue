@@ -158,6 +158,7 @@ import { useDocumentStore } from "../stores/documentStore";
 import { EMPTY_PROBLEM } from "@functions/systemTypes";
 import EventBus from "../lib/EventBus";
 import { NEW_FILE, NEW_PROBLEM } from "../helpers/consts";
+import { store } from "../store";
 const loading: Ref<boolean> = ref(false);
 const loggedIn: Ref<boolean> = ref(false);
 const dialogProblemSave: Ref<boolean> = ref(false);
@@ -191,6 +192,7 @@ function loadToDck() {
     loadActiveProblem(editor.value.code),
     editor.value.code
   );
+  store.activeProblem = editor.value.code;
 }
 
 async function encodeDCK() {
@@ -206,9 +208,11 @@ async function saveProblem() {
     useDocumentStore().activeProblem
   );
   prob.rawProblem = editor.value.code;
-  return Manager.updateProblem(prob).then(() => {
+  await Manager.updateProblem(prob).then((prob) => {
+    useProblemStore().rawActiveProblem = prob.rawProblem;
+    useDocumentStore().modifyActiveProblem(prob);
+    store.activeProblem = prob.rawProblem;
     loading.value = false;
-    return;
   });
 }
 
@@ -233,6 +237,7 @@ async function createAsNew(problemName: string) {
       loadActiveProblem(res.rawProblem),
       res.rawProblem
     );
+    store.activeProblem = res.rawProblem;
     EventBus.emit(NEW_FILE);
     loading.value = false;
   });

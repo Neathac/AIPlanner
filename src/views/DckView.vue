@@ -161,6 +161,7 @@ import { useDocumentStore } from "../stores/documentStore";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { useAtbStore } from "../stores/atbStore";
 import { EMPTY_DOMAIN } from "@functions/systemTypes";
+import { store } from "../store";
 
 const editorType: Ref<string> = ref("Domain");
 const loading: Ref<boolean> = ref(false);
@@ -209,14 +210,19 @@ function encodeDCK() {
   editor.value.code = useDomainStore().rawActiveDomain;
 }
 
-function updateDomainState() {
+async function updateDomainState() {
   dialogDomainSave.value = false;
   loading.value = true;
-  Manager.updateDomain({
+  await Manager.updateDomain({
     id: useDocumentStore().getActiveDomain.id,
     rawDomain: editor.value.code,
     atbDck: useAtbStore().dck,
-  }).then(() => {
+  }).then((dom) => {
+    editor.value.code = dom.rawDomain;
+    useAtbStore().dck = dom.atbDck;
+    useDocumentStore().modifyDomain(dom);
+    useDomainStore().rawActiveDomain = dom.rawDomain;
+    store.activeDomain = dom.rawDomain;
     loading.value = false;
   });
 }

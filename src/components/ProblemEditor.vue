@@ -29,7 +29,6 @@ export default defineComponent({
     problemStore.loadRawActiveProblem(store.activeProblem);
     const code = ref(problemStore.rawActiveProblem);
     const extensions = [pddlProblemLanguage(), oneDark];
-
     // Codemirror EditorView instance ref
     const view = shallowRef();
     const handleReady = (payload) => {
@@ -47,7 +46,7 @@ export default defineComponent({
     onChanged() {
       store.activeProblem = this.code;
       const problemStore = useProblemStore();
-      problemStore.loadRawActiveProblem(store.activeDomain);
+      problemStore.loadRawActiveProblem(store.activeProblem);
     },
   },
 });

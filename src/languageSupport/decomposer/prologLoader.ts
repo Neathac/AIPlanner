@@ -294,7 +294,7 @@ export const composeOrRule = (rule: AttributedInitRule): string => {
       orRule.andClause.forEach((andRule, andIndex) => {
         let foundOperator = false;
         PREDEFINED_CONSTRAINTS.forEach((cons) => {
-          if (cons == andRule.name) foundOperator = true;
+          if (andRule.name.includes(cons)) foundOperator = true;
         });
         if (foundOperator) {
           result +=
