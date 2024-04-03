@@ -427,7 +427,7 @@ const emit = defineEmits(["saveEvent"]);
 onMounted(() => {
   ruleVariableText.value = props.rule.rulePredicate.varNames.join(", ");
   thisRule.value = Object.assign({}, props.rule);
-  if (thisRule.value.simpleDefaultValue)
+  if (thisRule.value.hasSimpleValue && thisRule.value.simpleDefaultValue)
     defaultChoice.value = thisRule.value.simpleDefaultValue;
   useDomainStore().getStructure.predicates.forEach((val) =>
     possibleConstraints.value.push({

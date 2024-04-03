@@ -347,13 +347,13 @@ async function deleteDomain(domain: Domain) {
   });
 }
 
-function switchDomain(domain: Domain) {
+async function switchDomain(domain: Domain) {
   const tempDomain = selectedDomain.value;
   tempDomain.atbDck = useAtbStore().dck;
   tempDomain.rawDomain = useDomainStore().rawActiveDomain;
   useDocumentStore().modifyDomain(tempDomain);
   selectedDomain.value = domain;
-  Manager.getDomainProblems(domain.id).then((probs) => {
+  await Manager.getDomainProblems(domain.id).then((probs) => {
     if (probs && probs.length > 0) {
       selectedProblem.value = probs[0];
       problems.value = probs;
@@ -380,12 +380,7 @@ async function createProblem(problemName: string) {
   });
 }
 
-function switchProblem(problem: Problem) {
-  const temp = useDocumentStore().getActiveProblemById(
-    selectedProblem.value.id
-  );
-  temp.rawProblem = useProblemStore().getRawValue;
-  useDocumentStore().modifyActiveProblem(temp);
+async function switchProblem(problem: Problem) {
   selectedProblem.value = problem;
   Manager.selectProblem(problem);
 }
