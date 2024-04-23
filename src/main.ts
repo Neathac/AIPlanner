@@ -2,7 +2,6 @@ import { initializeApp } from "firebase/app";
 import { createApp } from "vue";
 import { createPinia } from "pinia";
 import { initEmulators } from "./helpers/emulatorHelper";
-import "@baklavajs/plugin-renderer-vue3/dist/styles.css";
 // Vuetify
 import "vuetify/styles";
 import { createVuetify } from "vuetify";

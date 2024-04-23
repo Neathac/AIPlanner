@@ -7,6 +7,7 @@ DomainGroup {
     DomainNameGroup | 
     DomainConstantsGroup | 
     DomainPredicatesGroup | 
+    DomainFunctionsGroup |
     DomainTimelessGroup |
     DomainActionGroup |
     DomainAxiomGroup
@@ -36,8 +37,14 @@ PredicateName {
 DomainTimelessGroup {
     "(" TIMELESS_SECTION (Timeless)+ ")"
 }
+DomainFunctionsGroup {
+    "(" FUNCTIONS_SECTION (Function)+ ")"
+}
 Timeless {
     "(" NAME (NAME)+ ")"
+}
+Function {
+    ("("NAME")" | NAME) ("("NAME")" | NAME)
 }
 DomainActionGroup {
     "(" ACTION_SECTION PredicateName ActionParametersSubgroup ActionPreconditionSubgroup ActionEffectSubgroup ")"
@@ -64,7 +71,8 @@ LogicalExpression {
         "(" CLAUSE_OPERATOR (LogicalExpression)+ ")" |
         "(" IMPLY_OPERATOR Predicate Predicate ")" |
         "(" FOR_OPERATOR Parameter (WHEN_OPERATOR Predicate)? LogicalExpression ")" |
-        "(" EXISTS_OPERATOR Parameter LogicalExpression ")"
+        "(" EXISTS_OPERATOR Parameter LogicalExpression ")" |
+        "(" INCREASE_OPERATOR Function ")"
     )
 }
 ActionEffectSubgroup {
@@ -91,6 +99,7 @@ CONSTANTS_SECTION { @specialize<SECTION, ":constants"> }
 TYPES_SECTION { @specialize<SECTION, ":types"> }
 PREDICATES_SECTION { @specialize<SECTION, ":predicates"> }
 TIMELESS_SECTION { @specialize<SECTION, ":timeless"> }
+FUNCTIONS_SECTION { @specialize<SECTION, ":functions"> }
 ACTION_SECTION { @specialize<SECTION, ":action"> }
 PARAMETERS_SUBSECTION { @specialize<SECTION, ":parameters"> }
 PRECONDITION_SUBSECTION { @specialize<SECTION, ":precondition"> }
@@ -99,6 +108,7 @@ AXIOM_SECTION { @specialize<SECTION, ":axiom"> }
 VARS_SUBSECTION { @specialize<SECTION, ":vars"> }
 CONTEXT_SUBSECTION { @specialize<SECTION, ":context"> }
 IMPLIES_SUBSECTION { @specialize<SECTION, ":implies">}
+INCREASE_OPERATOR { @specialize<NAME,"increase"> }
 NOT_OPERATOR { @specialize<NAME,"not"> }
 CLAUSE_OPERATOR { @specialize<NAME,"or"> | @specialize<NAME,"and"> }
 IMPLY_OPERATOR { @specialize<NAME,"imply"> }
@@ -106,7 +116,7 @@ FOR_OPERATOR { @specialize<NAME,"forall"> }
 WHEN_OPERATOR { @specialize<NAME,"when"> }
 EXISTS_OPERATOR { @specialize<NAME,"exists"> }
 @tokens {
-    NAME { $[a-zA-Z_0-9éèâùûôïîöëç\\.\\+\\'’&]+ ("-"$[a-zA-Z_0-9éèâùûôïîöëç\\.\\+\\'’&]+)*}
+    NAME { $[a-zA-Z_0-9éèâùûôïîöëç\\.\\+\\'=’&]+ ("-"$[a-zA-Z_0-9éèâùûôïîöëç\\.\\+\\'=’&]+)*}
     KEYWORD { "define" | "domain" }
     SPACE { @whitespace }
     LINE_COMMENT { ";" ![\n]* }

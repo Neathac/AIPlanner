@@ -216,6 +216,29 @@ export const assembleActionReplacements = (
     mod.extraEffects.forEach((val) => {
       if (val.rawPredicate) joinedEffects += val.rawPredicate;
     });
+    const newEffect = mod.originalOperator.effect.toString().includes("(and")
+      ? mod.originalOperator.effect
+          .toString()
+          .substring(
+            0,
+            mod.originalOperator.effect.toString().indexOf("(and") + 4
+          ) +
+        joinedEffects +
+        mod.originalOperator.effect
+          .toString()
+          .substring(mod.originalOperator.effect.toString().indexOf("(and") + 4)
+      : "(and" + joinedEffects + mod.originalOperator.effect + ")";
+    const newParameters: string[] = [];
+    mod.originalOperator.parameters.varName.forEach((val, ind) => {
+      let tmp = val;
+      if (mod.originalOperator.parameters.types.length > ind)
+        tmp += " " + mod.originalOperator.parameters.types[ind].name;
+      newParameters.push(tmp);
+    });
+    mod.extraParameters.forEach((val, _) => {
+      if (!mod.originalOperator.parameters.varName.includes(val))
+        newParameters.push(val);
+    });
     const assembledDckAction =
       "\n(:action DCK_" +
       mod.originalOperator.name +
@@ -223,15 +246,14 @@ export const assembleActionReplacements = (
       index +
       " \n\t:parameters " +
       "(" +
-      mod.extraParameters.join(" ") +
+      newParameters.join(" ") +
       ")" +
-      " \n\t:preconditions (and" +
+      " \n\t:precondition (and" +
       joinedPreconditions +
       mod.originalOperator.preconditions +
-      ") \n\t:effect (and" +
-      joinedEffects +
-      mod.originalOperator.effect +
-      "))\n";
+      ") \n\t:effect " +
+      newEffect +
+      ")\n";
     if (mappedModifications.has(mod.originalOperator.rawText))
       mappedModifications.set(
         mod.originalOperator.rawText,
