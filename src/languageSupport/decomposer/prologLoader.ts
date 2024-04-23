@@ -46,14 +46,22 @@ export const getConsultResult = async (
   const session = new Prolog();
 
   await session.consultText(fileContent);
-  // await session.consultText(PROLOG_TEST);
-
   for await (const rule of dckRules) {
     const query = session.query(branchRuleTypeQueries(rule));
     for await (const answer of query) {
       if (answer.status == "success") {
         Object.entries(answer.answer).forEach(([_, val]) => {
-          const temp = val.toString().replaceAll("'", "");
+          let temp = "";
+          if (val["functor"] && val["args"] && val["functor"] == "-")
+            temp = val
+              .toString()
+              .replaceAll("'", "")
+              .replaceAll("(", "")
+              .replaceAll(")", "")
+              .replaceAll("-", "")
+              .split(",")
+              .join("-");
+          else temp = val.toString().replaceAll("'", "");
           if (!flatObjects.includes(temp) && !newObjectsMapping.has(temp)) {
             if (/^\d+$/.test(temp))
               newObjectsMapping.set(temp, "DCK_num_" + temp);
@@ -62,7 +70,6 @@ export const getConsultResult = async (
           }
         });
       }
-
       tempInit.push(decodeAnswer(rule, answer, newObjectsMapping));
     }
   }
@@ -78,7 +85,8 @@ export const encodeInitPredicatesToPrologFormat = (
 ): string => {
   let result = "\n";
   initPredicates.forEach((val) => {
-    result += INIT_PREFIX + convertInstantiatedPredicateToProlog(val) + ".\n";
+    if (!val.name.includes("="))
+      result += INIT_PREFIX + convertInstantiatedPredicateToProlog(val) + ".\n";
   });
   return result;
 };
@@ -123,6 +131,9 @@ export const encodeObjectsToPrologFormat = (
   let result = "\n";
   objects.forEach((object) => {
     object.variables.forEach((variable) => {
+      const obj =
+        variable[0].toLowerCase() +
+        (variable.length > 1 ? variable.substring(1) : "");
       result += OBJECT_PROLOG_PREDICATE + "(" + variable + ").\n";
     });
   });
@@ -294,7 +305,7 @@ export const composeOrRule = (rule: AttributedInitRule): string => {
       orRule.andClause.forEach((andRule, andIndex) => {
         let foundOperator = false;
         PREDEFINED_CONSTRAINTS.forEach((cons) => {
-          if (andRule.name.includes(cons)) foundOperator = true;
+          if (andRule.name == cons) foundOperator = true;
         });
         if (foundOperator) {
           result +=
@@ -589,7 +600,17 @@ export const decodeAnswer = (
   if (rule.rulePredicate.varNames.length > 0) {
     result = "(" + rule.rulePredicate.name + " ";
     Object.entries(answer.answer).forEach(([_, val]) => {
-      const temp = val.toString().replaceAll("'", "");
+      let temp = "";
+      if (val["functor"] && val["args"] && val["functor"] == "-")
+        temp = val
+          .toString()
+          .replaceAll("'", "")
+          .replaceAll("(", "")
+          .replaceAll(")", "")
+          .replaceAll("-", "")
+          .split(",")
+          .join("-");
+      else temp = val.toString().replaceAll("'", "");
       if (newObjects.has(temp)) result += newObjects.get(temp) + " ";
       else result += temp + " ";
     });

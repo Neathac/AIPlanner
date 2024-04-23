@@ -326,6 +326,16 @@ async function createDomain(domainName: string) {
     if (res) {
       domains.value.push(res);
       selectedDomain.value = res;
+      Manager.getDomainProblems(res.id).then((probs) => {
+        if (probs && probs.length > 0) {
+          selectedProblem.value = probs[0];
+          problems.value = probs;
+        } else {
+          selectedProblem.value = null;
+          problems.value = [];
+        }
+        Manager.selectDomain(res);
+      });
     }
     loading.value = false;
   });
