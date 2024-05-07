@@ -1,9 +1,12 @@
 import { NOBODY } from "@functions/systemTypes";
 import { reactive } from "vue";
-import { CHILDSNACK_PROBLEM_TEST, CHILDSNACK_TEST } from "./helpers/consts";
+import {
+  ADVANCED_BLOCKSWORLD_PROBLEM_TEST,
+  ADVANCED_BLOCKSWORLD_TEST,
+} from "./helpers/consts";
 
 export const store = reactive({
   me: NOBODY,
-  activeDomain: CHILDSNACK_TEST,
-  activeProblem: CHILDSNACK_PROBLEM_TEST,
+  activeDomain: ADVANCED_BLOCKSWORLD_TEST,
+  activeProblem: ADVANCED_BLOCKSWORLD_PROBLEM_TEST,
 });
